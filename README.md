@@ -11,7 +11,7 @@ Currently in prerelease format -- if you somehow manage to get it up and running
         {
             "username": "$username",
             "password": "$password",
-            "machineauth": "$steamMachineAuthCookieValueFromWebLogin",
+            "machineauth": "$steamMachineAuthCookieValueFromWebLogin"
         }
     ]
 }
