@@ -288,19 +288,14 @@ public class FrontendClient {
                     // Hopefully we only need to do this once.
 
                     sessionId = Base64.encodeBytes(String.valueOf(callback.getUniqueId()).getBytes());
-                    System.out.println(sessionId);
 
                     TradeUser u = new TradeUser();
 
                     // I guess we'll just have to do this manually.
-                    // TODO Implement SteamWeb's steamMachineAuth cookie.
-                    /**
-                     * I'm thinking you can just generate the authkey from the
-                     * long steamid and just grab the value.
-                     */
                     u.addCookie("sessionid", sessionId, true);
-                    
+
                     if (clientInfo.getAccountToken() != null) {
+                        // 
                         u.addCookie("steamMachineAuth" + steamUser.getSteamId().convertToLong(), clientInfo.getAccountToken(), true);
                     }
                     try {
@@ -518,7 +513,7 @@ public class FrontendClient {
                 .password(clientInfo.getAccountPassword())
                 .authCode(authcode);
         loginData.sentryFileHash = sentryHash;
-        
+
         System.out.printf("%s%n%s%n", clientInfo.getAccountUsername(),
                 clientInfo.getAccountPassword());
 
@@ -551,22 +546,19 @@ public class FrontendClient {
 
 /**
  * A cheap AFK checker thread that polls for mouse input to see if the user is
- * available. Polls just about every second in addition to processing.
+ * available. Polls every second.
  *
  * @author nosoop < nosoop at users.noreply.github.com >
  */
 class FrontendInactivityChecker implements Runnable {
 
+    final int SECONDS_UNTIL_AWAY = 5 * 60; // 5 minutes
+    final int SECONDS_UNTIL_SNOOZE = 60 * 60 * 2; // 2 hours
     SteamFriends steamFriends;
     long timeLastActive;
     int lastX, lastY;
-    /*
-     * If user has been out for 300 seconds (5 minutes), change the user's
-     * persona state.
-     */
-    final int SECONDS_UNTIL_AWAY = 300;
     // If user set themselves away, don't automatically set them online.
-    boolean inactiveSetAFK;
+    boolean autoSetAFK;
 
     public FrontendInactivityChecker(SteamFriends steamFriends) {
         super();
@@ -578,9 +570,12 @@ class FrontendInactivityChecker implements Runnable {
         this.lastX = m.x;
         this.lastY = m.y;
 
-        this.inactiveSetAFK = false;
+        this.autoSetAFK = false;
     }
 
+    /**
+     * Mouse checking runnable.
+     */
     @Override
     @SuppressWarnings({"CallToThreadDumpStack"})
     public void run() {
@@ -588,14 +583,18 @@ class FrontendInactivityChecker implements Runnable {
 
         int newX = m.x, newY = m.y;
 
+        // If mouse was not moved in the last second...
         if (this.lastX == newX && this.lastY == newY) {
-            // Check how long the mouse has been there.
-            int secondsSinceAFK = (int) (System.currentTimeMillis() - timeLastActive) / 1000;
+            // Update seconds since we have been assumed AFK.
+            int secondsSinceAFK =
+                    (int) (System.currentTimeMillis() - timeLastActive) / 1000;
 
+            // If past AFK threshold and not away or snoozed, then set.
             if (secondsSinceAFK > SECONDS_UNTIL_AWAY
-                    && steamFriends.getPersonaState() == EPersonaState.Online) {
+                    && steamFriends.getPersonaState() != EPersonaState.Away
+                    && steamFriends.getPersonaState() != EPersonaState.Snooze) {
                 steamFriends.setPersonaState(EPersonaState.Away);
-                inactiveSetAFK = true;
+                autoSetAFK = true;
             }
         } else { // Mouse was moved.
             lastX = newX;
@@ -603,15 +602,18 @@ class FrontendInactivityChecker implements Runnable {
             timeLastActive = System.currentTimeMillis();
 
             // If the AFK handler set them away and we're not away, online.
-            if (inactiveSetAFK && steamFriends.getPersonaState() == EPersonaState.Away) {
+            if (autoSetAFK && steamFriends.getPersonaState() == EPersonaState.Away) {
                 steamFriends.setPersonaState(EPersonaState.Online);
-                inactiveSetAFK = false;
+                autoSetAFK = false;
                 //System.out.println("AFK unset.");
             }
         }
     }
 
-    // Unility to get the Point object from the mouse.
+    /**
+     * Gets the location of the mouse.
+     * @return A Point object representing the position of the mouse.
+     */
     private java.awt.Point getMousePoint() {
         return java.awt.MouseInfo.getPointerInfo().getLocation();
     }
