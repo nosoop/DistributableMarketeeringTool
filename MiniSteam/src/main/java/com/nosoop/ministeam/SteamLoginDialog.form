@@ -104,7 +104,9 @@
     </Component>
     <Component class="javax.swing.JLabel" name="versionNumberLabel">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Version 0.00"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="&quot;Version &quot; + BuildProperties.getBuildVersion() + &quot;, build &quot; + BuildProperties.getBuildTime()" type="code"/>
+        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="accountUserLabel">
@@ -147,7 +149,7 @@
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel2">
       <Properties>
-        <Property name="text" type="java.lang.String" value="(Powered by SteamKit-Java and Scrapbank.tf code)"/>
+        <Property name="text" type="java.lang.String" value="(Powered by SteamKit-Java and SteamTrade-Java code)"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JComboBox" name="accountUserField">

@@ -16,7 +16,7 @@ import java.util.Map;
 import javax.swing.JOptionPane;
 
 /**
- * A TradeListener that communicates with a UI.
+ * A TradeListener that receives input from .
  *
  * @author nosoop < nosoop at users.noreply.github.com >
  */

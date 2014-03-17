@@ -97,7 +97,7 @@ public class SteamLoginDialog extends javax.swing.JDialog {
         projectNameLabel.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
         projectNameLabel.setText("Distributable Marketeering Tool");
 
-        versionNumberLabel.setText("Version 0.00");
+        versionNumberLabel.setText("Version " + BuildProperties.getBuildVersion() + ", build " + BuildProperties.getBuildTime());
 
         accountUserLabel.setText("Steam Username:");
 
@@ -121,7 +121,7 @@ public class SteamLoginDialog extends javax.swing.JDialog {
 
         loginStatusLabel.setText("Status: Waiting to sign in...");
 
-        jLabel2.setText("(Powered by SteamKit-Java and Scrapbank.tf code)");
+        jLabel2.setText("(Powered by SteamKit-Java and SteamTrade-Java code)");
 
         accountUserField.setEditable(true);
         accountUserField.addItemListener(new java.awt.event.ItemListener() {
