@@ -220,7 +220,7 @@ public class FrontendClient {
                         return;
                     }
 
-                    logger.trace(callback.getResult().name());
+                    logger.debug(callback.getResult().name());
                 }
             });
 
@@ -438,7 +438,7 @@ public class FrontendClient {
                     new ActionT<UpdateMachineAuthCallback>() {
                 @Override
                 public void call(UpdateMachineAuthCallback callback) {
-                    logger.trace("Creating authentication file...");
+                    logger.info("Creating authentication file...");
                     byte[] sentryHash = CryptoHelper.SHAHash(callback.getData());
 
                     try (BufferedOutputStream fo = new BufferedOutputStream(

@@ -36,7 +36,7 @@ public class FrontendTrade extends TradeListener {
     public FrontendTrade(FrontendClient client, String otherPlayerName) {
         super();
         
-        this.logger = LoggerFactory.getLogger(FrontendTrade.class.getSimpleName());
+        this.logger = LoggerFactory.getLogger(FrontendTrade.class);
 
         this.client = client;
         this.tradeWindow = new SteamTradeWindow(this, otherPlayerName);
@@ -53,6 +53,7 @@ public class FrontendTrade extends TradeListener {
             ourTradeSlotsFilled[i] = null;
         }
 
+        logger.info("Trade session started.");
     }
 
     public final boolean tradePutFirstValidItem(TradeOurDisplayItem item) {
@@ -114,7 +115,7 @@ public class FrontendTrade extends TradeListener {
     public String getItemName(TradeInternalItem inventoryItem) {
         String invName = inventoryItem.getDisplayName();
         
-        logger.trace("Got display.");
+        logger.debug("Got display.");
 
         // Format item name for renamed items.
         if (inventoryItem.isRenamed()) {
@@ -122,14 +123,14 @@ public class FrontendTrade extends TradeListener {
                     inventoryItem.getDisplayName(), inventoryItem.getMarketName());
         }
 
-        logger.trace("Checked if renamed.");
+        logger.debug("Checked if renamed.");
         
         // Format item name for gifted items.
         if (inventoryItem.wasGifted()) {
             invName = String.format("%s (gifted)", invName);
         }
         
-        logger.trace("Check if gifted.");
+        logger.debug("Check if gifted.");
 
         return invName;
     }
@@ -292,7 +293,7 @@ public class FrontendTrade extends TradeListener {
 
     @Override
     public void onUserAddItem(TradeInternalItem inventoryItem) {
-        logger.trace("Getting name.");
+        logger.debug("Getting name.");
         String invName = getItemName(inventoryItem);
 
         if (otherOfferedItems.containsKey(invName)) {
@@ -359,7 +360,7 @@ public class FrontendTrade extends TradeListener {
     public void onUnknownAction(TradeEvent event) {
         int action = event.action;
 
-        logger.trace("Unknown action: {} -- {}", action, 
+        logger.debug("Unknown action: {} -- {}", action, 
                 event.getJSONObject());
 
         boolean isBot = !event.steamid.equals(String.valueOf(trade.getPartnerSteamId()));
@@ -379,16 +380,16 @@ public class FrontendTrade extends TradeListener {
 
                     TradeInternalCurrency item = trade.getPartner().getInventories().getInventory(event.appid, event.contextid).getCurrency(event.assetid);
 
-                    logger.trace("Name: {}", item.getDisplayName());
-                    logger.trace("Market name: {}", item.getMarketName());
+                    logger.debug("Name: {}", item.getDisplayName());
+                    logger.debug("Market name: {}", item.getMarketName());
 
                     this.onUserAddItem(item);
-                    logger.trace("Added item.");
+                    logger.debug("Added item.");
                 }
                 break;
             default:
                 break;
         }
-        logger.trace("Added item.");
+        logger.debug("Added item.");
     }
 }

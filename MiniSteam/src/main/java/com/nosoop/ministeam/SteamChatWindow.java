@@ -108,7 +108,7 @@ public class SteamChatWindow extends javax.swing.JFrame {
         int newTabIndex = chatTabPanel.getSelectedIndex();
         
         if (tabClosing) {
-            logger.trace("New tab: {}, total tabs {}.", newTabIndex, chatTabPanel.getTabCount());
+            logger.debug("New tab: {}, total tabs {}.", newTabIndex, chatTabPanel.getTabCount());
             
             newTabIndex = (newTabIndex == chatTabPanel.getTabCount()-1) ?
                     newTabIndex : newTabIndex + 1;
