@@ -24,8 +24,10 @@ Uses the [SteamKit-Java library](https://github.com/Top-Cat/SteamKit-Java) for S
 Slow Starts
 ===========
 
-Requires the support of Java Cryptography Extension Unlimited Strength policy files.  And Bouncy Castle for encryption.  
+Requires the support of Java Cryptography Extension Unlimited Strength policy files.    
 The direct download page for them is available [here](http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html), and full instructions on how to install them can be viewed [here](http://suhothayan.blogspot.com/2012/05/how-to-install-java-cryptography.html).
+
+You'll also want a copy of Bouncy Castle for encryption.
 
 In the future, an "easy install" method may be added to mostly? automate the installation of the policy files.
 
