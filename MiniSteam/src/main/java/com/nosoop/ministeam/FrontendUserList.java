@@ -10,6 +10,8 @@ import bundled.steamtrade.org.json.JSONObject;
 import java.io.File;
 import java.util.Map;
 import java.util.TreeMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -17,33 +19,32 @@ import java.util.TreeMap;
  */
 @SuppressWarnings("StaticNonFinalUsedInInitialization")
 public class FrontendUserList {
-    
+
     final static File USERDATA_FILE = new File("users.json");
-    
     private static Map<String, FrontendClientInfo> userStore = new TreeMap<>();
-    
+    static Logger logger = LoggerFactory.getLogger(FrontendUserList.class.getSimpleName());
+
     static {
         userStore.put("", new FrontendClientInfo("", "", null));
-        
+
         try {
             JSONObject data = new JSONObject(Util.readFile(USERDATA_FILE));
-            
+
             JSONArray clients = data.getJSONArray("clients");
-            
+
             for (int i = 0; i < clients.length(); i++) {
                 JSONObject client = clients.getJSONObject(i);
-                
-                userStore.put(client.getString("username"), 
+
+                userStore.put(client.getString("username"),
                         new FrontendClientInfo(client.getString("username"),
                         client.optString("password", ""),
-                        client.optString("machineauth", null))
-                        );
+                        client.optString("machineauth", null)));
             }
         } catch (JSONException ex) {
-            ex.printStackTrace();
+            logger.error("Error loading user storage.", ex);
         }
     }
-    
+
     static Map<String, FrontendClientInfo> getUserList() {
         return userStore;
     }

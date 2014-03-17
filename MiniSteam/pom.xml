@@ -109,6 +109,16 @@
             <artifactId>bcprov-jdk14</artifactId>
             <version>140</version>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.6.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.6</version>
+        </dependency>
     </dependencies>
     
     <pluginRepositories>

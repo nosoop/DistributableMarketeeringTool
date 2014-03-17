@@ -42,11 +42,18 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.*;
 import java.util.List;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 /**
  * Represents a browser session for the internal TradeOffer API. Modified to
@@ -160,7 +167,7 @@ public class TradeUser {
      * @return
      * @throws IOException
      */
-    public boolean login(String username, String password) throws Exception {
+    public boolean login(String username, String password) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         Scanner scanner = new Scanner(System.in);
         List<NameValuePair> data = new ArrayList<>();
         data.add(new BasicNameValuePair("username", username));
@@ -211,13 +218,17 @@ public class TradeUser {
             if (captcha) {
                 System.out.println("SteamWeb: Captcha is needed.");
 
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().browse(new URI("https://steamcommunity.com/public/captcha.php?gid=" + loginJson.captcha_gid));
-                } else {
-                    System.out.println("https://steamcommunity.com/public/captcha.php?gid=" + loginJson.captcha_gid);
+                try {
+                    if (Desktop.isDesktopSupported()) {
+                        Desktop.getDesktop().browse(new URI("https://steamcommunity.com/public/captcha.php?gid=" + loginJson.captcha_gid));
+                    } else {
+                        System.out.println("https://steamcommunity.com/public/captcha.php?gid=" + loginJson.captcha_gid);
+                    }
+                    System.out.println("SteamWeb: Type the captcha:");
+                    capText = scanner.nextLine();
+                } catch (URISyntaxException ex) {
+                    // Well, shit.
                 }
-                System.out.println("SteamWeb: Type the captcha:");
-                capText = scanner.nextLine();
             }
 
             data.add(new BasicNameValuePair("captchagid", captcha ? capGID : "-1"));

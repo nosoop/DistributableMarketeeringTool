@@ -10,6 +10,8 @@ import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -21,6 +23,7 @@ public class SteamChatWindow extends javax.swing.JFrame {
     int currentTabIndex = -1;
     FrontendClient client;
     Map<FriendData, SteamChatTab> activeFriendChats;
+    Logger logger;
     
     /**
      * Creates new form ChatWindow
@@ -28,6 +31,8 @@ public class SteamChatWindow extends javax.swing.JFrame {
     public SteamChatWindow(FrontendClient client) {
         initComponents();
         this.setLocationRelativeTo(null);
+        
+        this.logger = LoggerFactory.getLogger(SteamChatWindow.class.getSimpleName());
         
         this.client = client;
         
@@ -103,7 +108,7 @@ public class SteamChatWindow extends javax.swing.JFrame {
         int newTabIndex = chatTabPanel.getSelectedIndex();
         
         if (tabClosing) {
-            System.out.printf("%d, %d\n", newTabIndex, chatTabPanel.getTabCount());
+            logger.trace("New tab: {}, total tabs {}.", newTabIndex, chatTabPanel.getTabCount());
             
             newTabIndex = (newTabIndex == chatTabPanel.getTabCount()-1) ?
                     newTabIndex : newTabIndex + 1;

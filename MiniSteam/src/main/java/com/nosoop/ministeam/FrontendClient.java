@@ -5,7 +5,6 @@
 package com.nosoop.ministeam;
 
 import net.sourceforge.iharder.base64.Base64;
-import com.live.poonso.poopydebug.DebugPrint;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,6 +38,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import bundled.steamtrade.org.json.JSONException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -74,10 +75,9 @@ public class FrontendClient {
     TradePoller tradePoller;
     //
     CallbackMgr callbackManager;
+    Logger logger = LoggerFactory.getLogger(FrontendClient.class.getSimpleName());
 
     public FrontendClient() {
-        DebugPrint.setDebug(true);
-
         loginDialog = new SteamLoginDialog(null, false, FrontendClient.this);
         loginDialog.setVisible(true);
         loginDialog.setLoginStatus("Connecting to the Steam network.");
@@ -100,7 +100,7 @@ public class FrontendClient {
 
         callbackManager = new CallbackMgr();
 
-        DebugPrint.println("Connecting to the Steam network...");
+        logger.info("Connecting to the Steam network...");
         steamClient.connect();
 
         // Schedule trade poller to poll every second when in a trade.
@@ -142,7 +142,7 @@ public class FrontendClient {
             // Print to output if not a common callback.
             if (!(msg instanceof PersonaStateCallback)
                     && !(msg instanceof SessionTokenCallback)) {
-                DebugPrint.printf("Received callback %s.\n",
+                logger.info("Received callback {}.",
                         msg.getClass().getSimpleName());
             }
 
@@ -154,7 +154,7 @@ public class FrontendClient {
                 @Override
                 public void call(ConnectedCallback callback) {
                     if (callback.getResult() != EResult.OK) {
-                        DebugPrint.printf("Unable to connect to Steam: %s\n",
+                        logger.info("Unable to connect to Steam: {}",
                                 callback.getResult().getClass().getName());
                         isRunning = false;
                     } else {
@@ -168,7 +168,7 @@ public class FrontendClient {
                 // Disconnected form Steam.
                 @Override
                 public void call(DisconnectedCallback callback) {
-                    DebugPrint.println("Disconnected from Steam.  Retrying in one.");
+                    logger.error("Disconnected from Steam.  Retrying in one.");
 
                     /**
                      * Try to reconnect after a second.
@@ -176,7 +176,7 @@ public class FrontendClient {
                     clientExec.schedule(new Runnable() {
                         @Override
                         public void run() {
-                            DebugPrint.println("Retrying connection.");
+                            logger.info("Retrying connection.");
                             steamClient.connect();
                         }
                     }, 1, TimeUnit.SECONDS);
@@ -191,7 +191,7 @@ public class FrontendClient {
                         String dialogMessage = String.format("Account is SteamGuard protected.\nEnter the authentication code sent to the address at %s.", callback.getEmailDomain());
 
                         authcode = JOptionPane.showInputDialog(null, dialogMessage, "SteamGuard", JOptionPane.INFORMATION_MESSAGE);
-                        DebugPrint.println("Submitting authentication code " + authcode);
+                        logger.info("Submitting authentication code " + authcode);
 
                         // Force a disconnect because it won't try logging in on its own.
                         steamClient.disconnect();
@@ -207,7 +207,7 @@ public class FrontendClient {
                     }
 
                     if (callback.getResult() == EResult.OK) {
-                        DebugPrint.println("Successfully signed in to Steam!");
+                        logger.info("Successfully signed in to Steam!");
 
                         // TODO Move login code.
                         loginDialog.onSuccessfulLogin();
@@ -220,7 +220,7 @@ public class FrontendClient {
                         return;
                     }
 
-                    System.out.println(callback.getResult());
+                    logger.trace(callback.getResult().name());
                 }
             });
 
@@ -228,7 +228,7 @@ public class FrontendClient {
                 // Told to log off by Steam for some reason or other.
                 @Override
                 public void call(LoggedOffCallback callback) {
-                    DebugPrint.printf("Logged off of Steam with result %s.\n", callback.getResult());
+                    logger.info("Logged off of Steam with result {}.", callback.getResult());
                     // LogonSessionReplaced:  Another instance of Steam is using the account.
                 }
             });
@@ -299,14 +299,13 @@ public class FrontendClient {
                     }
                     try {
                         u.login(clientInfo.getAccountUsername(), clientInfo.getAccountPassword());
-                        DebugPrint.println("SteamWeb login authenticated.");
+                        logger.info("SteamWeb login authenticated.");
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        logger.error("SteamWeb Login Failre", e);
                     }
 
                     List<Cookie> cookies = u.getCookies();
                     for (Cookie c : cookies) {
-                        //System.out.printf("%s = %s\n", c.getName(), c.getValue());
                         if (c.getName().equals("steamLogin")) {
                             token = c.getValue();
                         }
@@ -326,7 +325,7 @@ public class FrontendClient {
                 @Override
                 public void call(TradeProposedCallback callback) {
                     // TODO Not automatically accept trade.
-                    DebugPrint.printf("Trade request received from [%s].\n",
+                    logger.info("Trade request received from [{}].",
                             callback.getOtherClient().render());
 
                     if (!isReadyToTrade) {
@@ -356,7 +355,7 @@ public class FrontendClient {
                         tradePoller.setCurrentTradeSession(new TradeSession(steamUser.getSteamId().convertToLong(), callback.getOtherClient().convertToLong(), sessionId, token, listener));
                     } catch (final Exception e) {
                         // Error during construction.
-                        e.printStackTrace();
+                        logger.error("Error during trade init.", e);
 
                         steamFriends.sendChatMessage(callback.getOtherClient(), EChatEntryType.ChatMsg, "Whoops!  Something went wrong.");
                         steamTrade.cancelTrade(callback.getOtherClient());
@@ -370,7 +369,6 @@ public class FrontendClient {
                 // We have sent a trade request; the other client responded.
                 @Override
                 public void call(TradeResultCallback callback) {
-                    //System.out.println(callback.getResponse().name());
                     switch (callback.getResponse()) {
                         case Accepted:
                             // The other client has accepted the trade.
@@ -402,7 +400,7 @@ public class FrontendClient {
                 @Override
                 public void call(WalletInfoCallback callback) {
                     if (callback.isHasWallet()) {
-                        System.out.printf("Wallet balance: %d %s\n",
+                        logger.info("Wallet balance: {} {}",
                                 callback.getBalance(), callback.getCurrency().name());
                     }
                 }
@@ -432,7 +430,7 @@ public class FrontendClient {
          * @param jobID The id number of the job. Used for auth.
          */
         void handleSteamJobMessage(CallbackMsg msg, final long jobID) {
-            DebugPrint.printf("Received callback %s (JobCallback)\n",
+            logger.info("Received callback {} (JobCallback)",
                     msg.getClass().getSimpleName());
 
             // Go update your SteamGuard file.  Or make a new one.
@@ -440,19 +438,19 @@ public class FrontendClient {
                     new ActionT<UpdateMachineAuthCallback>() {
                 @Override
                 public void call(UpdateMachineAuthCallback callback) {
-                    DebugPrint.println("Creating authentication file...");
+                    logger.trace("Creating authentication file...");
                     byte[] sentryHash = CryptoHelper.SHAHash(callback.getData());
 
-                    try {
-                        BufferedOutputStream fo = new BufferedOutputStream(
-                                new FileOutputStream(sentryFile));
+                    try (BufferedOutputStream fo = new BufferedOutputStream(
+                            new FileOutputStream(sentryFile))) {
+
                         fo.write(callback.getData());
                         fo.flush();
-                        fo.close();
                     } catch (FileNotFoundException ex) {
                     } catch (IOException ex) {
                     }
 
+                    // Respond by saying you did what you were told.
                     MachineAuthDetails machineAuth = new MachineAuthDetails();
                     {
                         machineAuth.jobId = jobID;
@@ -480,7 +478,7 @@ public class FrontendClient {
     final String SENTRY_BIN_FILENAME = "sentry_%s.bin";
 
     void doLogin() {
-        DebugPrint.printf("Connected to Steam.  Logging in as user %s.\n", clientInfo.getAccountUsername());
+        logger.info("Connected to Steam.  Logging in as user {}.", clientInfo.getAccountUsername());
 
         String fileName = String.format(SENTRY_BIN_FILENAME, clientInfo.getAccountUsername());
 
@@ -489,7 +487,7 @@ public class FrontendClient {
         byte[] sentryHash = null;
 
         if (sentryFile.exists()) {
-            DebugPrint.println("Using sentryfile " + sentryFile.getName() + " for sign-in...");
+            logger.info("Using sentryfile {} for sign-in...", sentryFile.getName());
 
             try {
                 FileInputStream fi = new FileInputStream(sentryFile);
@@ -503,7 +501,7 @@ public class FrontendClient {
                 // We already checked to see if the file is available, dipshit.
                 throw new Error("It's pointless.  Just give up already.");
             } catch (IOException ex) {
-                ex.printStackTrace();
+                logger.error("Sentry file dun goofed.", ex);
             }
         }
 
@@ -556,6 +554,7 @@ class FrontendInactivityChecker implements Runnable {
     int lastX, lastY;
     // If user set themselves away, don't automatically set them online.
     boolean autoSetAFK;
+    Logger logger;
 
     public FrontendInactivityChecker(SteamFriends steamFriends) {
         super();
@@ -563,6 +562,8 @@ class FrontendInactivityChecker implements Runnable {
         this.steamFriends = steamFriends;
         this.timeLastActive = System.currentTimeMillis();
 
+        logger = LoggerFactory.getLogger(FrontendInactivityChecker.class.getSimpleName());
+        
         java.awt.Point m = getMousePoint();
         this.lastX = m.x;
         this.lastY = m.y;
@@ -591,7 +592,7 @@ class FrontendInactivityChecker implements Runnable {
                     && autoSetAFK) {
                 steamFriends.setPersonaState(EPersonaState.Snooze);
             } else // If past AFK threshold and not away or snoozed, then set.
-                if (secondsSinceAFK > SECONDS_UNTIL_AWAY
+            if (secondsSinceAFK > SECONDS_UNTIL_AWAY
                     && steamFriends.getPersonaState() != EPersonaState.Away
                     && steamFriends.getPersonaState() != EPersonaState.Snooze) {
                 steamFriends.setPersonaState(EPersonaState.Away);
@@ -606,13 +607,14 @@ class FrontendInactivityChecker implements Runnable {
             if (autoSetAFK && steamFriends.getPersonaState() == EPersonaState.Away) {
                 steamFriends.setPersonaState(EPersonaState.Online);
                 autoSetAFK = false;
-                //System.out.println("AFK unset.");
+                logger.info("AFK unset.");
             }
         }
     }
 
     /**
      * Gets the location of the mouse.
+     *
      * @return A Point object representing the position of the mouse.
      */
     private java.awt.Point getMousePoint() {

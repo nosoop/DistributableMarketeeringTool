@@ -10,10 +10,10 @@ import com.nosoop.steamtrade.inventory.AppContextPair;
 import java.awt.EventQueue;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.table.DefaultTableModel;
 import bundled.steamtrade.org.json.JSONException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A window that allows the user to interact in a Steam trade.
@@ -23,12 +23,15 @@ import bundled.steamtrade.org.json.JSONException;
 public class SteamTradeWindow extends javax.swing.JFrame {
 
     FrontendTrade tradeListener;
+    Logger logger;
 
     /**
      * Creates new form SteamTradeWindow
      */
     SteamTradeWindow(FrontendTrade trade, String otherPlayerName) {
         initComponents();
+        this.logger = LoggerFactory.getLogger(SteamTradeWindow.class.getSimpleName());
+
         this.setLocationRelativeTo(null);
 
         this.tradeListener = trade;
@@ -455,7 +458,7 @@ public class SteamTradeWindow extends javax.swing.JFrame {
                     try {
                         tradeListener.trade.getCmds().acceptTrade();
                     } catch (JSONException ex) {
-                        ex.printStackTrace();
+                        logger.error("Error on complete trade button", ex);
                     }
                 }
             });
@@ -466,7 +469,7 @@ public class SteamTradeWindow extends javax.swing.JFrame {
         try {
             tradeListener.trade.getCmds().cancelTrade();
         } catch (JSONException ex) {
-            Logger.getLogger(SteamTradeWindow.class.getName()).log(Level.SEVERE, null, ex);
+            logger.error("Error on pressing cancel trade button", ex);
         }
     }//GEN-LAST:event_cancelTradeButtonActionPerformed
 
@@ -474,7 +477,7 @@ public class SteamTradeWindow extends javax.swing.JFrame {
         try {
             tradeListener.trade.getCmds().cancelTrade();
         } catch (JSONException ex) {
-            Logger.getLogger(SteamTradeWindow.class.getName()).log(Level.SEVERE, null, ex);
+            logger.error("Error on closing trade window", ex);
         }
     }//GEN-LAST:event_formWindowClosed
 

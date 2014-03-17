@@ -15,6 +15,8 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.swing.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
 import uk.co.thomasc.steamkit.types.steamid.SteamID;
 
@@ -35,6 +37,9 @@ public class SteamChatTab extends javax.swing.JPanel {
     PrintWriter chatlog;
     
     static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss a");
+    
+    final Logger LOGGER =
+            LoggerFactory.getLogger(SteamChatTab.class.getSimpleName());
     
 
     /**
@@ -104,7 +109,7 @@ public class SteamChatTab extends javax.swing.JPanel {
                 // Create the PrintWriter for the chatlog.
                 chatlog = new PrintWriter(new BufferedWriter(new FileWriter(filename, true)));
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error("Error writing to log file", e);
             }
         }
         

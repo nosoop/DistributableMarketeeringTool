@@ -8,12 +8,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Scanner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author nosoop < nosoop at users.noreply.github.com >
  */
 public class Util {
+    static Logger logger = LoggerFactory.getLogger(Util.class.getSimpleName());
+    
     public static String readFile(File file) {
         StringBuilder buff = new StringBuilder();
         try {
@@ -23,7 +27,7 @@ public class Util {
             }
             return buff.toString();
         } catch (FileNotFoundException ex) {
-            ex.printStackTrace();
+            logger.error("Error reading file", ex);
         }
         return buff.toString();
     }

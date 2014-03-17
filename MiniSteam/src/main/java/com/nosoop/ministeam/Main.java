@@ -4,6 +4,9 @@
  */
 package com.nosoop.ministeam;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * The main class.  Launches one instance of the FrontendClient.
  * 
@@ -11,6 +14,8 @@ package com.nosoop.ministeam;
  */
 public class Main {
 
+    static Logger logger = LoggerFactory.getLogger(SteamMainWindow.class.getSimpleName());
+    
     /**
      * @param args the command line arguments
      */
@@ -22,7 +27,7 @@ public class Main {
             javax.swing.UIManager.setLookAndFeel(
                     javax.swing.UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(SteamMainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            logger.error("Error setting System L&F", ex);
         }
         //</editor-fold>
 

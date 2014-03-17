@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.JOptionPane;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A TradeListener that receives input from .
@@ -29,9 +31,12 @@ public class FrontendTrade extends TradeListener {
     private final short MAX_ITEMS_IN_TRADE = 256;
     private TradeInternalItem ourTradeSlotsFilled[];
     String otherPlayerName;
+    Logger logger;
 
     public FrontendTrade(FrontendClient client, String otherPlayerName) {
         super();
+        
+        this.logger = LoggerFactory.getLogger(FrontendTrade.class.getSimpleName());
 
         this.client = client;
         this.tradeWindow = new SteamTradeWindow(this, otherPlayerName);
@@ -109,7 +114,7 @@ public class FrontendTrade extends TradeListener {
     public String getItemName(TradeInternalItem inventoryItem) {
         String invName = inventoryItem.getDisplayName();
         
-        System.out.println("Got display.");
+        logger.trace("Got display.");
 
         // Format item name for renamed items.
         if (inventoryItem.isRenamed()) {
@@ -117,14 +122,14 @@ public class FrontendTrade extends TradeListener {
                     inventoryItem.getDisplayName(), inventoryItem.getMarketName());
         }
 
-        System.out.println("Checked if renamed.");
+        logger.trace("Checked if renamed.");
         
         // Format item name for gifted items.
         if (inventoryItem.wasGifted()) {
             invName = String.format("%s (gifted)", invName);
         }
         
-        System.out.println("Check if gifted.");
+        logger.trace("Check if gifted.");
 
         return invName;
     }
@@ -287,7 +292,7 @@ public class FrontendTrade extends TradeListener {
 
     @Override
     public void onUserAddItem(TradeInternalItem inventoryItem) {
-        System.out.println("Getting name.");
+        logger.trace("Getting name.");
         String invName = getItemName(inventoryItem);
 
         if (otherOfferedItems.containsKey(invName)) {
@@ -354,7 +359,7 @@ public class FrontendTrade extends TradeListener {
     public void onUnknownAction(TradeEvent event) {
         int action = event.action;
 
-        System.out.printf("Unknown action: %d%n%s%n", action,
+        logger.trace("Unknown action: {} -- {}", action, 
                 event.getJSONObject());
 
         boolean isBot = !event.steamid.equals(String.valueOf(trade.getPartnerSteamId()));
@@ -374,16 +379,16 @@ public class FrontendTrade extends TradeListener {
 
                     TradeInternalCurrency item = trade.getPartner().getInventories().getInventory(event.appid, event.contextid).getCurrency(event.assetid);
 
-                    System.out.println("Name: " + item.getDisplayName());
-                    System.out.println("Market name: " + item.getMarketName());
+                    logger.trace("Name: {}", item.getDisplayName());
+                    logger.trace("Market name: {}", item.getMarketName());
 
                     this.onUserAddItem(item);
-                    System.out.println("Added item.");
+                    logger.trace("Added item.");
                 }
                 break;
             default:
                 break;
         }
-        System.out.println("Added item.");
+        logger.trace("Added item.");
     }
 }
