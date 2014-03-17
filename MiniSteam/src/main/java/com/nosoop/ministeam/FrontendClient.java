@@ -295,7 +295,6 @@ public class FrontendClient {
                     u.addCookie("sessionid", sessionId, true);
 
                     if (clientInfo.getAccountToken() != null) {
-                        // 
                         u.addCookie("steamMachineAuth" + steamUser.getSteamId().convertToLong(), clientInfo.getAccountToken(), true);
                     }
                     try {
@@ -514,9 +513,6 @@ public class FrontendClient {
                 .authCode(authcode);
         loginData.sentryFileHash = sentryHash;
 
-        System.out.printf("%s%n%s%n", clientInfo.getAccountUsername(),
-                clientInfo.getAccountPassword());
-
         steamUser.logOn(loginData);
     }
 
@@ -554,6 +550,7 @@ class FrontendInactivityChecker implements Runnable {
 
     final int SECONDS_UNTIL_AWAY = 5 * 60; // 5 minutes
     final int SECONDS_UNTIL_SNOOZE = 60 * 60 * 2; // 2 hours
+    // TODO Implement auto-snooze.
     SteamFriends steamFriends;
     long timeLastActive;
     int lastX, lastY;
@@ -589,8 +586,12 @@ class FrontendInactivityChecker implements Runnable {
             int secondsSinceAFK =
                     (int) (System.currentTimeMillis() - timeLastActive) / 1000;
 
-            // If past AFK threshold and not away or snoozed, then set.
-            if (secondsSinceAFK > SECONDS_UNTIL_AWAY
+            if (secondsSinceAFK > SECONDS_UNTIL_SNOOZE
+                    && steamFriends.getPersonaState() == EPersonaState.Away
+                    && autoSetAFK) {
+                steamFriends.setPersonaState(EPersonaState.Snooze);
+            } else // If past AFK threshold and not away or snoozed, then set.
+                if (secondsSinceAFK > SECONDS_UNTIL_AWAY
                     && steamFriends.getPersonaState() != EPersonaState.Away
                     && steamFriends.getPersonaState() != EPersonaState.Snooze) {
                 steamFriends.setPersonaState(EPersonaState.Away);
