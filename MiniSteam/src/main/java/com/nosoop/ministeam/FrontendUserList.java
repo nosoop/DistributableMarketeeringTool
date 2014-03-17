@@ -8,7 +8,6 @@ import bundled.steamtrade.org.json.JSONArray;
 import bundled.steamtrade.org.json.JSONException;
 import bundled.steamtrade.org.json.JSONObject;
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -24,7 +23,6 @@ public class FrontendUserList {
     private static Map<String, FrontendClientInfo> userStore = new TreeMap<>();
     
     static {
-        //userList.put("", new UserProperty("", null));
         userStore.put("", new FrontendClientInfo("", "", null));
         
         try {
@@ -38,7 +36,7 @@ public class FrontendUserList {
                 userStore.put(client.getString("username"), 
                         new FrontendClientInfo(client.getString("username"),
                         client.optString("password", ""),
-                        client.optString("authval", null))
+                        client.optString("machineauth", null))
                         );
             }
         } catch (JSONException ex) {
