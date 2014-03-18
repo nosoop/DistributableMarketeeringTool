@@ -20,6 +20,11 @@ Currently in prerelease format as pulled out from my working files -- if you som
 
 Uses the [SteamKit-Java library](https://github.com/Top-Cat/SteamKit-Java) for Steam connectivity and the [SteamTrade-Java library](https://github.com/nosoop/SteamTrade-Java) for trades.
 
+Screenshots
+-----------
+
+[In-progress screenshots are available as an imgur album here.](http://imgur.com/a/Nv9xH#0)
+
 
 Slow Starts
 ===========
