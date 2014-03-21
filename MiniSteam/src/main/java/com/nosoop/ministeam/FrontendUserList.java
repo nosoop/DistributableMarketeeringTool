@@ -28,17 +28,21 @@ public class FrontendUserList {
         userStore.put("", new FrontendClientInfo("", "", null));
 
         try {
-            JSONObject data = new JSONObject(Util.readFile(USERDATA_FILE));
+            if (USERDATA_FILE.exists()) {
+                JSONObject data = new JSONObject(Util.readFile(USERDATA_FILE));
 
-            JSONArray clients = data.getJSONArray("clients");
+                JSONArray clients = data.getJSONArray("clients");
 
-            for (int i = 0; i < clients.length(); i++) {
-                JSONObject client = clients.getJSONObject(i);
+                for (int i = 0; i < clients.length(); i++) {
+                    JSONObject client = clients.getJSONObject(i);
 
-                userStore.put(client.getString("username"),
-                        new FrontendClientInfo(client.getString("username"),
-                        client.optString("password", ""),
-                        client.optString("machineauth", null)));
+                    userStore.put(client.getString("username"),
+                            new FrontendClientInfo(client.getString("username"),
+                            client.optString("password", ""),
+                            client.optString("machineauth", null)));
+                }
+            } else {
+                logger.error("User credential storage file does not exist.");
             }
         } catch (JSONException ex) {
             logger.error("Error loading user storage.", ex);
