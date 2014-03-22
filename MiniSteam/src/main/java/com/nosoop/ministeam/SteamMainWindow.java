@@ -342,15 +342,15 @@ public class SteamMainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_playerStatusBoxActionPerformed
 
     private void friendTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_friendTableMouseClicked
-        int targetRow = ((javax.swing.JTable) evt.getSource()).getSelectedRow();
+        int targetRow = friendTable.getSelectedRow();
 
         if (evt.getClickCount() == 2
                 && evt.getButton() == MouseEvent.BUTTON1) {
 
             if (targetRow >= 0) {
-                targetRow = ((javax.swing.JTable) evt.getSource()).convertRowIndexToModel(targetRow);
+                targetRow = friendTable.convertRowIndexToModel(targetRow);
                 
-                FriendData user = (FriendData) ((javax.swing.JTable) evt.getSource()).getModel().getValueAt(targetRow, 0);
+                FriendData user = (FriendData) friendTable.getModel().getValueAt(targetRow, 0);
                 
                 chatWindow.addNewChat(user);
                 chatWindow.setVisible(true);
@@ -366,6 +366,13 @@ public class SteamMainWindow extends javax.swing.JFrame {
 
     private void friendTableMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_friendTableMouseReleased
         int r = friendTable.rowAtPoint(evt.getPoint());
+        
+        // Show exactly which row we're acting on.
+        if (r >= 0 && r < friendTable.getRowCount()) {
+            friendTable.setRowSelectionInterval(r, r);
+        } else {
+            friendTable.clearSelection();
+        }
 
         // Open menu for current person.
         if (evt.getButton() == MouseEvent.BUTTON3) {
