@@ -271,15 +271,16 @@ public class SteamMainWindow extends javax.swing.JFrame {
         friendTable.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         friendTable.setFillsViewportHeight(true);
         friendTable.setFocusable(false);
+        friendTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         friendTable.setShowHorizontalLines(false);
         friendTable.setShowVerticalLines(false);
         friendTable.getTableHeader().setReorderingAllowed(false);
         friendTable.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                friendTableMouseClicked(evt);
-            }
             public void mouseReleased(java.awt.event.MouseEvent evt) {
                 friendTableMouseReleased(evt);
+            }
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                friendTableMouseClicked(evt);
             }
         });
         jScrollPane2.setViewportView(friendTable);
@@ -365,12 +366,8 @@ public class SteamMainWindow extends javax.swing.JFrame {
 
     private void friendTableMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_friendTableMouseReleased
         int r = friendTable.rowAtPoint(evt.getPoint());
-        if (r >= 0 && r < friendTable.getRowCount()) {
-            friendTable.setRowSelectionInterval(r, r);
-        } else {
-            friendTable.clearSelection();
-        }
 
+        // Open menu for current person.
         if (evt.getButton() == MouseEvent.BUTTON3) {
             if (r >= 0) {
                 selectedFriend = (FriendData) friendTable.getValueAt(r, 0);
