@@ -93,15 +93,18 @@ public class SteamChatTab extends javax.swing.JPanel {
         // If a chat log hasn't been created, make one.
         if (chatlog == null) {
             try {
+                String logFolder = String.format(".\\log\\%d",
+                        client.steamClient.getSteamId().convertToLong());
                 
                 // Generate filename, stripping out invalid characters.
-                String filename = String.format(".\\log\\%s - %d - %s.txt",
+                String filename = String.format("%s\\%s - %d - %s.txt",
+                        logFolder,
                         friend.getSteamID().render().replaceAll(":", "_"),
                         System.currentTimeMillis(),
                         friend.getName().replaceAll("[\\\\/:\"*?<>|]+", "_"));
                 
-                if (!(new File(".\\log\\")).exists()) {
-                    (new File(".\\log\\")).mkdir();
+                if (!(new File(logFolder)).exists()) {
+                    (new File(logFolder)).mkdirs();
                 }
                 
                 (new File(filename)).createNewFile();
