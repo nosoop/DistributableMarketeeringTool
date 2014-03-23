@@ -13,7 +13,6 @@ import javax.swing.DefaultComboBoxModel;
  * @author nosoop < nosoop at users.noreply.github.com >
  */
 public class SteamLoginDialog extends javax.swing.JDialog {
-    
     FrontendClient client;
     Map<String, FrontendClientInfo> userInfo;
     boolean signedIn;
@@ -25,7 +24,7 @@ public class SteamLoginDialog extends javax.swing.JDialog {
             FrontendClient client) {
         super(parent, modal);
         initComponents();
-        
+
         this.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosed(java.awt.event.WindowEvent e) {
@@ -34,40 +33,40 @@ public class SteamLoginDialog extends javax.swing.JDialog {
                 }
             }
         });
-        
+
         this.setLocationRelativeTo(null);
         this.setEnabled(true);
-        
+
         signedIn = false;
-        
+
         this.client = client;
-        
+
         userInfo = FrontendUserList.getUserList();
-        
+
         final DefaultComboBoxModel model = (DefaultComboBoxModel) accountUserField.getModel();
         for (String user : userInfo.keySet()) {
             model.addElement(user);
         }
     }
-    
+
     public void setLoginStatus(String text) {
         loginStatusLabel.setText(String.format("Status: %s", text));
     }
-    
+
     public void setInputState(boolean enabled) {
         accountPasswordField.setEnabled(enabled);
         accountUserField.setEnabled(enabled);
         loginButton.setEnabled(enabled);
         rememberLoginCheckbox.setEnabled(enabled);
     }
-    
+
     public void onSuccessfulLogin() {
         setLoginStatus("Signed in!");
         setVisible(false);
         signedIn = true;
         dispose();
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -191,17 +190,18 @@ public class SteamLoginDialog extends javax.swing.JDialog {
     private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
         String username = accountUserField.getEditor().getItem().toString();
         String password = String.valueOf(accountPasswordField.getPassword());
-        
+
         setLoginStatus("Signing in...");
-        
-        if (userInfo.containsKey(username) &&
-                userInfo.get(username).getAccountPassword().equals(password)) {
+
+        // TODO Remove this while keeping authdata?
+        if (userInfo.containsKey(username)
+                && userInfo.get(username).getAccountPassword().equals(password)) {
             client.setClientInfo(userInfo.get(username));
         } else {
             client.setClientInfo(
-                new FrontendClientInfo(username, password, null));
+                    new FrontendClientInfo(username, password, null));
         }
-        
+
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -209,21 +209,22 @@ public class SteamLoginDialog extends javax.swing.JDialog {
             }
         });
     }//GEN-LAST:event_loginButtonActionPerformed
-    
+
     private void accountUserFieldItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_accountUserFieldItemStateChanged
         // If there was already an account saved, load the password.
         String password;
-        
-        if ((password = userInfo.get(evt.getItem().toString()).getAccountPassword()) != null) {
-            accountPasswordField.setText(password);
+
+        if (userInfo.containsKey(evt.getItem().toString())) {
+            if ((password = userInfo.get(evt.getItem().toString()).getAccountPassword()) != null) {
+                accountPasswordField.setText(password);
+            }
         }
-        
+
     }//GEN-LAST:event_accountUserFieldItemStateChanged
-    
+
     private void quitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_quitButtonActionPerformed
         client.quit();
     }//GEN-LAST:event_quitButtonActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPasswordField accountPasswordField;
     private javax.swing.JLabel accountPasswordLabel;
