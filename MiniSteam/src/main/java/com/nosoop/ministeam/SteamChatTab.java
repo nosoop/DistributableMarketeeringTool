@@ -143,6 +143,13 @@ public class SteamChatTab extends javax.swing.JPanel {
         // Close file handle to the chatlog when the tab is removed.
         chatlog.close();
     }
+    
+    @Override
+    public void setVisible(boolean visible) {
+        // Makes the text entry field take focus on tab change.
+        super.setVisible(visible);
+        messageEntryField.requestFocusInWindow();
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -163,6 +170,7 @@ public class SteamChatTab extends javax.swing.JPanel {
         playerNameLabel.setText("[other player name]");
 
         tradeButton.setText("Send Trade Request");
+        tradeButton.setFocusable(false);
         tradeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tradeButtonActionPerformed(evt);
@@ -171,6 +179,7 @@ public class SteamChatTab extends javax.swing.JPanel {
 
         playerStatusLabel.setText("[other player status]");
 
+        messageTextPane.setFocusable(false);
         jScrollPane1.setViewportView(messageTextPane);
 
         messageEntryField.setFocusCycleRoot(true);
@@ -187,13 +196,13 @@ public class SteamChatTab extends javax.swing.JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(playerStatusLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 237, Short.MAX_VALUE)
                             .addComponent(playerNameLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(tradeButton))
+                    .addComponent(jScrollPane1)
                     .addComponent(messageEntryField))
                 .addContainerGap())
         );
