@@ -46,7 +46,6 @@ import org.slf4j.LoggerFactory;
  * @author nosoop < nosoop at users.noreply.github.com >
  */
 public class FrontendClient {
-
     public boolean isLoggedIn = false;
     //
     public SteamFriends steamFriends;
@@ -114,7 +113,6 @@ public class FrontendClient {
      * handles them.
      */
     private class CallbackGetter implements Runnable {
-
         @Override
         public void run() {
             CallbackMsg msg;
@@ -130,7 +128,6 @@ public class FrontendClient {
      * Class that groups all the callback handlers together.
      */
     private class CallbackMgr {
-
         /**
          * A collection of handlers for Steam callback messages.
          *
@@ -185,6 +182,8 @@ public class FrontendClient {
                 // Logged on to Steam, or attempted to login and SteamGuard-blocked.
                 @Override
                 public void call(LoggedOnCallback callback) {
+                    logger.debug("Logon enum value: {}", callback.getResult().name());
+
                     if (callback.getResult() == EResult.AccountLogonDenied) {
                         String dialogMessage = String.format("Account is SteamGuard protected.\nEnter the authentication code sent to the address at %s.", callback.getEmailDomain());
 
@@ -217,8 +216,6 @@ public class FrontendClient {
                         mainWindow.setVisible(true);
                         return;
                     }
-
-                    logger.debug(callback.getResult().name());
                 }
             });
 
@@ -283,8 +280,12 @@ public class FrontendClient {
             msg.handle(LoginKeyCallback.class, new ActionT<LoginKeyCallback>() {
                 @Override
                 public void call(LoginKeyCallback callback) {
+                    /**
+                     * TODO Implement support for storing the authorized login
+                     * data and enable automatic client authentication for those
+                     * that have it working.
+                     */
                     // Hopefully we only need to do this once.
-
                     sessionId = Base64.encodeBytes(String.valueOf(callback.getUniqueId()).getBytes());
 
                     TradeUser u = new TradeUser();
@@ -472,8 +473,9 @@ public class FrontendClient {
             });
         }
     }
-    // Hardcoded sentry file name format.
+
     final String SENTRY_BIN_FILENAME = "sentry_%s.bin";
+    // Hardcoded sentry file name format.
 
     void doLogin() {
         logger.info("Connected to Steam.  Logging in as user {}.", clientInfo.getAccountUsername());
@@ -542,7 +544,6 @@ public class FrontendClient {
      * @author nosoop < nosoop at users.noreply.github.com >
      */
     class FrontendInactivityChecker implements Runnable {
-
         final int SECONDS_UNTIL_AWAY = 5 * 60; // 5 minutes
         final int SECONDS_UNTIL_SNOOZE = 60 * 60 * 2; // 2 hours
         // TODO Implement auto-snooze.
@@ -616,10 +617,10 @@ public class FrontendClient {
             return java.awt.MouseInfo.getPointerInfo().getLocation();
         }
     }
+
 }
 
 class TradePoller implements Runnable {
-
     TradeSession t;
 
     public TradePoller() {
