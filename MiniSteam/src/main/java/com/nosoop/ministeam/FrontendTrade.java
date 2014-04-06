@@ -18,12 +18,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A TradeListener that receives input from .
+ * A TradeListener that receives user input from a window..
  *
  * @author nosoop < nosoop at users.noreply.github.com >
  */
 public class FrontendTrade extends TradeListener {
-
     FrontendClient client;
     SteamTradeWindow tradeWindow;
     Map<String, TradeOurDisplayItem> myInventoryItems;
@@ -35,11 +34,13 @@ public class FrontendTrade extends TradeListener {
 
     public FrontendTrade(FrontendClient client, String otherPlayerName) {
         super();
-        
+
         this.logger = LoggerFactory.getLogger(FrontendTrade.class);
+        logger.debug("Opening up trade window.");
 
         this.client = client;
         this.tradeWindow = new SteamTradeWindow(this, otherPlayerName);
+        logger.debug("Created trade window.");
 
         this.otherPlayerName = otherPlayerName;
 
@@ -114,8 +115,8 @@ public class FrontendTrade extends TradeListener {
      */
     public String getItemName(TradeInternalItem inventoryItem) {
         String invName = inventoryItem.getDisplayName();
-        
-        logger.debug("Got display.");
+
+        logger.trace("Got display name for {}.", invName);
 
         // Format item name for renamed items.
         if (inventoryItem.isRenamed()) {
@@ -123,14 +124,14 @@ public class FrontendTrade extends TradeListener {
                     inventoryItem.getDisplayName(), inventoryItem.getMarketName());
         }
 
-        logger.debug("Checked if renamed.");
-        
+        logger.trace("Checked if renamed: {}.", inventoryItem.isRenamed());
+
         // Format item name for gifted items.
         if (inventoryItem.wasGifted()) {
             invName = String.format("%s (gifted)", invName);
         }
-        
-        logger.debug("Check if gifted.");
+
+        logger.trace("Checked if gifted: {}.", inventoryItem.wasGifted());
 
         return invName;
     }
@@ -267,10 +268,16 @@ public class FrontendTrade extends TradeListener {
                 estr = "Trade failed.";
                 break;
             default:
-                estr = "Unknown error (eid:" + eid + ").";
+                estr = "Unknown error code " + eid + ".";
+        }
+
+        // TODO make message null checking refer to the library value.
+        if (message != null) {
+            estr += " (" + message + ")";
         }
 
         JOptionPane.showMessageDialog(tradeWindow, estr);
+        onTradeClosed();
     }
 
     @Override
@@ -305,6 +312,7 @@ public class FrontendTrade extends TradeListener {
             otherOfferedItems.put(invName, it);
         }
         tradeWindow.updateTradeCount(false, otherOfferedItems.values());
+        logger.info("Item {} added.", invName);
     }
 
     @Override
@@ -360,36 +368,47 @@ public class FrontendTrade extends TradeListener {
     public void onUnknownAction(TradeEvent event) {
         int action = event.action;
 
-        logger.debug("Unknown action: {} -- {}", action, 
+        logger.debug("Unknown action {}: {}", action,
                 event.getJSONObject());
 
         boolean isBot = !event.steamid.equals(String.valueOf(trade.getPartnerSteamId()));
-        
+        logger.debug("Is bot action? {}", isBot);
+
         // TODO Complete implementation of currency.
-        
+
         switch (event.action) {
             case TradeAction.CURRENCY_CHANGED:
+                logger.debug("Event currency changed.");
                 if (!isBot) {
                     /**
                      * If this is the other user and we don't have their
                      * inventory yet, then we will load it.
                      */
                     if (!trade.getPartner().getInventories().hasInventory(event.appid, event.contextid)) {
-                        //trade.addForeignInventory(event.appid, event.contextid);
+                        trade.getCmds().addForeignInventory(event.appid, event.contextid);
+                        logger.debug("Inventory loaded.");
+                    }
+                    
+                    List<TradeInternalCurrency> currencies = trade.getPartner().getInventories().getInventory(event.appid, event.contextid).getCurrencyList();
+                    for (TradeInternalCurrency c : currencies) {
+                        logger.debug("Currency {}: {}", c.getCurrencyId(), c.getDisplayName());
                     }
 
-                    TradeInternalCurrency item = trade.getPartner().getInventories().getInventory(event.appid, event.contextid).getCurrency(event.assetid);
+                    TradeInternalCurrency item = trade.getPartner().getInventories().getInventory(event.appid, event.contextid).getCurrency(event.currencyid);
 
-                    logger.debug("Name: {}", item.getDisplayName());
-                    logger.debug("Market name: {}", item.getMarketName());
+                    if (item != null) {
+                        logger.debug("Name: {}", item.getDisplayName());
+                        logger.debug("Market name: {}", item.getMarketName());
 
-                    this.onUserAddItem(item);
-                    logger.debug("Added item.");
+                        this.onUserAddItem(item);
+                        logger.debug("Added item.");
+                    } else {
+                        logger.debug("Item was found to be null. Failed to add.");
+                    }
                 }
                 break;
             default:
                 break;
         }
-        logger.debug("Added item.");
     }
 }
