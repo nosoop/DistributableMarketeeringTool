@@ -347,9 +347,13 @@ public class FrontendClient {
                 @Override
                 public void call(SessionStartCallback callback) {
 
+                    logger.debug("Opening up trade window.");
+                    
                     TradeListener listener = new FrontendTrade(FrontendClient.this,
                             steamFriends.getFriendPersonaName(callback.getOtherClient()));
 
+                    logger.debug("Trade window created.");
+                    
                     try {
                         tradePoller.setCurrentTradeSession(new TradeSession(steamUser.getSteamId().convertToLong(), callback.getOtherClient().convertToLong(), sessionId, token, listener));
                     } catch (final Exception e) {
