@@ -35,16 +35,14 @@ public class SteamTradeWindow extends javax.swing.JFrame {
         this.setLocationRelativeTo(null);
 
         this.tradeListener = trade;
+        logger.debug("Trade listener hooked into window.");
 
         this.setTitle(String.format("Trading with %s", otherPlayerName));
         otherOfferPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(String.format("%s's Offer", otherPlayerName)));
-
-        //this.yourInventoryTable.getRowSorter().toggleSortOrder(0);
-
-        //this.yourOfferTable.getRowSorter().toggleSortOrder(0);
-        //this.otherOfferTable.getRowSorter().toggleSortOrder(0);
-
+        logger.debug("Setting titles and borders.");
+        
         this.setVisible(true);
+        logger.debug("Trade window should be visible.");
     }
 
     public void addMessage(String name, String text) {
