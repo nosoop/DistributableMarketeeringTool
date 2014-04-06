@@ -366,6 +366,7 @@ public class FrontendTrade extends TradeListener {
 
     @Override
     public void onUnknownAction(TradeEvent event) {
+        // Just output some stuff on unknown actions.
         int action = event.action;
 
         logger.debug("Unknown action {}: {}", action,
@@ -377,36 +378,6 @@ public class FrontendTrade extends TradeListener {
         // TODO Complete implementation of currency.
 
         switch (event.action) {
-            case TradeAction.CURRENCY_CHANGED:
-                logger.debug("Event currency changed.");
-                if (!isBot) {
-                    /**
-                     * If this is the other user and we don't have their
-                     * inventory yet, then we will load it.
-                     */
-                    if (!trade.getPartner().getInventories().hasInventory(event.appid, event.contextid)) {
-                        trade.getCmds().addForeignInventory(event.appid, event.contextid);
-                        logger.debug("Inventory loaded.");
-                    }
-                    
-                    List<TradeInternalCurrency> currencies = trade.getPartner().getInventories().getInventory(event.appid, event.contextid).getCurrencyList();
-                    for (TradeInternalCurrency c : currencies) {
-                        logger.debug("Currency {}: {}", c.getCurrencyId(), c.getDisplayName());
-                    }
-
-                    TradeInternalCurrency item = trade.getPartner().getInventories().getInventory(event.appid, event.contextid).getCurrency(event.currencyid);
-
-                    if (item != null) {
-                        logger.debug("Name: {}", item.getDisplayName());
-                        logger.debug("Market name: {}", item.getMarketName());
-
-                        this.onUserAddItem(item);
-                        logger.debug("Added item.");
-                    } else {
-                        logger.debug("Item was found to be null. Failed to add.");
-                    }
-                }
-                break;
             default:
                 break;
         }
