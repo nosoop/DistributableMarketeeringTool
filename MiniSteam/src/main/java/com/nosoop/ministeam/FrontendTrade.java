@@ -9,7 +9,6 @@ import com.nosoop.ministeam.trade.TradeOurDisplayItem;
 import com.nosoop.steamtrade.inventory.*;
 import com.nosoop.steamtrade.TradeListener;
 import com.nosoop.steamtrade.status.TradeEvent;
-import com.nosoop.steamtrade.status.TradeEvent.TradeAction;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,25 +112,29 @@ public class FrontendTrade extends TradeListener {
      * @param inventoryItem
      * @return
      */
-    public String getItemName(TradeInternalItem inventoryItem) {
+    public String getItemName(TradeInternalAsset inventoryItem) {
         String invName = inventoryItem.getDisplayName();
 
         logger.trace("Got display name for {}.", invName);
 
-        // Format item name for renamed items.
-        if (inventoryItem.isRenamed()) {
-            invName = String.format("%s (%s)",
-                    inventoryItem.getDisplayName(), inventoryItem.getMarketName());
+        if (inventoryItem instanceof TradeInternalItem) {
+            TradeInternalItem item = (TradeInternalItem) inventoryItem;
+            
+            // Format item name for renamed items.
+            if (item.isRenamed()) {
+                invName = String.format("%s (%s)",
+                        item.getDisplayName(), item.getMarketName());
+            }
+
+            logger.trace("Checked if renamed: {}.", item.isRenamed());
+
+            // Format item name for gifted items.
+            if (item.wasGifted()) {
+                invName = String.format("%s (gifted)", invName);
+            }
+
+            logger.trace("Checked if gifted: {}.", item.wasGifted());
         }
-
-        logger.trace("Checked if renamed: {}.", inventoryItem.isRenamed());
-
-        // Format item name for gifted items.
-        if (inventoryItem.wasGifted()) {
-            invName = String.format("%s (gifted)", invName);
-        }
-
-        logger.trace("Checked if gifted: {}.", inventoryItem.wasGifted());
 
         return invName;
     }
@@ -299,7 +302,7 @@ public class FrontendTrade extends TradeListener {
     }
 
     @Override
-    public void onUserAddItem(TradeInternalItem inventoryItem) {
+    public void onUserAddItem(TradeInternalAsset inventoryItem) {
         logger.debug("Getting name.");
         String invName = getItemName(inventoryItem);
 
@@ -316,7 +319,7 @@ public class FrontendTrade extends TradeListener {
     }
 
     @Override
-    public void onUserRemoveItem(TradeInternalItem inventoryItem) {
+    public void onUserRemoveItem(TradeInternalAsset inventoryItem) {
         String invName = getItemName(inventoryItem);
 
         TradeDisplayItem it = otherOfferedItems.remove(invName);
