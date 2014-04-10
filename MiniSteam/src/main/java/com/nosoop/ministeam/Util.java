@@ -4,9 +4,15 @@
  */
 package com.nosoop.ministeam;
 
+import com.nosoop.steamtrade.assetbuilders.TF2AssetBuilder;
+import com.nosoop.steamtrade.inventory.AssetBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,5 +36,11 @@ public class Util {
             logger.error("Error reading file", ex);
         }
         return buff.toString();
+    }
+    
+    final static Map<Integer, AssetBuilder> ASSET_BUILDERS;
+    static {
+        ASSET_BUILDERS = new HashMap<>();
+        ASSET_BUILDERS.put(440, new TF2AssetBuilder());
     }
 }

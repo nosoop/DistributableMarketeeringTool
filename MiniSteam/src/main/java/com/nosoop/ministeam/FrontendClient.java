@@ -354,8 +354,8 @@ public class FrontendClient {
 
                     logger.debug("Trade window created.");
                     
-                    try {
-                        tradePoller.setCurrentTradeSession(new TradeSession(steamUser.getSteamId().convertToLong(), callback.getOtherClient().convertToLong(), sessionId, token, listener));
+                    try {                        
+                        tradePoller.setCurrentTradeSession(new TradeSession(steamUser.getSteamId().convertToLong(), callback.getOtherClient().convertToLong(), sessionId, token, listener, Util.ASSET_BUILDERS));
                     } catch (final Exception e) {
                         // Error during construction.
                         logger.error("Error during trade init.", e);

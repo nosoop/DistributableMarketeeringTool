@@ -114,28 +114,7 @@ public class FrontendTrade extends TradeListener {
      */
     public String getItemName(TradeInternalAsset inventoryItem) {
         String invName = inventoryItem.getDisplayName();
-
-        logger.trace("Got display name for {}.", invName);
-
-        if (inventoryItem instanceof TradeInternalItem) {
-            TradeInternalItem item = (TradeInternalItem) inventoryItem;
-            
-            // Format item name for renamed items.
-            if (item.isRenamed()) {
-                invName = String.format("%s (%s)",
-                        item.getDisplayName(), item.getMarketName());
-            }
-
-            logger.trace("Checked if renamed: {}.", item.isRenamed());
-
-            // Format item name for gifted items.
-            if (item.wasGifted()) {
-                invName = String.format("%s (gifted)", invName);
-            }
-
-            logger.trace("Checked if gifted: {}.", item.wasGifted());
-        }
-
+        
         return invName;
     }
 
@@ -199,28 +178,6 @@ public class FrontendTrade extends TradeListener {
         }
 
         tradeWindow.setOwnInventoryTable(myInventoryItems.values());
-    }
-
-    /**
-     * Attempts to remove an item from the trade according to defindex.
-     *
-     * @param defIndex Number corresponding to item.
-     * @return True if there was an item matching the defindex and was removed,
-     * false if there was no item.
-     */
-    public final boolean tradeRemoveItemByDefIndex(int defIndex) {
-        for (int i = 0; i < ourTradeSlotsFilled.length; i++) {
-            if (ourTradeSlotsFilled[i] != null) {
-                final TradeInternalItem item = ourTradeSlotsFilled[i];
-
-                if (item.getDefIndex() == defIndex) {
-                    trade.getCmds().removeItem(ourTradeSlotsFilled[i]);
-                    ourTradeSlotsFilled[i] = null;
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     /**
