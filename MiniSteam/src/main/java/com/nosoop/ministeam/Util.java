@@ -9,6 +9,7 @@ import com.nosoop.steamtrade.inventory.AssetBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -36,9 +37,9 @@ public class Util {
         return buff.toString();
     }
     
-    final static Map<Integer, AssetBuilder> ASSET_BUILDERS;
+    final static ArrayList<AssetBuilder> ASSET_BUILDERS;
     static {
-        ASSET_BUILDERS = new HashMap<>();
-        ASSET_BUILDERS.put(440, new TF2AssetBuilder());
+        ASSET_BUILDERS = new ArrayList<>();
+        ASSET_BUILDERS.add(new TF2AssetBuilder());
     }
 }
