@@ -42,6 +42,9 @@ In the future, an "easy install" method may be added to mostly? automate the ins
 On the To-Do
 ============
 
-  * Clean up all this spaghetti.
+  * Clean up all this spaghetti, namely:
+    * Merge the UI with the client-handling classes.
+    * Do some maintainance work on the connectivity (following the previous bullet point).  Flexibility is desired.
+    * Update to reflect changes in SteamTrade-Java, which, of course, follows the previous point on flexibility.
   * Add direct support for the steamLogin token to bypass weblogin. (Well, that, and reimplement the old authentication method for those that actually have it working.  It sure as hell doesn't on mine.)
   * Import sentry files from an installed client to skip SteamGuard, with [the JSON conversion library](https://github.com/nosoop/vdf-json-java), of course.
