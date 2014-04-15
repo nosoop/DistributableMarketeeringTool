@@ -14,7 +14,7 @@ public class CallbackInputFrame<T> extends JFrame {
     
     protected Callback<T> callback;
     
-    public abstract class Callback<T> {
+    public static abstract class Callback<T> {
         public abstract void run(T returnValue);
     }
     

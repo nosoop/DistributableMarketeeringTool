@@ -5,7 +5,7 @@
 package com.nosoop.ministeam2;
 
 import bundled.steamtrade.org.json.JSONException;
-import com.nosoop.ministeam.FrontendClient;
+import com.nosoop.inputdialog.CallbackInputFrame.Callback;
 import com.nosoop.ministeam.FrontendTrade;
 import com.nosoop.steamtrade.TradeListener;
 import com.nosoop.steamtrade.TradeSession;
@@ -13,6 +13,7 @@ import com.nosoop.steamtrade.inventory.AssetBuilder;
 import com.ryanspeets.tradeoffer.TradeUser;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -48,6 +49,7 @@ import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoginKeyCallba
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.SessionTokenCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.UpdateMachineAuthCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.WalletInfoCallback;
+import uk.co.thomasc.steamkit.steam3.handlers.steamuser.types.LogOnDetails;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.types.MachineAuthDetails;
 import uk.co.thomasc.steamkit.steam3.steamclient.SteamClient;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.CallbackMsg;
@@ -62,9 +64,8 @@ import uk.co.thomasc.steamkit.util.crypto.CryptoHelper;
  * @author nosoop < nosoop at users.noreply.github.com >
  */
 public class SteamClientMainForm extends javax.swing.JFrame {
-    
     SteamKitClient backend;
-    
+
     /**
      * Creates new form SteamClientMainForm
      */
@@ -72,9 +73,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         backend = new SteamKitClient();
         initComponents();
     }
-    
+
     synchronized void updateFriendStatus(Friend friend) {
-        
     }
 
     /**
@@ -139,13 +139,13 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox comboboxUserStatus;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel labelPlayerName;
     private javax.swing.JTable tableUsers;
     // End of variables declaration//GEN-END:variables
+
     /**
      * Inner class that handles Steam client connectivity.
      */
@@ -158,8 +158,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         final ScheduledExecutorService tradeExec, clientExec;
         CallbackMgr callbackManager;
         TradePoller tradePoller;
-        Logger logger = LoggerFactory.getLogger(FrontendClient.class.getSimpleName());
-        
+        Logger logger = LoggerFactory.getLogger(SteamClientMainForm.class.getSimpleName());
         String sessionId, token;
         SteamClientInfo clientInfo;
 
@@ -216,6 +215,13 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             // TODO Set not running.
                         } else {
                             // TODO Enable login state.
+                            SteamClientLoginDialog dialog = new SteamClientLoginDialog(new Callback<SteamClientInfo>() {
+                                @Override
+                                public void run(SteamClientInfo returnValue) {
+                                    SteamKitClient.this.login(returnValue);
+                                }
+                            });
+                            dialog.setVisible(true);
                         }
                     }
                 });
@@ -542,6 +548,37 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             }
         }
 
+        void login(SteamClientInfo userLogin) {
+            logger.info("Connected to Steam.  Logging in as user {}.", clientInfo.username);
+
+            byte[] sentryHash = null;
+
+            if (userLogin.sentryFile != null && userLogin.sentryFile.exists()) {
+                logger.info("Using sentryfile {} for sign-in...", userLogin.sentryFile.getName());
+
+                try (FileInputStream fi = 
+                        new FileInputStream(userLogin.sentryFile)) {
+                    byte[] sentryData = new byte[(int) userLogin.sentryFile.length()];
+                    fi.read(sentryData);
+
+                    sentryHash = CryptoHelper.SHAHash(sentryData);
+                } catch (FileNotFoundException ex) {
+                    // We already checked to see if the file is available, dipshit.
+                    throw new Error("It's pointless.  Just give up already.");
+                } catch (IOException ex) {
+                    logger.error("Sentry file dun goofed.", ex);
+                }
+            }
+
+            LogOnDetails loginData = new LogOnDetails()
+                    .username(clientInfo.username)
+                    .password(clientInfo.password)
+                    .authCode(clientInfo.authcode);
+            loginData.sentryFileHash = sentryHash;
+
+            steamUser.logOn(loginData);
+        }
+
         /**
          * Runnable class that gets as many unhandled callbacks as possible and
          * handles them.
@@ -598,7 +635,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         boolean readyToTrade() {
             return sessionId != null && token != null;
         }
-        
+
         /**
          * A cheap AFK checker thread that polls for mouse input to see if the
          * user is available. Polls every second.
@@ -679,12 +716,12 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 return java.awt.MouseInfo.getPointerInfo().getLocation();
             }
         }
-        
-        public class SteamClientInfo {
-            String username, password, authcode, token;
-            File sentryFile;
-        }
 
+    }
+
+    public static class SteamClientInfo {
+        String username, password, authcode, token;
+        File sentryFile;
     }
 
 }

@@ -6,19 +6,18 @@ package com.nosoop.ministeam2;
 
 import com.nosoop.inputdialog.CallbackInputFrame;
 import com.nosoop.ministeam.BuildProperties;
+import com.nosoop.ministeam2.SteamClientMainForm.SteamClientInfo;
 
 /**
  *
  * @author nosoop < nosoop at users.noreply.github.com >
  */
-public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientMainForm.SteamKitClient.SteamClientInfo> {
-    
-    SteamClientMainForm.SteamKitClient.SteamClientInfo clientInfo;
+public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> {
     
     /**
      * Creates new form SteamClientLoginDialog.
      */
-    public SteamClientLoginDialog(Callback<SteamClientMainForm.SteamKitClient.SteamClientInfo> callback) {
+    public SteamClientLoginDialog(Callback<SteamClientInfo> callback) {
         super(callback);
         initComponents();
 
@@ -151,6 +150,12 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientMainFo
     }// </editor-fold>//GEN-END:initComponents
 
     private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
+        SteamClientInfo clientInfo;
+        
+        clientInfo = new SteamClientInfo();
+        clientInfo.username = accountUserField.getEditor().getItem().toString();
+        clientInfo.password = String.valueOf(accountPasswordField.getPassword());
+        
         callback.run(clientInfo);
     }//GEN-LAST:event_loginButtonActionPerformed
 
