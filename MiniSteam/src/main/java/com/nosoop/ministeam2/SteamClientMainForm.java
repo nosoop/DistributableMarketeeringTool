@@ -258,6 +258,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             logger.info("Submitting authentication code " + clientInfo.authcode);
 
                             // Force a disconnect because it won't try logging in on its own.
+                            // TODO Try to log in again?
                             steamClient.disconnect();
                             return;
                         }
@@ -281,7 +282,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             clientExec.scheduleAtFixedRate(inactiveChecker, 0, 1, TimeUnit.SECONDS);
 
                             SteamClientMainForm.this.setVisible(true);
-                            return;
                         }
                     }
                 });
@@ -576,7 +576,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             LogOnDetails loginData = new LogOnDetails()
                     .username(userLogin.username)
                     .password(userLogin.password)
-                    .authCode(userLogin.authcode);
+                    .authCode(userLogin.authcode != null ? 
+                    userLogin.authcode : "");
             loginData.sentryFileHash = sentryHash;
 
             steamUser.logOn(loginData);
