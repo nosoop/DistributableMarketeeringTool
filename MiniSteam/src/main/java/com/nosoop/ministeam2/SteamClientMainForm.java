@@ -549,34 +549,39 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         }
 
         void login(SteamClientInfo userLogin) {
-            logger.info("Connected to Steam.  Logging in as user {}.", clientInfo.username);
+            logger.info("Connected to Steam.  Logging in as user {}.", 
+                    userLogin.username);
 
             byte[] sentryHash = null;
 
             if (userLogin.sentryFile != null && userLogin.sentryFile.exists()) {
-                logger.info("Using sentryfile {} for sign-in...", userLogin.sentryFile.getName());
+                logger.info("Using sentryfile {} for sign-in...", 
+                        userLogin.sentryFile.getName());
 
-                try (FileInputStream fi = 
+                try (FileInputStream fi =
                         new FileInputStream(userLogin.sentryFile)) {
-                    byte[] sentryData = new byte[(int) userLogin.sentryFile.length()];
+                    byte[] sentryData = 
+                            new byte[(int) userLogin.sentryFile.length()];
                     fi.read(sentryData);
 
                     sentryHash = CryptoHelper.SHAHash(sentryData);
                 } catch (FileNotFoundException ex) {
                     // We already checked to see if the file is available, dipshit.
-                    throw new Error("It's pointless.  Just give up already.");
+                    throw new Error(ex);
                 } catch (IOException ex) {
                     logger.error("Sentry file dun goofed.", ex);
                 }
             }
 
             LogOnDetails loginData = new LogOnDetails()
-                    .username(clientInfo.username)
-                    .password(clientInfo.password)
-                    .authCode(clientInfo.authcode);
+                    .username(userLogin.username)
+                    .password(userLogin.password)
+                    .authCode(userLogin.authcode);
             loginData.sentryFileHash = sentryHash;
 
             steamUser.logOn(loginData);
+            
+            clientInfo = userLogin;
         }
 
         /**
@@ -719,6 +724,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
     }
 
+    /**
+     * Struct holding client login data.
+     */
     public static class SteamClientInfo {
         String username, password, authcode, token;
         File sentryFile;
