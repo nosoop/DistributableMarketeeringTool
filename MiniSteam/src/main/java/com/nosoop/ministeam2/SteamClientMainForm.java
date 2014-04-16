@@ -215,6 +215,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             // TODO Set not running.
                         } else {
                             // TODO Enable login state.
+                            // TODO Prevent multiple login dialogs from showing.
                             SteamClientLoginDialog dialog = new SteamClientLoginDialog(new Callback<SteamClientInfo>() {
                                 @Override
                                 public void run(SteamClientInfo returnValue) {
