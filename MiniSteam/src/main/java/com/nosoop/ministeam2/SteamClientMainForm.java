@@ -11,17 +11,14 @@ import com.nosoop.steamtrade.TradeListener;
 import com.nosoop.steamtrade.TradeSession;
 import com.nosoop.steamtrade.inventory.AssetBuilder;
 import com.ryanspeets.tradeoffer.TradeUser;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import javax.crypto.*;
 import javax.swing.JOptionPane;
 import net.sourceforge.iharder.base64.Base64;
 import org.apache.http.cookie.Cookie;
@@ -32,30 +29,17 @@ import static uk.co.thomasc.steamkit.base.generated.steamlanguage.EEconTradeResp
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EPersonaState;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EResult;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.SteamFriends;
-import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendMsgCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendsListCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.PersonaStateCallback;
+import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.*;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.types.Friend;
 import uk.co.thomasc.steamkit.steam3.handlers.steamgamecoordinator.SteamGameCoordinator;
 import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.SteamTrading;
-import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.SessionStartCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeProposedCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeResultCallback;
+import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.*;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.SteamUser;
-import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.AccountInfoCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOffCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOnCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoginKeyCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.SessionTokenCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.UpdateMachineAuthCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.WalletInfoCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamuser.types.LogOnDetails;
-import uk.co.thomasc.steamkit.steam3.handlers.steamuser.types.MachineAuthDetails;
+import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.*;
+import uk.co.thomasc.steamkit.steam3.handlers.steamuser.types.*;
 import uk.co.thomasc.steamkit.steam3.steamclient.SteamClient;
-import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.CallbackMsg;
-import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.JobCallback;
-import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.ConnectedCallback;
-import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.DisconnectedCallback;
+import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.*;
+import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.*;
 import uk.co.thomasc.steamkit.util.cSharp.events.ActionT;
 import uk.co.thomasc.steamkit.util.crypto.CryptoHelper;
 
@@ -95,7 +79,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
         labelPlayerName.setText("jLabel1");
 
-        comboboxUserStatus.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        comboboxUserStatus.setModel(new javax.swing.DefaultComboBoxModel(EPersonaState.values()));
 
         tableUsers.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -182,7 +166,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             tradeExec.scheduleAtFixedRate(tradePoller, 0, 1, TimeUnit.SECONDS);
 
             // Schedule callbacks.
-            clientExec.scheduleWithFixedDelay(new CallbackGetter(), 0, 100, TimeUnit.MILLISECONDS);
+            clientExec.scheduleWithFixedDelay(
+                    new CallbackGetter(), 0, 100, TimeUnit.MILLISECONDS);
         }
 
         /**
@@ -370,7 +355,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         try {
                             u.login(clientInfo.username, clientInfo.password);
                             logger.info("SteamWeb login authenticated.");
-                        } catch (Exception e) {
+                        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) {
                             logger.error("SteamWeb Login Failre", e);
                         }
 
