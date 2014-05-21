@@ -48,14 +48,40 @@ import uk.co.thomasc.steamkit.util.crypto.CryptoHelper;
  * @author nosoop < nosoop at users.noreply.github.com >
  */
 public class SteamClientMainForm extends javax.swing.JFrame {
+    /**
+     * Class for Steam connectivity.
+     */
     SteamKitClient backend;
+    /**
+     * Child dialog for signing in to Steam.
+     */
+    SteamClientLoginDialog loginDialog;
 
     /**
      * Creates new form SteamClientMainForm
      */
     public SteamClientMainForm() {
+        /**
+         * Initialize the sign-in form; data is passed to it while the client is
+         * running.
+         */
+        loginDialog = new SteamClientLoginDialog(new Callback<SteamClientInfo>() {
+            @Override
+            public void run(SteamClientInfo returnValue) {
+                SteamClientMainForm.this.backend.login(returnValue);
+            }
+        });
+
+        /**
+         * Initialize the Steam client.
+         */
         backend = new SteamKitClient();
+
+        /**
+         * Show components.
+         */
         initComponents();
+        loginDialog.setVisible(true);
     }
 
     synchronized void updateFriendStatus(Friend friend) {
@@ -142,9 +168,11 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         final ScheduledExecutorService tradeExec, clientExec;
         CallbackMgr callbackManager;
         TradePoller tradePoller;
-        Logger logger = LoggerFactory.getLogger(SteamClientMainForm.class.getSimpleName());
+        Logger logger = LoggerFactory.getLogger(
+                SteamClientMainForm.class.getSimpleName());
         String sessionId, token;
         SteamClientInfo clientInfo;
+        boolean loginOnConnectedCallback;
 
         public SteamKitClient() {
             steamClient = new SteamClient();
@@ -168,6 +196,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             // Schedule callbacks.
             clientExec.scheduleWithFixedDelay(
                     new CallbackGetter(), 0, 100, TimeUnit.MILLISECONDS);
+
+            loginOnConnectedCallback = false;
         }
 
         /**
@@ -198,16 +228,13 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             logger.info("Unable to connect to Steam: {}",
                                     callback.getResult().getClass().getName());
                             // TODO Set not running.
+                        } else if (loginOnConnectedCallback) {
+                            // TODO Move signing-in state to login dialog.
+                            // Sign in client if we disconnected after login.
+                            // (See: LoggedOnCallback)
+                            login(clientInfo);
                         } else {
-                            // TODO Enable login state.
-                            // TODO Prevent multiple login dialogs from showing.
-                            SteamClientLoginDialog dialog = new SteamClientLoginDialog(new Callback<SteamClientInfo>() {
-                                @Override
-                                public void run(SteamClientInfo returnValue) {
-                                    SteamKitClient.this.login(returnValue);
-                                }
-                            });
-                            dialog.setVisible(true);
+                            loginDialog.setVisible(true);
                         }
                     }
                 });
@@ -238,14 +265,27 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         logger.debug("Logon enum value: {}", callback.getResult().name());
 
                         if (callback.getResult() == EResult.AccountLogonDenied) {
-                            String dialogMessage = String.format("Account is SteamGuard protected.\nEnter the authentication code sent to the address at %s.", callback.getEmailDomain());
+                            String dialogMessage = String.format(
+                                    "Account is SteamGuard protected.\n"
+                                    + "Enter the authentication code sent to"
+                                    + " the address at %s.", 
+                                    callback.getEmailDomain());
 
-                            clientInfo.authcode = JOptionPane.showInputDialog(null, dialogMessage, "SteamGuard", JOptionPane.INFORMATION_MESSAGE);
-                            logger.info("Submitting authentication code " + clientInfo.authcode);
+                            clientInfo.authcode = JOptionPane.showInputDialog(
+                                    null, dialogMessage, "SteamGuard", 
+                                    JOptionPane.INFORMATION_MESSAGE);
+                            logger.info("Disconnecting and submitting "
+                                    + "authentication code {}.", 
+                                    clientInfo.authcode);
 
-                            // Force a disconnect because it won't try logging in on its own.
-                            // TODO Try to log in again?
+                            /**
+                             * Force a disconnect because it won't try logging
+                             * in on its own, then set a flag to communicate
+                             * that we need to log in again once we receive the
+                             * ConnectedCallback.
+                             */
                             steamClient.disconnect();
+                            loginOnConnectedCallback = true;
                             return;
                         }
 
@@ -505,6 +545,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
                             fo.write(callback.getData());
                             fo.flush();
+                            logger.info("File successfully written at {}",
+                                    clientInfo.sentryFile.getAbsolutePath());
                         } catch (FileNotFoundException ex) {
                         } catch (IOException ex) {
                         }
@@ -535,18 +577,18 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         }
 
         void login(SteamClientInfo userLogin) {
-            logger.info("Connected to Steam.  Logging in as user {}.", 
+            logger.info("Connected to Steam.  Logging in as user {}.",
                     userLogin.username);
 
             byte[] sentryHash = null;
 
             if (userLogin.sentryFile != null && userLogin.sentryFile.exists()) {
-                logger.info("Using sentryfile {} for sign-in...", 
+                logger.info("Using sentryfile {} for sign-in...",
                         userLogin.sentryFile.getName());
 
                 try (FileInputStream fi =
                         new FileInputStream(userLogin.sentryFile)) {
-                    byte[] sentryData = 
+                    byte[] sentryData =
                             new byte[(int) userLogin.sentryFile.length()];
                     fi.read(sentryData);
 
@@ -562,12 +604,12 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             LogOnDetails loginData = new LogOnDetails()
                     .username(userLogin.username)
                     .password(userLogin.password)
-                    .authCode(userLogin.authcode != null ? 
-                    userLogin.authcode : "");
+                    .authCode(userLogin.authcode != null
+                    ? userLogin.authcode : "");
             loginData.sentryFileHash = sentryHash;
 
             steamUser.logOn(loginData);
-            
+
             clientInfo = userLogin;
         }
 

@@ -7,12 +7,27 @@ package com.nosoop.ministeam2;
 import com.nosoop.inputdialog.CallbackInputFrame;
 import com.nosoop.ministeam.BuildProperties;
 import com.nosoop.ministeam2.SteamClientMainForm.SteamClientInfo;
+import java.io.File;
 
 /**
  *
  * @author nosoop < nosoop at users.noreply.github.com >
  */
 public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> {
+    
+    // Filename format for saved SSFN data.
+    static final String SENTRY_FILENAME_FMT = "sentry_%s.bin";
+    
+    /**
+     * Package-private enum to communicate signing-in status.
+     */
+    enum ClientConnectivityState {
+        CONNECTING, CONNECTED, DISCONNECTED, INCORRECT_LOGIN, SIGNED_IN;
+    }
+    
+    private enum DialogActivityMode {
+        ALL_FIELDS_ACTIVE, LOGIN_BUTTON_BLOCK, CLOSED;
+    }
     
     /**
      * Creates new form SteamClientLoginDialog.
@@ -155,6 +170,9 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         clientInfo = new SteamClientInfo();
         clientInfo.username = accountUserField.getEditor().getItem().toString();
         clientInfo.password = String.valueOf(accountPasswordField.getPassword());
+        
+        clientInfo.sentryFile = new File(String.format(SENTRY_FILENAME_FMT,
+                clientInfo.username));
         
         callback.run(clientInfo);
     }//GEN-LAST:event_loginButtonActionPerformed
