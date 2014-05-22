@@ -56,7 +56,7 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
     void setSteamConnectionState(ClientConnectivityState state) {
         switch (state) {
             case CONNECTED:
-                setLoginStatusLabel("Connected to the Steam network.");
+                setLoginStatusLabel("Waiting to sign in...");
                 break;
             case CONNECTING:
                 setLoginStatusLabel("Connecting...");
