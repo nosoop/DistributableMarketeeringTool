@@ -205,7 +205,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 return false;
             }
         });
-        tableUsers.setColumnSelectionAllowed(true);
         tableUsers.setFillsViewportHeight(true);
         tableUsers.setShowHorizontalLines(false);
         tableUsers.setShowVerticalLines(false);
@@ -244,7 +243,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         backend.steamFriends.setPersonaState(
                 (EPersonaState) comboboxUserStatus.getSelectedItem());
     }//GEN-LAST:event_comboboxUserStatusActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox comboboxUserStatus;
     private javax.swing.JScrollPane jScrollPane1;
@@ -325,7 +323,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                                     callback.getResult().getClass().getName());
                             // TODO Set not running.
                         } else if (loginOnConnectedCallback) {
-                            // TODO Move signing-in state to login dialog.
                             // Sign in client if we disconnected after login.
                             // (See: LoggedOnCallback)
                             login(clientInfo);
@@ -443,7 +440,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 msg.handle(PersonaStateCallback.class, new ActionT<PersonaStateCallback>() {
                     @Override
                     public void call(PersonaStateCallback callback) {
-                        // TODO Fix references.
                         if (callback.getFriendID().convertToLong() == steamUser.getSteamId().convertToLong()) {
                             SteamClientMainForm.this.labelPlayerName.setText(callback.getName());
                         } else {
@@ -488,20 +484,28 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                          * for those that have it working.
                          */
                         // Hopefully we only need to do this once.
-                        sessionId = Base64.encodeBytes(String.valueOf(callback.getUniqueId()).getBytes());
+                        sessionId = Base64.encodeBytes(
+                                String.valueOf(callback.getUniqueId()).
+                                getBytes());
 
                         TradeUser u = new TradeUser();
 
                         // I guess we'll just have to do this manually.
                         u.addCookie("sessionid", sessionId, true);
 
-                        if (clientInfo.token != null) {
-                            u.addCookie("steamMachineAuth" + steamUser.getSteamId().convertToLong(), clientInfo.token, true);
+                        if (!clientInfo.machineauthcookie.equals("")) {
+                            u.addCookie("steamMachineAuth" + 
+                                    steamUser.getSteamId().convertToLong(), 
+                                    clientInfo.machineauthcookie, true);
                         }
                         try {
                             u.login(clientInfo.username, clientInfo.password);
                             logger.info("SteamWeb login authenticated.");
-                        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) {
+                        } catch (IOException | NoSuchAlgorithmException |
+                                InvalidKeySpecException |
+                                NoSuchPaddingException | InvalidKeyException |
+                                IllegalBlockSizeException |
+                                BadPaddingException e) {
                             logger.error("SteamWeb Login Failre", e);
                         }
 
@@ -557,12 +561,19 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
                         try {
                             List<AssetBuilder> assetBuilders = new ArrayList<>();
-                            tradePoller.setCurrentTradeSession(new TradeSession(steamUser.getSteamId().convertToLong(), callback.getOtherClient().convertToLong(), sessionId, token, listener, assetBuilders));
+                            tradePoller.setCurrentTradeSession(
+                                    new TradeSession(
+                                    steamUser.getSteamId().convertToLong(),
+                                    callback.getOtherClient().convertToLong(),
+                                    sessionId, token, listener, assetBuilders));
                         } catch (final Exception e) {
                             // Error during construction.
                             logger.error("Error during trade init.", e);
 
-                            steamFriends.sendChatMessage(callback.getOtherClient(), EChatEntryType.ChatMsg, "Whoops!  Something went wrong.");
+                            steamFriends.sendChatMessage(
+                                    callback.getOtherClient(),
+                                    EChatEntryType.ChatMsg,
+                                    "Whoops!  Something went wrong.");
                             steamTrade.cancelTrade(callback.getOtherClient());
 
                             tradePoller.forceCancelTradeSession();
@@ -863,7 +874,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
      * Struct holding client login data.
      */
     public static class SteamClientInfo {
-        String username, password, authcode, token;
+        String username, password, authcode, token, machineauthcookie;
         File sentryFile;
     }
 

@@ -4,10 +4,17 @@
  */
 package com.nosoop.ministeam2;
 
+import bundled.steamtrade.org.json.*;
 import com.nosoop.inputdialog.CallbackInputFrame;
 import com.nosoop.ministeam.BuildProperties;
+import com.nosoop.ministeam.Util;
 import com.nosoop.ministeam2.SteamClientMainForm.SteamClientInfo;
 import java.io.File;
+import java.util.Map;
+import java.util.TreeMap;
+import javax.swing.DefaultComboBoxModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -16,6 +23,10 @@ import java.io.File;
 public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> {
     // Filename format for saved SSFN data.
     static final String SENTRY_FILENAME_FMT = "sentry_%s.bin";
+    /**
+     * Stores users as loaded from a file.
+     */
+    AccountStorage accounts;
 
     /**
      * Package-private enum to communicate signing-in status.
@@ -51,6 +62,13 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
                 // Close.
             }
         });
+
+        accounts = new AccountStorage(new File("users.json"));
+
+        final DefaultComboBoxModel model = (DefaultComboBoxModel) accountUserField.getModel();
+        for (String user : accounts.userStore.keySet()) {
+            model.addElement(user);
+        }
     }
 
     void setSteamConnectionState(ClientConnectivityState state) {
@@ -231,11 +249,18 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
 
     private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
         SteamClientInfo clientInfo;
-
+        
         clientInfo = new SteamClientInfo();
         clientInfo.username = accountUserField.getEditor().getItem().toString();
         clientInfo.password = String.valueOf(accountPasswordField.getPassword());
 
+        if (accounts.userStore.containsKey(clientInfo.username)
+                && accounts.userStore.get(clientInfo.username)
+                .password.equals(clientInfo.password)) {
+            // Assuming we're using stored data.
+            clientInfo = accounts.userStore.get(clientInfo.username);
+        }
+        
         clientInfo.sentryFile = new File(String.format(SENTRY_FILENAME_FMT,
                 clientInfo.username));
 
@@ -243,6 +268,17 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
     }//GEN-LAST:event_loginButtonActionPerformed
 
     private void accountUserFieldItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_accountUserFieldItemStateChanged
+        String password;
+
+        String user = accountUserField.getEditor().getItem().toString();
+        
+        // Load stored user / password if possible.
+        if (accounts.userStore.containsKey(user)) {
+            if ((password = accounts.userStore.get(user).
+                    password) != null) {
+                accountPasswordField.setText(password);
+            }
+        }
     }//GEN-LAST:event_accountUserFieldItemStateChanged
 
     private void quitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_quitButtonActionPerformed
@@ -260,4 +296,50 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
     private javax.swing.JCheckBox rememberLoginCheckbox;
     private javax.swing.JLabel versionNumberLabel;
     // End of variables declaration//GEN-END:variables
+
+    // TODO Use a better storage format.
+    public static class AccountStorage {
+        final static File USERDATA_FILE = new File("users.json");
+        private Map<String, SteamClientInfo> userStore;
+        Logger logger = LoggerFactory.getLogger(
+                AccountStorage.class.getSimpleName());
+
+        AccountStorage(File file) {
+            userStore = new TreeMap<>();
+            SteamClientInfo baseInfo = new SteamClientInfo();
+            baseInfo.username = "";
+            baseInfo.password = "";
+            baseInfo.machineauthcookie = "";
+            userStore.put("", baseInfo);
+
+            try {
+                if (file.exists()) {
+                    JSONObject data = new JSONObject(Util.readFile(file));
+
+                    JSONArray clients = data.getJSONArray("clients");
+
+                    for (int i = 0; i < clients.length(); i++) {
+                        JSONObject client = clients.getJSONObject(i);
+
+                        SteamClientInfo userInfo = new SteamClientInfo();
+                        userInfo.username = client.getString("username");
+                        userInfo.password = client.optString("password", "");
+                        userInfo.machineauthcookie =
+                                client.optString("machineauth", "");
+
+                        userStore.put(client.getString("username"), userInfo);
+                    }
+                } else {
+                    logger.info("User credential storage file does not exist.");
+                }
+            } catch (JSONException ex) {
+                logger.error("Error loading user storage.", ex);
+            }
+        }
+
+        Map<String, SteamClientInfo> getUserList() {
+            return userStore;
+        }
+    }
+
 }
