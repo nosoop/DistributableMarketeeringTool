@@ -175,7 +175,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        labelPlayerName.setText("jLabel1");
+        labelPlayerName.setText("[unknown]");
 
         comboboxUserStatus.setModel(new javax.swing.DefaultComboBoxModel(EPersonaState.values()));
         comboboxUserStatus.addActionListener(new java.awt.event.ActionListener() {
@@ -206,6 +206,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             }
         });
         tableUsers.setFillsViewportHeight(true);
+        tableUsers.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tableUsers.setShowHorizontalLines(false);
         tableUsers.setShowVerticalLines(false);
         tableUsers.getTableHeader().setReorderingAllowed(false);
