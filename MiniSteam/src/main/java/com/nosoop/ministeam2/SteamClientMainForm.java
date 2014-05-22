@@ -11,21 +11,26 @@ import com.nosoop.steamtrade.TradeListener;
 import com.nosoop.steamtrade.TradeSession;
 import com.nosoop.steamtrade.inventory.AssetBuilder;
 import com.ryanspeets.tradeoffer.TradeUser;
+import java.awt.EventQueue;
 import java.io.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import javax.crypto.*;
 import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 import net.sourceforge.iharder.base64.Base64;
 import org.apache.http.cookie.Cookie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
 import static uk.co.thomasc.steamkit.base.generated.steamlanguage.EEconTradeResponse.*;
+import uk.co.thomasc.steamkit.base.generated.steamlanguage.EFriendRelationship;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EPersonaState;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EResult;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.SteamFriends;
@@ -40,6 +45,7 @@ import uk.co.thomasc.steamkit.steam3.handlers.steamuser.types.*;
 import uk.co.thomasc.steamkit.steam3.steamclient.SteamClient;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.*;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.*;
+import uk.co.thomasc.steamkit.types.steamid.SteamID;
 import uk.co.thomasc.steamkit.util.cSharp.events.ActionT;
 import uk.co.thomasc.steamkit.util.crypto.CryptoHelper;
 
@@ -56,6 +62,11 @@ public class SteamClientMainForm extends javax.swing.JFrame {
      * Child dialog for signing in to Steam.
      */
     SteamClientLoginDialog loginDialog;
+    /**
+     *
+     */
+    Map<Long, SteamFriendEntry> friendList;
+    Object[][] dataTable;
 
     /**
      * Creates new form SteamClientMainForm
@@ -72,6 +83,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 SteamClientMainForm.this.backend.login(returnValue);
             }
         });
+        loginDialog.setVisible(true);
 
         /**
          * Initialize the Steam client.
@@ -82,12 +94,69 @@ public class SteamClientMainForm extends javax.swing.JFrame {
          * Show components.
          */
         initComponents();
-        loginDialog.setVisible(true);
+
         loginDialog.setSteamConnectionState(
                 SteamClientLoginDialog.ClientConnectivityState.CONNECTING);
+
+        friendList = new HashMap<>();
     }
 
-    synchronized void updateFriendStatus(Friend friend) {
+    synchronized void updateFriendStatus(final SteamID userid) {
+        if (userid.isIndividualAccount()) {
+            long sid = userid.convertToLong();
+
+            if (friendList.containsKey(sid)) {
+                friendList.remove(sid);
+            }
+
+            String friendState;
+
+            /**
+             * If the user is your friend, get their activity state (Online,
+             * Away...), otherwise, get your relationship (Invite pending...).
+             */
+            if (backend.steamFriends.getFriendRelationship(userid)
+                    == EFriendRelationship.Friend) {
+                friendState = backend.steamFriends.
+                        getFriendPersonaState(userid).name();
+            } else {
+                friendState = backend.steamFriends.
+                        getFriendRelationship(userid).name();
+            }
+
+            // Only put them in the friends list if you have a relationship.
+            if (backend.steamFriends.getFriendRelationship(userid)
+                    != EFriendRelationship.None) {
+                SteamFriendEntry friend = new SteamFriendEntry();
+                friend.steamid64 = sid;
+                friend.username = backend.steamFriends.
+                        getFriendPersonaName(userid);
+                friend.status = friendState;
+
+                friendList.put(sid, friend);
+            }
+
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    updateFriendTable();
+                }
+            });
+        }
+    }
+
+    private synchronized void updateFriendTable() {
+        DefaultTableModel friendTable =
+                ((DefaultTableModel) tableUsers.getModel());
+
+        // Fastest way to clear the table.
+        friendTable.setNumRows(0);
+
+        // TODO a way to update the table more efficently?
+        for (Map.Entry<Long, SteamFriendEntry> keyValues : friendList.entrySet()) {
+            SteamFriendEntry entry = keyValues.getValue();
+            friendTable.addRow(new Object[]{entry.username, entry.status});
+        }
     }
 
     /**
@@ -110,14 +179,27 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
         comboboxUserStatus.setModel(new javax.swing.DefaultComboBoxModel(EPersonaState.values()));
 
+        tableUsers.setAutoCreateRowSorter(true);
         tableUsers.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
+            dataTable,
             new String [] {
-
+                "Name", "Status"
             }
-        ));
+        ) {
+            Class[] types = new Class [] {
+                SteamFriendEntry.class
+                , java.lang.String.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types[columnIndex];
+            }
+
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        });
         tableUsers.setColumnSelectionAllowed(true);
         tableUsers.setFillsViewportHeight(true);
         tableUsers.setShowHorizontalLines(false);
@@ -238,8 +320,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             login(clientInfo);
                         } else {
                             loginDialog.setSteamConnectionState(
-                                    SteamClientLoginDialog.
-                                    ClientConnectivityState.CONNECTED);
+                                    SteamClientLoginDialog.ClientConnectivityState.CONNECTED);
                         }
                     }
                 });
@@ -251,8 +332,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         logger.error("Disconnected from Steam.  Retrying in one.");
 
                         loginDialog.setSteamConnectionState(
-                                SteamClientLoginDialog.ClientConnectivityState
-                                .DISCONNECTED);
+                                SteamClientLoginDialog.ClientConnectivityState.DISCONNECTED);
 
                         /**
                          * Try to reconnect after a second.
@@ -296,8 +376,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             steamClient.disconnect();
                             loginOnConnectedCallback = true;
                             loginDialog.setSteamConnectionState(
-                                    SteamClientLoginDialog.
-                                    ClientConnectivityState.SIGNING_IN);
+                                    SteamClientLoginDialog.ClientConnectivityState.SIGNING_IN);
                             return;
                         }
 
@@ -306,8 +385,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             // TODO Figure out how to handle an invalid password.
                             //loginDialog.setLoginStatus("Password is invalid.");
                             loginDialog.setSteamConnectionState(
-                                    SteamClientLoginDialog.
-                                    ClientConnectivityState.INCORRECT_LOGIN);
+                                    SteamClientLoginDialog.ClientConnectivityState.INCORRECT_LOGIN);
                             loginOnConnectedCallback = false;
                             steamClient.disconnect();
                             steamClient.connect();
@@ -315,15 +393,14 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
                         if (callback.getResult() == EResult.OK) {
                             logger.info("Successfully signed in to Steam!");
-                            
+
                             loginDialog.setSteamConnectionState(
-                                    SteamClientLoginDialog.
-                                    ClientConnectivityState.SIGNED_IN);
+                                    SteamClientLoginDialog.ClientConnectivityState.SIGNED_IN);
 
                             // Spawn a thread for checking AFK.  Might want to manage.
-                            Runnable inactiveChecker = 
+                            Runnable inactiveChecker =
                                     new FrontendInactivityChecker();
-                            clientExec.scheduleAtFixedRate(inactiveChecker, 0, 
+                            clientExec.scheduleAtFixedRate(inactiveChecker, 0,
                                     1, TimeUnit.SECONDS);
 
                             SteamClientMainForm.this.setVisible(true);
@@ -335,7 +412,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     // Told to log off by Steam for some reason or other.
                     @Override
                     public void call(LoggedOffCallback callback) {
-                        logger.info("Logged off of Steam with result {}.", 
+                        logger.info("Logged off of Steam with result {}.",
                                 callback.getResult());
                         // LogonSessionReplaced:  Another instance of Steam is using the account.
                     }
@@ -359,8 +436,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         if (callback.getFriendID().convertToLong() == steamUser.getSteamId().convertToLong()) {
                             SteamClientMainForm.this.labelPlayerName.setText(callback.getName());
                         } else {
-                            //mainWindow.updateFriendStatus(callback.getFriendID());
-                            // TODO Update friend status.
+                            SteamClientMainForm.this.
+                                    updateFriendStatus(callback.getFriendID());
                         }
                     }
                 });
@@ -373,11 +450,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     @Override
                     public void call(FriendsListCallback callback) {
                         for (Friend friend : callback.getFriendList()) {
-                            // mainWindow.updateFriendStatus(friend.getSteamId());
-                            // TODO Update friend status.
+                            SteamClientMainForm.this.updateFriendStatus(
+                                    friend.getSteamId());
                         }
-                        //mainWindow.updateFriendsList();
-                        // TODO Reload friend list.
                     }
                 });
 
@@ -779,6 +854,17 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     public static class SteamClientInfo {
         String username, password, authcode, token;
         File sentryFile;
+    }
+
+    public static class SteamFriendEntry {
+        long steamid64;
+        String username;
+        String status;
+
+        @Override
+        public String toString() {
+            return username;
+        }
     }
 
 }
