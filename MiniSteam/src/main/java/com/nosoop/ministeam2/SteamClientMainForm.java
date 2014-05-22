@@ -63,7 +63,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
      */
     SteamClientLoginDialog loginDialog;
     /**
-     *
+     * Holding spot for friend table entries.
      */
     Map<Long, SteamFriendEntry> friendList;
     Object[][] dataTable;
@@ -178,6 +178,11 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         labelPlayerName.setText("jLabel1");
 
         comboboxUserStatus.setModel(new javax.swing.DefaultComboBoxModel(EPersonaState.values()));
+        comboboxUserStatus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                comboboxUserStatusActionPerformed(evt);
+            }
+        });
 
         tableUsers.setAutoCreateRowSorter(true);
         tableUsers.setModel(new javax.swing.table.DefaultTableModel(
@@ -234,6 +239,12 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void comboboxUserStatusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboboxUserStatusActionPerformed
+        backend.steamFriends.setPersonaState(
+                (EPersonaState) comboboxUserStatus.getSelectedItem());
+    }//GEN-LAST:event_comboboxUserStatusActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox comboboxUserStatus;
     private javax.swing.JScrollPane jScrollPane1;
