@@ -12,13 +12,13 @@ import javax.swing.JFrame;
  */
 public class CallbackInputFrame<T> extends JFrame {
     
-    protected Callback<T> callback;
+    protected DialogCallback<T> callback;
     
-    public static abstract class Callback<T> {
+    public static abstract class DialogCallback<T> {
         public abstract void run(T returnValue);
     }
     
-    public CallbackInputFrame(Callback<T> callback) {
+    public CallbackInputFrame(DialogCallback<T> callback) {
         super();
         this.callback = callback;
     }
