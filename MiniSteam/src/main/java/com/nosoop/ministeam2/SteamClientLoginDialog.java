@@ -14,25 +14,34 @@ import java.io.File;
  * @author nosoop < nosoop at users.noreply.github.com >
  */
 public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> {
-    
     // Filename format for saved SSFN data.
     static final String SENTRY_FILENAME_FMT = "sentry_%s.bin";
-    
+
     /**
      * Package-private enum to communicate signing-in status.
      */
     enum ClientConnectivityState {
-        CONNECTING, CONNECTED, DISCONNECTED, INCORRECT_LOGIN, SIGNED_IN;
+        CONNECTING(DialogActivityMode.LOGIN_BUTTON_BLOCK),
+        CONNECTED(DialogActivityMode.ALL_FIELDS_ACTIVE),
+        DISCONNECTED(DialogActivityMode.LOGIN_BUTTON_BLOCK),
+        SIGNING_IN(DialogActivityMode.ALL_FIELDS_DISABLED),
+        INCORRECT_LOGIN(DialogActivityMode.ALL_FIELDS_ACTIVE),
+        SIGNED_IN(DialogActivityMode.CLOSED);
+        private final DialogActivityMode DIALOG_MODE;
+
+        private ClientConnectivityState(DialogActivityMode mode) {
+            DIALOG_MODE = mode;
+        }
     }
-    
+
     private enum DialogActivityMode {
-        ALL_FIELDS_ACTIVE, LOGIN_BUTTON_BLOCK, CLOSED;
+        ALL_FIELDS_ACTIVE, ALL_FIELDS_DISABLED, LOGIN_BUTTON_BLOCK, CLOSED;
     }
-    
+
     /**
      * Creates new form SteamClientLoginDialog.
      */
-    public SteamClientLoginDialog(Callback<SteamClientInfo> callback) {
+    public SteamClientLoginDialog(DialogCallback<SteamClientInfo> callback) {
         super(callback);
         initComponents();
 
@@ -42,6 +51,62 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
                 // Close.
             }
         });
+    }
+
+    void setSteamConnectionState(ClientConnectivityState state) {
+        switch (state) {
+            case CONNECTED:
+                setLoginStatusLabel("Connected to the Steam network.");
+                break;
+            case CONNECTING:
+                setLoginStatusLabel("Connecting...");
+                break;
+            case DISCONNECTED:
+                setLoginStatusLabel("Disconnected from Steam.");
+                break;
+            case INCORRECT_LOGIN:
+                setLoginStatusLabel("Incorrect password.");
+                break;
+            case SIGNED_IN:
+                setLoginStatusLabel("Logged in!");
+                break;
+            case SIGNING_IN:
+                setLoginStatusLabel("Signing in...");
+                break;
+        }
+        setLoginDialogVisibilityState(state.DIALOG_MODE);
+    }
+
+    private void setLoginDialogVisibilityState(DialogActivityMode mode) {
+        switch (mode) {
+            case ALL_FIELDS_ACTIVE:
+                accountUserField.setEnabled(true);
+                accountPasswordField.setEnabled(true);
+                loginButton.setEnabled(true);
+                quitButton.setEnabled(true);
+                break;
+            case LOGIN_BUTTON_BLOCK:
+                accountUserField.setEnabled(true);
+                accountPasswordField.setEnabled(true);
+                loginButton.setEnabled(false);
+                quitButton.setEnabled(true);
+                break;
+            case ALL_FIELDS_DISABLED:
+                accountUserField.setEnabled(false);
+                accountPasswordField.setEnabled(false);
+                loginButton.setEnabled(false);
+                quitButton.setEnabled(true);
+                break;
+            case CLOSED:
+                this.dispose();
+                break;
+            default:
+                throw new Error("Unhandled dialog visibility state enum");
+        }
+    }
+
+    private void setLoginStatusLabel(String text) {
+        loginStatusLabel.setText("Status: " + text);
     }
 
     /**
@@ -166,14 +231,14 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
 
     private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
         SteamClientInfo clientInfo;
-        
+
         clientInfo = new SteamClientInfo();
         clientInfo.username = accountUserField.getEditor().getItem().toString();
         clientInfo.password = String.valueOf(accountPasswordField.getPassword());
-        
+
         clientInfo.sentryFile = new File(String.format(SENTRY_FILENAME_FMT,
                 clientInfo.username));
-        
+
         callback.run(clientInfo);
     }//GEN-LAST:event_loginButtonActionPerformed
 

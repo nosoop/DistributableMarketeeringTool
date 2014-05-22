@@ -5,7 +5,7 @@
 package com.nosoop.ministeam2;
 
 import bundled.steamtrade.org.json.JSONException;
-import com.nosoop.inputdialog.CallbackInputFrame.Callback;
+import com.nosoop.inputdialog.CallbackInputFrame.DialogCallback;
 import com.nosoop.ministeam.FrontendTrade;
 import com.nosoop.steamtrade.TradeListener;
 import com.nosoop.steamtrade.TradeSession;
@@ -65,7 +65,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
          * Initialize the sign-in form; data is passed to it while the client is
          * running.
          */
-        loginDialog = new SteamClientLoginDialog(new Callback<SteamClientInfo>() {
+        loginDialog = new SteamClientLoginDialog(
+                new DialogCallback<SteamClientInfo>() {
             @Override
             public void run(SteamClientInfo returnValue) {
                 SteamClientMainForm.this.backend.login(returnValue);
@@ -82,6 +83,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
          */
         initComponents();
         loginDialog.setVisible(true);
+        loginDialog.setSteamConnectionState(
+                SteamClientLoginDialog.ClientConnectivityState.CONNECTING);
     }
 
     synchronized void updateFriendStatus(Friend friend) {
@@ -234,7 +237,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             // (See: LoggedOnCallback)
                             login(clientInfo);
                         } else {
-                            loginDialog.setVisible(true);
+                            loginDialog.setSteamConnectionState(
+                                    SteamClientLoginDialog.
+                                    ClientConnectivityState.CONNECTED);
                         }
                     }
                 });
@@ -244,6 +249,10 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     @Override
                     public void call(DisconnectedCallback callback) {
                         logger.error("Disconnected from Steam.  Retrying in one.");
+
+                        loginDialog.setSteamConnectionState(
+                                SteamClientLoginDialog.ClientConnectivityState
+                                .DISCONNECTED);
 
                         /**
                          * Try to reconnect after a second.
@@ -268,14 +277,14 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             String dialogMessage = String.format(
                                     "Account is SteamGuard protected.\n"
                                     + "Enter the authentication code sent to"
-                                    + " the address at %s.", 
+                                    + " the address at %s.",
                                     callback.getEmailDomain());
 
                             clientInfo.authcode = JOptionPane.showInputDialog(
-                                    null, dialogMessage, "SteamGuard", 
+                                    null, dialogMessage, "SteamGuard",
                                     JOptionPane.INFORMATION_MESSAGE);
                             logger.info("Disconnecting and submitting "
-                                    + "authentication code {}.", 
+                                    + "authentication code {}.",
                                     clientInfo.authcode);
 
                             /**
@@ -286,6 +295,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                              */
                             steamClient.disconnect();
                             loginOnConnectedCallback = true;
+                            loginDialog.setSteamConnectionState(
+                                    SteamClientLoginDialog.
+                                    ClientConnectivityState.SIGNING_IN);
                             return;
                         }
 
@@ -293,19 +305,26 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             // Notified that user info is incorrect.
                             // TODO Figure out how to handle an invalid password.
                             //loginDialog.setLoginStatus("Password is invalid.");
+                            loginDialog.setSteamConnectionState(
+                                    SteamClientLoginDialog.
+                                    ClientConnectivityState.INCORRECT_LOGIN);
+                            loginOnConnectedCallback = false;
                             steamClient.disconnect();
                             steamClient.connect();
                         }
 
                         if (callback.getResult() == EResult.OK) {
                             logger.info("Successfully signed in to Steam!");
-
-                            // TODO Move login code.
-                            //loginDialog.onSuccessfulLogin();
+                            
+                            loginDialog.setSteamConnectionState(
+                                    SteamClientLoginDialog.
+                                    ClientConnectivityState.SIGNED_IN);
 
                             // Spawn a thread for checking AFK.  Might want to manage.
-                            Runnable inactiveChecker = new FrontendInactivityChecker();
-                            clientExec.scheduleAtFixedRate(inactiveChecker, 0, 1, TimeUnit.SECONDS);
+                            Runnable inactiveChecker = 
+                                    new FrontendInactivityChecker();
+                            clientExec.scheduleAtFixedRate(inactiveChecker, 0, 
+                                    1, TimeUnit.SECONDS);
 
                             SteamClientMainForm.this.setVisible(true);
                         }
@@ -316,7 +335,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     // Told to log off by Steam for some reason or other.
                     @Override
                     public void call(LoggedOffCallback callback) {
-                        logger.info("Logged off of Steam with result {}.", callback.getResult());
+                        logger.info("Logged off of Steam with result {}.", 
+                                callback.getResult());
                         // LogonSessionReplaced:  Another instance of Steam is using the account.
                     }
                 });
