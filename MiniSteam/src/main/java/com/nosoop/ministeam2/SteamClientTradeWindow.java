@@ -1,7 +1,5 @@
 package com.nosoop.ministeam2;
 
-import com.nosoop.ministeam.trade.TradeDisplayItem;
-import com.nosoop.ministeam.trade.TradeOurDisplayItem;
 import com.nosoop.steamtrade.inventory.AppContextPair;
 import java.awt.EventQueue;
 import java.util.Collection;
@@ -14,6 +12,7 @@ import com.nosoop.steamtrade.inventory.TradeInternalAsset;
 import com.nosoop.steamtrade.inventory.TradeInternalInventory;
 import com.nosoop.steamtrade.inventory.TradeInternalItem;
 import com.nosoop.steamtrade.status.TradeEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JOptionPane;
@@ -29,24 +28,29 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
     SteamKitClient client;
     Logger logger;
     ClientTradeListener listener;
+    StringBuffer chat;
 
     /**
      * Creates new form SteamTradeWindow
      */
-    SteamClientTradeWindow() {
+    SteamClientTradeWindow(SteamKitClient client) {
         initComponents();
+        this.client = client;
         this.logger = LoggerFactory.getLogger(SteamClientTradeWindow.class.getSimpleName());
 
         this.setLocationRelativeTo(null);
 
         logger.debug("Trade listener hooked into window.");
 
+        // TODO fix up names and stuff
         this.setTitle(String.format("Trading with %s", "%s"));
         otherOfferPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(String.format("%s's Offer", "%s")));
         logger.debug("Setting titles and borders.");
 
         this.setVisible(true);
         logger.debug("Trade window should be visible.");
+
+        chat = new StringBuffer();
     }
 
     public TradeListener getTradeListener() {
@@ -55,8 +59,9 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
     }
 
     public void addMessage(String name, String text) {
-        tradeChatArea.setText(String.format("%s%s: %s\n",
-                tradeChatArea.getText(), name, text));
+        chat.append(String.format("%s: %s%n", name, text));
+
+        tradeChatArea.setText(chat.toString());
 
         tradeScroller.scrollRectToVisible(
                 new java.awt.Rectangle(0, tradeChatArea.getBounds(null).height, 1, 1));
@@ -68,14 +73,12 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
      *
      * @param items
      */
-    public void setOwnInventoryTable(Collection<TradeOurDisplayItem> items) {
+    public void setOwnInventoryTable(Collection<TradePersonalDisplayItem> items) {
         javax.swing.JTable modifiedTable = yourInventoryTable;
 
         DefaultTableModel table = (DefaultTableModel) modifiedTable.getModel();
 
-        for (int i = table.getRowCount() - 1; i >= 0; i--) {
-            table.removeRow(i);
-        }
+        table.setRowCount(0);
 
         for (TradeDisplayItem item : items) {
             table.addRow(new Object[]{item, item.getCount()});
@@ -516,7 +519,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
             if (targetRow >= 0) {
                 targetRow = yourInventoryTable.convertRowIndexToModel(targetRow);
 
-                TradeOurDisplayItem item = (TradeOurDisplayItem) yourInventoryTable.getModel().getValueAt(targetRow, 0);
+                TradePersonalDisplayItem item = (TradePersonalDisplayItem) yourInventoryTable.getModel().getValueAt(targetRow, 0);
                 listener.tradePutFirstValidItem(item);
             }
         }
@@ -567,9 +570,9 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
                 targetRow = yourInventoryTable.convertRowIndexToModel(targetRow);
                 item = yourInventoryTable.getModel().getValueAt(targetRow, 0);
 
-                if (item instanceof TradeOurDisplayItem) {
+                if (item instanceof TradePersonalDisplayItem) {
                     listener.tradePutFirstValidItem(
-                            (TradeOurDisplayItem) item);
+                            (TradePersonalDisplayItem) item);
                 }
             }
         }
@@ -635,7 +638,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
      */
     public class ClientTradeListener extends TradeListener {
         SteamClientTradeWindow tradeWindow = SteamClientTradeWindow.this;
-        Map<String, TradeOurDisplayItem> myInventoryItems;
+        Map<String, TradePersonalDisplayItem> myInventoryItems;
         Map<String, TradeDisplayItem> otherOfferedItems, myOfferedItems;
         private final short MAX_ITEMS_IN_TRADE = 256;
         private TradeInternalItem ourTradeSlotsFilled[];
@@ -663,7 +666,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
             logger.info("Trade session started.");
         }
 
-        public final boolean tradePutFirstValidItem(TradeOurDisplayItem item) {
+        public final boolean tradePutFirstValidItem(TradePersonalDisplayItem item) {
             List<TradeInternalItem> itemids = item.getItemList();
             for (TradeInternalItem itemid : itemids) {
                 if (tradePutItem(itemid)) {
@@ -686,7 +689,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
         }
 
         public final boolean tradeRemoveFirstValidItem(TradeDisplayItem dispItem) {
-            TradeOurDisplayItem myItem = myInventoryItems.get(dispItem.getDisplayName());
+            TradePersonalDisplayItem myItem = myInventoryItems.get(dispItem.getDisplayName());
             List<TradeInternalItem> itemids = myItem.getItemList();
 
             for (TradeInternalItem itemid : itemids) {
@@ -772,12 +775,12 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
             for (final TradeInternalItem item : inventory.getItemList()) {
                 String invName = getItemName(item);
 
-                TradeOurDisplayItem displayItem;
+                TradePersonalDisplayItem displayItem;
 
                 if (myInventoryItems.containsKey(invName)) {
                     displayItem = myInventoryItems.remove(invName);
                 } else {
-                    displayItem = new TradeOurDisplayItem(item.getClassid(), invName);
+                    displayItem = new TradePersonalDisplayItem(item.getClassid(), invName);
                 }
 
                 displayItem.incrementCount(1);
@@ -850,8 +853,6 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
 
         @Override
         public void onWelcome() {
-            //trade.sendMessage("[DMT] Hello!  This user is testing out an in-development third-party Steam client; I am not a bot.  Pardon any bugs.");
-            //trade.sendMessage("[DMT] For more information, feel free to check out the group: http://steamcommunity.com/groups/dmt-client");
         }
 
         @Override
@@ -949,6 +950,69 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
                 default:
                     break;
             }
+        }
+    }
+
+    public class TradeDisplayItem implements Comparable<TradeDisplayItem> {
+        int classid;
+        String displayName;
+        int count;
+
+        public TradeDisplayItem(int classid, String displayName) {
+            this.classid = classid;
+            this.displayName = displayName;
+
+            this.count = 0;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
+
+        public void incrementCount(int factor) {
+            count += factor;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        public int getClassid() {
+            return classid;
+        }
+
+        /**
+         * Compares display items by name.
+         *
+         * @param t TradeDisplayItem to compare.
+         * @return
+         */
+        @Override
+        public int compareTo(TradeDisplayItem t) {
+            return displayName.compareTo(t.displayName);
+        }
+    }
+
+    public class TradePersonalDisplayItem extends TradeDisplayItem {
+        List<TradeInternalItem> itemAddList;
+
+        public TradePersonalDisplayItem(int classid, String displayName) {
+            super(classid, displayName);
+
+            itemAddList = new ArrayList<>();
+        }
+
+        public void addItemToList(TradeInternalItem item) {
+            itemAddList.add(item);
+        }
+
+        public List<TradeInternalItem> getItemList() {
+            return itemAddList;
         }
     }
 
