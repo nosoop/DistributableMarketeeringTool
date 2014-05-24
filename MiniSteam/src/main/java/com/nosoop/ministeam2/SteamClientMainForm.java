@@ -606,7 +606,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         logger.debug("Opening up trade window.");
 
                         SteamClientTradeWindow sct = 
-                                new SteamClientTradeWindow();
+                                new SteamClientTradeWindow(SteamKitClient.this);
                         
                         // TODO Clean up reference to FrontendTrade.
                         TradeListener listener = sct.getTradeListener();
@@ -862,7 +862,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         class FrontendInactivityChecker implements Runnable {
             final int SECONDS_UNTIL_AWAY = 5 * 60; // 5 minutes
             final int SECONDS_UNTIL_SNOOZE = 60 * 60 * 2; // 2 hours
-            // TODO Implement auto-snooze.
             long timeLastActive;
             int lastX, lastY;
             // If user set themselves away, don't automatically set them online.
@@ -916,7 +915,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     timeLastActive = System.currentTimeMillis();
 
                     // If the AFK handler set them away and we're not away, online.
-                    if (autoSetAFK && status == EPersonaState.Away) {
+                    if (autoSetAFK && (status == EPersonaState.Away || 
+                            status == EPersonaState.Snooze)) {
                         steamFriends.setPersonaState(EPersonaState.Online);
                         autoSetAFK = false;
                         logger.info("AFK unset.");
