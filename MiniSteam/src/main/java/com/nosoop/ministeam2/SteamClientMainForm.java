@@ -441,11 +441,17 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 msg.handle(PersonaStateCallback.class, new ActionT<PersonaStateCallback>() {
                     @Override
                     public void call(PersonaStateCallback callback) {
-                        if (callback.getFriendID().convertToLong() == steamUser.getSteamId().convertToLong()) {
-                            SteamClientMainForm.this.labelPlayerName.setText(callback.getName());
+                        SteamClientMainForm form = SteamClientMainForm.this;
+                        
+                        if (callback.getFriendID().convertToLong() ==
+                                steamUser.getSteamId().convertToLong()) {
+                            form.labelPlayerName.setText(callback.getName());
+                            if (!form.comboboxUserStatus.getSelectedItem().equals(callback.getState())) {
+                                form.comboboxUserStatus.setSelectedItem(callback.getState());
+                            }
                         } else {
-                            SteamClientMainForm.this.
-                                    updateFriendStatus(callback.getFriendID());
+                            form.updateFriendStatus(callback.getFriendID());
+                            // TODO use callback to update other stuff.
                         }
                     }
                 });
@@ -454,7 +460,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                  * Steam friends and messaging service.
                  */
                 msg.handle(FriendsListCallback.class, new ActionT<FriendsListCallback>() {
-                    // Updated friends list.  Client has either added or removed a player.
+                    // Updated friends list.  Client has either added or removed a player?
                     @Override
                     public void call(FriendsListCallback callback) {
                         for (Friend friend : callback.getFriendList()) {

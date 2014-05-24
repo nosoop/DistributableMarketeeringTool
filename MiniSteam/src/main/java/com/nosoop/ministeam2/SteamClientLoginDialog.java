@@ -59,7 +59,8 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         this.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosed(java.awt.event.WindowEvent e) {
-                // Close.
+                // TODO Handle disposal properly when not needed.
+                System.exit(0);
             }
         });
 
@@ -116,7 +117,7 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
                 quitButton.setEnabled(true);
                 break;
             case CLOSED:
-                this.dispose();
+                this.setVisible(false);
                 break;
             default:
                 throw new Error("Unhandled dialog visibility state enum");
