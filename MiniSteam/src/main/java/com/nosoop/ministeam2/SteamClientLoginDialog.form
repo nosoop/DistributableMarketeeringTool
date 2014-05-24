@@ -80,8 +80,9 @@
                       <Component id="accountPasswordLabel" alignment="3" min="-2" pref="14" max="-2" attributes="0"/>
                   </Group>
               </Group>
-              <Component id="rememberLoginCheckbox" min="-2" max="-2" attributes="0"/>
-              <EmptySpace pref="19" max="32767" attributes="0"/>
+              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+              <Component id="rememberLoginCheckbox" min="-2" pref="23" max="-2" attributes="0"/>
+              <EmptySpace pref="12" max="32767" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="loginButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="quitButton" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -128,6 +129,9 @@
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loginButtonActionPerformed"/>
       </Events>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="this.getRootPane().setDefaultButton(loginButton);"/>
+      </AuxValues>
     </Component>
     <Component class="javax.swing.JButton" name="quitButton">
       <Properties>

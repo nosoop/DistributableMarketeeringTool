@@ -145,6 +145,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Clears and rebuilds the viewable friend list.
+     */
     private synchronized void updateFriendTable() {
         DefaultTableModel friendTable =
                 ((DefaultTableModel) tableUsers.getModel());
@@ -315,6 +318,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 /**
                  * Basic Steam connectivity.
                  */
+                //<editor-fold defaultstate="collapsed" desc="ConnectedCallback">
                 msg.handle(ConnectedCallback.class, new ActionT<ConnectedCallback>() {
                     // Connected to Steam.  It acknowledges your presence.
                     @Override
@@ -333,7 +337,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         }
                     }
                 });
-
+                //</editor-fold>
+                //<editor-fold defaultstate="collapsed" desc="DisconnectedCallback">
                 msg.handle(DisconnectedCallback.class, new ActionT<DisconnectedCallback>() {
                     // Disconnected form Steam.
                     @Override
@@ -355,7 +360,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         }, 1, TimeUnit.SECONDS);
                     }
                 });
-
+                //</editor-fold>
+                //<editor-fold defaultstate="collapsed" desc="LoggedOnCallback">
                 msg.handle(LoggedOnCallback.class, new ActionT<LoggedOnCallback>() {
                     // Logged on to Steam, or attempted to login and SteamGuard-blocked.
                     @Override
@@ -416,7 +422,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         }
                     }
                 });
-
+                //</editor-fold>
+                //<editor-fold defaultstate="collapsed" desc="LoggedOffCallback">
                 msg.handle(LoggedOffCallback.class, new ActionT<LoggedOffCallback>() {
                     // Told to log off by Steam for some reason or other.
                     @Override
@@ -426,10 +433,12 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         // LogonSessionReplaced:  Another instance of Steam is using the account.
                     }
                 });
-
+                //</editor-fold>
+                
                 /**
                  * Account info and state.
                  */
+                //<editor-fold defaultstate="collapsed" desc="AccountInfoCallback">
                 msg.handle(AccountInfoCallback.class, new ActionT<AccountInfoCallback>() {
                     // Oh hey, you can do stuff with your account now.
                     @Override
@@ -437,7 +446,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         steamFriends.setPersonaState(EPersonaState.Online);
                     }
                 });
-
+                //</editor-fold>
+                //<editor-fold defaultstate="collapsed" desc="PersonaStateCallback">
                 msg.handle(PersonaStateCallback.class, new ActionT<PersonaStateCallback>() {
                     @Override
                     public void call(PersonaStateCallback callback) {
@@ -455,10 +465,12 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         }
                     }
                 });
-
+                //</editor-fold>
+                
                 /**
                  * Steam friends and messaging service.
                  */
+                //<editor-fold defaultstate="collapsed" desc="FriendsListCallback">
                 msg.handle(FriendsListCallback.class, new ActionT<FriendsListCallback>() {
                     // Updated friends list.  Client has either added or removed a player?
                     @Override
@@ -469,7 +481,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         }
                     }
                 });
-
+                //</editor-fold>
+                //<editor-fold defaultstate="collapsed" desc="FriendMsgCallback">
                 msg.handle(FriendMsgCallback.class, new ActionT<FriendMsgCallback>() {
                     // Another person is typing or sent a message.
                     @Override
@@ -478,10 +491,12 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         // TODO Create window for chat message.
                     }
                 });
+                //</editor-fold>
 
                 /**
                  * Steam web services.
                  */
+                //<editor-fold defaultstate="collapsed" desc="LoginKeyCallback">
                 msg.handle(LoginKeyCallback.class, new ActionT<LoginKeyCallback>() {
                     @Override
                     public void call(LoginKeyCallback callback) {
@@ -526,10 +541,12 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         // Once authenticated, you can set other things.
                     }
                 });
+                //</editor-fold>
 
                 /**
                  * Handlers for trade events.
                  */
+                //<editor-fold defaultstate="collapsed" desc="TradeProposedCallback">
                 msg.handle(TradeProposedCallback.class, new ActionT<TradeProposedCallback>() {
                     // A trade session was requested by another client.
                     @Override
@@ -552,7 +569,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         }
                     }
                 });
-
+                //</editor-fold>
+                //<editor-fold defaultstate="collapsed" desc="SessionStartCallback">
                 msg.handle(SessionStartCallback.class, new ActionT<SessionStartCallback>() {
                     // A trade session was initialized.
                     @Override
@@ -587,7 +605,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         }
                     }
                 });
-
+                //</editor-fold>
+                //<editor-fold defaultstate="collapsed" desc="TradeResultCallback">
                 msg.handle(TradeResultCallback.class, new ActionT<TradeResultCallback>() {
                     // We have sent a trade request; the other client responded.
                     @Override
@@ -614,10 +633,12 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         }
                     }
                 });
-
+                //</editor-fold>
+                
                 /**
                  * Handler for money stuff?
                  */
+                //<editor-fold defaultstate="collapsed" desc="WalletInfoCallback">
                 msg.handle(WalletInfoCallback.class, new ActionT<WalletInfoCallback>() {
                     // TODO Wallet balance?
                     @Override
@@ -628,11 +649,13 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         }
                     }
                 });
+                //</editor-fold>
 
                 /**
                  * The job handler. Passes the callback into
                  * handleSteamJobMessage(...).
                  */
+                //<editor-fold defaultstate="collapsed" desc="JobCallback">
                 msg.handle(JobCallback.class, new ActionT<JobCallback>() {
                     // You have a job to do~!
                     // Add a handler in handleSteamJobMessage(...) to handle it.
@@ -644,6 +667,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         CallbackMgr.this.handleSteamJobMessage(jobCallback, JOBID);
                     }
                 });
+                //</editor-fold>
             }
 
             /**
@@ -657,6 +681,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         msg.getClass().getSimpleName());
 
                 // Go update your SteamGuard file.  Or make a new one.
+                //<editor-fold defaultstate="collapsed" desc="UpdateMachineAuthCallback">
                 msg.handle(UpdateMachineAuthCallback.class,
                         new ActionT<UpdateMachineAuthCallback>() {
                     @Override
@@ -697,6 +722,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         steamUser.sendMachineAuthResponse(machineAuth);
                     }
                 });
+                //</editor-fold>
             }
         }
 

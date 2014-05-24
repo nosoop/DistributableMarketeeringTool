@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.nosoop.ministeam2;
 
 import bundled.steamtrade.org.json.*;
@@ -17,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * A dialog window, prompting the user to sign in.
  *
  * @author nosoop < nosoop at users.noreply.github.com >
  */
@@ -164,6 +161,7 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         accountPasswordLabel.setText("Steam Password:");
 
         loginButton.setText("Login");
+        this.getRootPane().setDefaultButton(loginButton);
         loginButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 loginButtonActionPerformed(evt);
@@ -235,8 +233,9 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(accountPasswordField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(accountPasswordLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addComponent(rememberLoginCheckbox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 19, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(rememberLoginCheckbox, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(loginButton)
                     .addComponent(quitButton))
@@ -250,18 +249,17 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
 
     private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
         SteamClientInfo clientInfo;
-        
+
         clientInfo = new SteamClientInfo();
         clientInfo.username = accountUserField.getEditor().getItem().toString();
         clientInfo.password = String.valueOf(accountPasswordField.getPassword());
 
         if (accounts.userStore.containsKey(clientInfo.username)
-                && accounts.userStore.get(clientInfo.username)
-                .password.equals(clientInfo.password)) {
+                && accounts.userStore.get(clientInfo.username).password.equals(clientInfo.password)) {
             // Assuming we're using stored data.
             clientInfo = accounts.userStore.get(clientInfo.username);
         }
-        
+
         clientInfo.sentryFile = new File(String.format(SENTRY_FILENAME_FMT,
                 clientInfo.username));
 
@@ -272,11 +270,10 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         String password;
 
         String user = accountUserField.getEditor().getItem().toString();
-        
+
         // Load stored user / password if possible.
         if (accounts.userStore.containsKey(user)) {
-            if ((password = accounts.userStore.get(user).
-                    password) != null) {
+            if ((password = accounts.userStore.get(user).password) != null) {
                 accountPasswordField.setText(password);
             }
         }
