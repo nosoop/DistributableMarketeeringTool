@@ -606,9 +606,11 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
                         logger.debug("Opening up trade window.");
 
+                        SteamClientTradeWindow sct = 
+                                new SteamClientTradeWindow();
+                        
                         // TODO Clean up reference to FrontendTrade.
-                        TradeListener listener = new FrontendTrade(null,
-                                steamFriends.getFriendPersonaName(callback.getOtherClient()));
+                        TradeListener listener = sct.getTradeListener();
 
                         logger.debug("Trade window created.");
 
