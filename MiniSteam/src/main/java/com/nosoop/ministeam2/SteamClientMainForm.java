@@ -1,25 +1,42 @@
 package com.nosoop.ministeam2;
 
 import bundled.steamtrade.org.json.JSONException;
+import bundled.steamtrade.org.json.JSONObject;
 import com.nosoop.inputdialog.CallbackInputFrame.DialogCallback;
 import com.nosoop.steamtrade.TradeListener;
 import com.nosoop.steamtrade.TradeSession;
 import com.nosoop.steamtrade.inventory.AssetBuilder;
 import com.ryanspeets.tradeoffer.TradeUser;
+import java.awt.Desktop;
 import java.awt.EventQueue;
 import java.awt.event.MouseEvent;
 import java.io.*;
+import java.math.BigInteger;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.*;
+import java.util.zip.GZIPInputStream;
 import javax.crypto.*;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import javax.xml.bind.DatatypeConverter;
 import net.sourceforge.iharder.base64.Base64;
 import org.apache.http.cookie.Cookie;
 import org.slf4j.Logger;
@@ -99,7 +116,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 SteamClientLoginDialog.ClientConnectivityState.CONNECTING);
 
         friendList = new HashMap<>();
-        
+
         chatFrame = new SteamClientChatFrame(backend);
     }
 
@@ -261,16 +278,14 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
             if (targetRow >= 0) {
                 targetRow = tableUsers.convertRowIndexToModel(targetRow);
-                
-                SteamFriendEntry user = (SteamFriendEntry) 
-                        tableUsers.getModel().getValueAt(targetRow, 0);
-                
+
+                SteamFriendEntry user = (SteamFriendEntry) tableUsers.getModel().getValueAt(targetRow, 0);
+
                 chatFrame.addNewChatTab(user.steamid);
                 chatFrame.setVisible(true);
             }
         }
     }//GEN-LAST:event_tableUsersMouseClicked
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox comboboxUserStatus;
     private javax.swing.JScrollPane jScrollPane1;
@@ -458,7 +473,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     }
                 });
                 //</editor-fold>
-                
+
                 /**
                  * Account info and state.
                  */
@@ -476,9 +491,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     @Override
                     public void call(PersonaStateCallback callback) {
                         SteamClientMainForm form = SteamClientMainForm.this;
-                        
-                        if (callback.getFriendID().convertToLong() ==
-                                steamUser.getSteamId().convertToLong()) {
+
+                        if (callback.getFriendID().convertToLong()
+                                == steamUser.getSteamId().convertToLong()) {
                             form.labelPlayerName.setText(callback.getName());
                             if (!form.comboboxUserStatus.getSelectedItem().equals(callback.getState())) {
                                 form.comboboxUserStatus.setSelectedItem(callback.getState());
@@ -491,7 +506,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     }
                 });
                 //</editor-fold>
-                
+
                 /**
                  * Steam friends and messaging service.
                  */
@@ -514,7 +529,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     public void call(FriendMsgCallback callback) {
                         //mainWindow.receiveChatMessage(callback);
                         SteamClientMainForm.this.chatFrame.onReceivedChatMessage(
-                                callback.getSender(), callback.getEntryType(), 
+                                callback.getSender(), callback.getEntryType(),
                                 callback.getMessage());
                     }
                 });
@@ -543,8 +558,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         u.addCookie("sessionid", sessionId, true);
 
                         if (!clientInfo.machineauthcookie.equals("")) {
-                            u.addCookie("steamMachineAuth" + 
-                                    steamUser.getSteamId().convertToLong(), 
+                            u.addCookie("steamMachineAuth"
+                                    + steamUser.getSteamId().convertToLong(),
                                     clientInfo.machineauthcookie, true);
                         }
                         try {
@@ -605,9 +620,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
                         logger.debug("Opening up trade window.");
 
-                        SteamClientTradeWindow sct = 
+                        SteamClientTradeWindow sct =
                                 new SteamClientTradeWindow(SteamKitClient.this);
-                        
+
                         // TODO Clean up reference to FrontendTrade.
                         TradeListener listener = sct.getTradeListener();
 
@@ -663,7 +678,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     }
                 });
                 //</editor-fold>
-                
+
                 /**
                  * Handler for money stuff?
                  */
@@ -757,7 +772,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
         /**
          * Signs in the client, using applicable files.
-         * @param userLogin 
+         *
+         * @param userLogin
          */
         void login(SteamClientInfo userLogin) {
             logger.info("Connected to Steam.  Logging in as user {}.",
@@ -890,9 +906,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             public void run() {
                 java.awt.Point m = getMousePoint();
                 EPersonaState status = steamFriends.getPersonaState();
-                
+
                 int newX = m.x, newY = m.y;
-                
+
                 // If mouse was not moved in the last second...
                 if (this.lastX == newX && this.lastY == newY) {
                     // Update seconds since we have been assumed AFK.
@@ -915,8 +931,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     timeLastActive = System.currentTimeMillis();
 
                     // If the AFK handler set them away and we're not away, online.
-                    if (autoSetAFK && (status == EPersonaState.Away || 
-                            status == EPersonaState.Snooze)) {
+                    if (autoSetAFK && (status == EPersonaState.Away
+                            || status == EPersonaState.Snooze)) {
                         steamFriends.setPersonaState(EPersonaState.Online);
                         autoSetAFK = false;
                         logger.info("AFK unset.");
@@ -936,6 +952,218 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
     }
 
+    public static class SteamWebLogin {
+        public static boolean login(String username, String password,
+                Map<String, String> cookies) throws IOException,
+                NoSuchAlgorithmException, InvalidKeySpecException,
+                NoSuchPaddingException, InvalidKeyException,
+                IllegalBlockSizeException, BadPaddingException, JSONException {
+
+            Scanner scanner = new Scanner(System.in);
+
+            // Build cookie request property
+            Map<String, String> reqp = new HashMap<>();
+            StringBuilder sb = new StringBuilder();
+            for (Map.Entry<String, String> c : cookies.entrySet()) {
+                sb.append(c.getKey()).append("=").append(c.getValue()).append("; ");
+            }
+            reqp.put("Cookie", sb.toString().trim());
+
+            // Add posts.
+            Map<String, String> post = new HashMap<>();
+            post.put("username", username);
+
+            String response = retrievePageText("https://steamcommunity.com/login/getrsakey", new HashMap<String, String>(), post);
+            JSONObject rsaJSON = new JSONObject(response);
+
+
+            // Validate
+            if (!rsaJSON.getBoolean("success")) {
+                return false;
+            }
+
+            BigInteger m = new BigInteger(rsaJSON.getString("publickey_mod"), 16);
+            BigInteger e = new BigInteger(rsaJSON.getString("publickey_exp"), 16);
+            RSAPublicKeySpec spec = new RSAPublicKeySpec(m, e);
+
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+
+            PublicKey key = keyFactory.generatePublic(spec);
+
+            Cipher rsa = Cipher.getInstance("RSA");
+            rsa.init(Cipher.ENCRYPT_MODE, key);
+
+            byte[] encodedPassword = rsa.doFinal(password.getBytes("ASCII"));
+            String encryptedBase64Password = DatatypeConverter.printBase64Binary(encodedPassword);
+
+            JSONObject loginJSON = null;
+            String steamGuardText = "";
+            String steamGuardId = "";
+            do {
+                System.out.println("SteamWeb: Logging In...");
+
+                boolean captcha = loginJSON != null
+                        && loginJSON.getBoolean("captcha_needed");
+                boolean steamGuard = loginJSON != null
+                        && loginJSON.getBoolean("emailauth_needed");
+
+                String time = rsaJSON.getString("timestamp");
+                String capGID = loginJSON == null ? null
+                        : loginJSON.getString("captcha_gid");
+
+                post = new HashMap<>();
+                post.put("password", encryptedBase64Password);
+                post.put("username", username);
+
+                // Captcha
+                String capText = "";
+                if (captcha) {
+                    assert (loginJSON != null);
+                    System.out.println("SteamWeb: Captcha is needed.");
+
+                    try {
+                        if (Desktop.isDesktopSupported()) {
+                            Desktop.getDesktop().browse(new URI("https://steamcommunity.com/public/captcha.php?gid=" + loginJSON.getString("captcha_gid")));
+                        } else {
+                            System.out.println("https://steamcommunity.com/public/captcha.php?gid=" + loginJSON.getString("captcha_gid"));
+                        }
+                        System.out.println("SteamWeb: Type the captcha:");
+                        capText = scanner.nextLine();
+                    } catch (URISyntaxException ex) {
+                        // Well, shit.
+                    }
+                }
+
+                post.put("captchagid", captcha ? capGID : "-1");
+                post.put("captcha_text", captcha ? capText : "");
+                // Captcha end
+
+                // SteamGuard
+                if (steamGuard) {
+                    assert (loginJSON != null);
+                    System.out.println("SteamWeb: SteamGuard is needed.");
+                    System.out.println("SteamWeb: Type the code:");
+                    steamGuardText = scanner.nextLine();
+                    steamGuardId = loginJSON.getString("emailsteamid");
+                }
+
+                post.put("emailauth", steamGuardText);
+                post.put("emailsteamid", steamGuardId);
+                // SteamGuard end
+
+                post.put("rsatimestamp", time);
+
+                response = retrievePageText("https://steamcommunity.com/login/dologin/", new HashMap<String, String>(), post);
+
+                loginJSON = new JSONObject(response);
+
+            } while (loginJSON.getBoolean("captcha_needed")
+                    || loginJSON.getBoolean("emailauth_needed"));
+
+            if (loginJSON.getBoolean("success")) {
+                post = new HashMap<>();
+                JSONObject transferParams =
+                        loginJSON.getJSONObject("transfer_parameters");
+                for (String kv : (Set<String>) transferParams.keySet()) {
+                    post.put(kv, transferParams.getString(kv));
+                }
+
+                retrievePageText(loginJSON.getString("transfer_url"),
+                        new HashMap<String, String>(), post);
+
+                return true;
+            } else {
+                System.out.println("SteamWeb Error: "
+                        + loginJSON.optString("message"));
+                return false;
+            }
+        }
+
+        /**
+         * Stores the contents of a requested URL into a StringBuffer. This
+         * method requests the URL via POST.
+         *
+         * @param url The URL to retrieve.
+         * @param reqProps Request properties to be sent.
+         * @param postParams Post parameters to be sent.
+         * @return StringBuffer containing response, default error JSON if
+         * otherwise
+         * @throws IOException
+         */
+        public static String retrievePageText(String url,
+                Map<String, String> reqProps, Map<String, String> postParams) throws
+                IOException {
+            BufferedReader feedReader;
+            InputStreamReader feedStream;
+
+            StringBuilder buf = new StringBuilder();
+            URL siteUrl = new URL(url);
+            HttpURLConnection conn = (HttpURLConnection) siteUrl.openConnection();
+
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+
+            if (reqProps != null) {
+                for (String key : reqProps.keySet()) {
+                    conn.setRequestProperty(key, reqProps.get(key));
+                }
+            }
+
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+
+            if (postParams != null) {
+                DataOutputStream out = new DataOutputStream(conn.getOutputStream());
+                Set keys = postParams.keySet();
+                Iterator<String> keyIter = keys.iterator();
+                String content = "";
+                for (int i = 0; keyIter.hasNext(); i++) {
+                    Object key = keyIter.next();
+                    if (i != 0) {
+                        content += "&";
+                    }
+                    content += key + "=" + URLEncoder.encode(postParams.get(key),
+                            "UTF-8");
+                }
+                out.writeBytes(content);
+                out.flush();
+                out.close();
+            }
+
+            InputStream netStream;
+
+            try {
+                netStream = conn.getInputStream();
+            } catch (java.io.IOException ee) {
+                // Grab the JSON message from the error stream.
+                netStream = conn.getErrorStream();
+            }
+
+            if (netStream != null) {
+                if ("gzip".equals(conn.getContentEncoding())) {
+                    netStream = new GZIPInputStream(netStream);
+                }
+
+                feedStream = new InputStreamReader(netStream);
+
+                feedReader = new BufferedReader(feedStream);
+
+                String line;
+                while ((line = feedReader.readLine()) != null) {
+                    buf.append(line).append('\n');
+                }
+
+                feedReader.close();
+            }
+            conn.disconnect();
+            return buf.toString();
+        }
+    }
+
     /**
      * Struct holding client login data.
      */
@@ -944,6 +1172,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         File sentryFile;
     }
 
+    /**
+     * Struct containing friend data.
+     */
     public static class SteamFriendEntry {
         SteamID steamid;
         String username;
