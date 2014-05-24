@@ -31,6 +31,9 @@
   </Layout>
   <SubComponents>
     <Container class="javax.swing.JTabbedPane" name="chatTabbedPane">
+      <Properties>
+        <Property name="tabLayoutPolicy" type="int" value="1"/>
+      </Properties>
 
       <Layout class="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout"/>
     </Container>

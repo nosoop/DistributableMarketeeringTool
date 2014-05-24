@@ -6,6 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
+import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.PersonaStateCallback;
 import uk.co.thomasc.steamkit.types.steamid.SteamID;
 
 /**
@@ -27,8 +28,8 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
      * A logging instance.
      */
     Logger logger = LoggerFactory.getLogger(
-                SteamClientChatFrame.class.getSimpleName());
-    
+            SteamClientChatFrame.class.getSimpleName());
+
     /**
      * Creates new form SteamClientChatFrame
      */
@@ -36,6 +37,23 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
         this.client = client;
         this.currentUsers = new HashMap<>();
         initComponents();
+    }
+
+    void addNewChatTab(SteamID user) {
+        if (currentUsers.containsKey(user))
+            return;
+        
+        String tabName = client.steamFriends.getFriendPersonaName(user);
+        SteamClientChatTab tab = new SteamClientChatTab(user);
+
+        chatTabbedPane.addTab(tabName, tab);
+        currentUsers.put(user, tab);
+
+        UserInfo info = new UserInfo();
+        info.username = tabName;
+        info.status = client.steamFriends.getFriendPersonaState(user).
+                toString();
+        tab.updateUserInfo(info);
     }
 
     /**
@@ -49,40 +67,52 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     public void onReceivedChatMessage(SteamID sender,
             EChatEntryType entryType, String message) {
         SteamClientChatTab tabHandlingMessage;
-        
+
         logger.debug("Message received. Searching for tab.");
-        
+
         if (!currentUsers.containsKey(sender)) {
-            String tabName = client.steamFriends.getFriendPersonaName(sender);
-            tabHandlingMessage = new SteamClientChatTab(sender);
-            
-            chatTabbedPane.addTab(tabName, tabHandlingMessage);
-            currentUsers.put(sender, tabHandlingMessage);
-            
-            SteamClientChatTab.UserInfo info = 
-                    new SteamClientChatTab.UserInfo();
-            info.username = tabName;
-            info.status = client.steamFriends.getFriendPersonaState(sender).
-                    toString();
-            tabHandlingMessage.updateUserInfo(info);
-            
+            addNewChatTab(sender);
             logger.debug("Tab added.");
-        } else {
-            tabHandlingMessage = currentUsers.get(sender);
-            logger.debug("Tab already exists; using existing tab.");
         }
+
+        tabHandlingMessage = currentUsers.get(sender);
         tabHandlingMessage.receiveMessage(entryType, message);
-        
+
         logger.debug("Message fired at tab.");
-        
+
         if (entryType == EChatEntryType.ChatMsg) {
             this.setVisible(true);
         }
     }
-    
+
     // TODO Maybe make this an event listener?
     public void onSendingMessage() {
-        
+    }
+
+    /**
+     * Relay an updated persona state to the chat tab that needs it, if
+     * applicable.
+     *
+     * @param callback
+     */
+    void onPersonaState(PersonaStateCallback callback) {
+        if (currentUsers.containsKey(callback.getFriendID())) {
+            UserInfo info = new UserInfo();
+            info.username = callback.getName();
+            info.status = callback.getState().name();
+
+            SteamClientChatTab updateTab =
+                    currentUsers.get(callback.getFriendID());
+
+            updateTab.updateUserInfo(info);
+
+            int tabNumber = chatTabbedPane.indexOfComponent(updateTab);
+
+            // TODO Better way to rename tab than by removing and reinserting?
+            chatTabbedPane.removeTabAt(tabNumber);
+            chatTabbedPane.insertTab(info.username, null, updateTab, null,
+                    tabNumber);
+        }
     }
 
     /**
@@ -95,6 +125,8 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     private void initComponents() {
 
         chatTabbedPane = new javax.swing.JTabbedPane();
+
+        chatTabbedPane.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -112,4 +144,11 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTabbedPane chatTabbedPane;
     // End of variables declaration//GEN-END:variables
+    /**
+     * A struct containing data to update the chat window with.
+     */
+    public static class UserInfo {
+        String username, status;
+    }
+
 }

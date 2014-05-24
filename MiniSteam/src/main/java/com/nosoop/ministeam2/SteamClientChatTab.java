@@ -72,7 +72,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         logger.debug("Chat field updated.");
     }
     
-    public void updateUserInfo(UserInfo info) {
+    public void updateUserInfo(SteamClientChatFrame.UserInfo info) {
         userNameLabel.setText(info.username);
         userStatusLabel.setText(info.status);
     }
@@ -184,12 +184,4 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     private javax.swing.JLabel userNameLabel;
     private javax.swing.JLabel userStatusLabel;
     // End of variables declaration//GEN-END:variables
-
-    /**
-     * A struct containing data to update the chat window with.
-     */
-    public static class UserInfo {
-        String username, status;
-    }
-
 }

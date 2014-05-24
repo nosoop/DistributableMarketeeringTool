@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.nosoop.ministeam2;
 
 import bundled.steamtrade.org.json.JSONException;
@@ -12,6 +8,7 @@ import com.nosoop.steamtrade.TradeSession;
 import com.nosoop.steamtrade.inventory.AssetBuilder;
 import com.ryanspeets.tradeoffer.TradeUser;
 import java.awt.EventQueue;
+import java.awt.event.MouseEvent;
 import java.io.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -69,7 +66,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     /**
      * Holding spot for friend table entries.
      */
-    Map<Long, SteamFriendEntry> friendList;
+    Map<SteamID, SteamFriendEntry> friendList;
     Object[][] dataTable;
 
     /**
@@ -109,10 +106,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
     synchronized void updateFriendStatus(final SteamID userid) {
         if (userid.isIndividualAccount()) {
-            long sid = userid.convertToLong();
-
-            if (friendList.containsKey(sid)) {
-                friendList.remove(sid);
+            if (friendList.containsKey(userid)) {
+                friendList.remove(userid);
             }
 
             String friendState;
@@ -134,12 +129,12 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             if (backend.steamFriends.getFriendRelationship(userid)
                     != EFriendRelationship.None) {
                 SteamFriendEntry friend = new SteamFriendEntry();
-                friend.steamid64 = sid;
+                friend.steamid = userid;
                 friend.username = backend.steamFriends.
                         getFriendPersonaName(userid);
                 friend.status = friendState;
 
-                friendList.put(sid, friend);
+                friendList.put(userid, friend);
             }
 
             EventQueue.invokeLater(new Runnable() {
@@ -162,9 +157,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         friendTable.setNumRows(0);
 
         // TODO a way to update the table more efficently?
-        for (Map.Entry<Long, SteamFriendEntry> keyValues : friendList.entrySet()) {
+        for (Map.Entry<SteamID, SteamFriendEntry> keyValues : friendList.entrySet()) {
             SteamFriendEntry entry = keyValues.getValue();
-            friendTable.addRow(new Object[]{entry.username, entry.status});
+            friendTable.addRow(new Object[]{entry, entry.status});
         }
     }
 
@@ -219,6 +214,11 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         tableUsers.setShowHorizontalLines(false);
         tableUsers.setShowVerticalLines(false);
         tableUsers.getTableHeader().setReorderingAllowed(false);
+        tableUsers.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tableUsersMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(tableUsers);
         tableUsers.getColumnModel().getSelectionModel().setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
 
@@ -253,6 +253,25 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         backend.steamFriends.setPersonaState(
                 (EPersonaState) comboboxUserStatus.getSelectedItem());
     }//GEN-LAST:event_comboboxUserStatusActionPerformed
+
+    private void tableUsersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableUsersMouseClicked
+        int targetRow = tableUsers.getSelectedRow();
+
+        if (evt.getClickCount() == 2
+                && evt.getButton() == MouseEvent.BUTTON1) {
+
+            if (targetRow >= 0) {
+                targetRow = tableUsers.convertRowIndexToModel(targetRow);
+                
+                SteamFriendEntry user = (SteamFriendEntry) 
+                        tableUsers.getModel().getValueAt(targetRow, 0);
+                
+                chatFrame.addNewChatTab(user.steamid);
+                chatFrame.setVisible(true);
+            }
+        }
+    }//GEN-LAST:event_tableUsersMouseClicked
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox comboboxUserStatus;
     private javax.swing.JScrollPane jScrollPane1;
@@ -468,6 +487,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         } else {
                             form.updateFriendStatus(callback.getFriendID());
                             // TODO use callback to update other stuff.
+                            form.chatFrame.onPersonaState(callback);
                         }
                     }
                 });
@@ -734,6 +754,10 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             }
         }
 
+        /**
+         * Signs in the client, using applicable files.
+         * @param userLogin 
+         */
         void login(SteamClientInfo userLogin) {
             logger.info("Connected to Steam.  Logging in as user {}.",
                     userLogin.username);
@@ -865,9 +889,10 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             @SuppressWarnings({"CallToThreadDumpStack"})
             public void run() {
                 java.awt.Point m = getMousePoint();
-
+                EPersonaState status = steamFriends.getPersonaState();
+                
                 int newX = m.x, newY = m.y;
-
+                
                 // If mouse was not moved in the last second...
                 if (this.lastX == newX && this.lastY == newY) {
                     // Update seconds since we have been assumed AFK.
@@ -875,13 +900,12 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             (int) (System.currentTimeMillis() - timeLastActive) / 1000;
 
                     if (secondsSinceAFK > SECONDS_UNTIL_SNOOZE
-                            && steamFriends.getPersonaState() == EPersonaState.Away
-                            && autoSetAFK) {
+                            && status == EPersonaState.Away && autoSetAFK) {
                         steamFriends.setPersonaState(EPersonaState.Snooze);
                     } else // If past AFK threshold and not away or snoozed, then set.
                     if (secondsSinceAFK > SECONDS_UNTIL_AWAY
-                            && steamFriends.getPersonaState() != EPersonaState.Away
-                            && steamFriends.getPersonaState() != EPersonaState.Snooze) {
+                            && status != EPersonaState.Away
+                            && status != EPersonaState.Snooze) {
                         steamFriends.setPersonaState(EPersonaState.Away);
                         autoSetAFK = true;
                     }
@@ -891,7 +915,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     timeLastActive = System.currentTimeMillis();
 
                     // If the AFK handler set them away and we're not away, online.
-                    if (autoSetAFK && steamFriends.getPersonaState() == EPersonaState.Away) {
+                    if (autoSetAFK && status == EPersonaState.Away) {
                         steamFriends.setPersonaState(EPersonaState.Online);
                         autoSetAFK = false;
                         logger.info("AFK unset.");
@@ -920,7 +944,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     }
 
     public static class SteamFriendEntry {
-        long steamid64;
+        SteamID steamid;
         String username;
         String status;
 
