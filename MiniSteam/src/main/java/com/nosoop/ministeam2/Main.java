@@ -1,8 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package com.nosoop.ministeam;
+package com.nosoop.ministeam2;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +10,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Main {
 
-    static Logger logger = LoggerFactory.getLogger(SteamMainWindow.class.getSimpleName());
+    static Logger logger = LoggerFactory.getLogger(Main.class.getSimpleName());
     
     /**
      * @param args the command line arguments
@@ -32,6 +28,6 @@ public class Main {
         //</editor-fold>
 
         /* Create and display the form */
-        new FrontendClient();
+        new SteamClientMainForm();
     }
 }

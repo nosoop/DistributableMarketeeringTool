@@ -38,6 +38,7 @@
             </plugin>
             -->
             <plugin>
+                <!-- Copies all dependent JARs to a folder. -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
@@ -57,14 +58,16 @@
                 </executions>
             </plugin>
             <plugin>
+                <!-- Adds ./lib/ to classpath. -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
                 <configuration>
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>com.nosoop.ministeam.Main</mainClass>
+                            <mainClass>com.nosoop.ministeam2.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

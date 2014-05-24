@@ -1,4 +1,4 @@
-package com.nosoop.ministeam;
+package com.nosoop.ministeam2;
 
 import java.io.IOException;
 import java.io.InputStream;

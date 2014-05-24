@@ -1,70 +1,129 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package com.nosoop.ministeam;
+package com.nosoop.ministeam2;
 
-import java.awt.EventQueue;
+import bundled.steamtrade.org.json.*;
+import com.nosoop.inputdialog.CallbackInputFrame;
+import com.nosoop.ministeam2.SteamClientMainForm.SteamClientInfo;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.Map;
+import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
+ * A dialog window, prompting the user to sign in.
  *
  * @author nosoop < nosoop at users.noreply.github.com >
  */
-public class SteamLoginDialog extends javax.swing.JDialog {
-    FrontendClient client;
-    Map<String, FrontendClientInfo> userInfo;
-    boolean signedIn;
+public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> {
+    // Filename format for saved SSFN data.
+    static final String SENTRY_FILENAME_FMT = "sentry_%s.bin";
+    /**
+     * Stores users as loaded from a file.
+     */
+    AccountStorage accounts;
 
     /**
-     * Creates new form LoginDialog
+     * Package-private enum to communicate signing-in status.
      */
-    public SteamLoginDialog(java.awt.Frame parent, boolean modal,
-            FrontendClient client) {
-        super(parent, modal);
+    enum ClientConnectivityState {
+        CONNECTING(DialogActivityMode.LOGIN_BUTTON_BLOCK),
+        CONNECTED(DialogActivityMode.ALL_FIELDS_ACTIVE),
+        DISCONNECTED(DialogActivityMode.LOGIN_BUTTON_BLOCK),
+        SIGNING_IN(DialogActivityMode.ALL_FIELDS_DISABLED),
+        INCORRECT_LOGIN(DialogActivityMode.ALL_FIELDS_ACTIVE),
+        SIGNED_IN(DialogActivityMode.CLOSED);
+        private final DialogActivityMode DIALOG_MODE;
+
+        private ClientConnectivityState(DialogActivityMode mode) {
+            DIALOG_MODE = mode;
+        }
+    }
+
+    private enum DialogActivityMode {
+        ALL_FIELDS_ACTIVE, ALL_FIELDS_DISABLED, LOGIN_BUTTON_BLOCK, CLOSED;
+    }
+
+    /**
+     * Creates new form SteamClientLoginDialog.
+     */
+    public SteamClientLoginDialog(DialogCallback<SteamClientInfo> callback) {
+        super(callback);
         initComponents();
 
         this.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosed(java.awt.event.WindowEvent e) {
-                if (!signedIn) {
-                    SteamLoginDialog.this.client.quit();
-                }
+                // TODO Handle disposal properly when not needed.
+                System.exit(0);
             }
         });
 
-        this.setLocationRelativeTo(null);
-        this.setEnabled(true);
-
-        signedIn = false;
-
-        this.client = client;
-
-        userInfo = FrontendUserList.getUserList();
+        accounts = new AccountStorage(new File("users.json"));
 
         final DefaultComboBoxModel model = (DefaultComboBoxModel) accountUserField.getModel();
-        for (String user : userInfo.keySet()) {
+        for (String user : accounts.userStore.keySet()) {
             model.addElement(user);
         }
     }
 
-    public void setLoginStatus(String text) {
-        loginStatusLabel.setText(String.format("Status: %s", text));
+    void setSteamConnectionState(ClientConnectivityState state) {
+        switch (state) {
+            case CONNECTED:
+                setLoginStatusLabel("Waiting to sign in...");
+                break;
+            case CONNECTING:
+                setLoginStatusLabel("Connecting...");
+                break;
+            case DISCONNECTED:
+                setLoginStatusLabel("Disconnected from Steam.");
+                break;
+            case INCORRECT_LOGIN:
+                setLoginStatusLabel("Incorrect password.");
+                break;
+            case SIGNED_IN:
+                setLoginStatusLabel("Logged in!");
+                break;
+            case SIGNING_IN:
+                setLoginStatusLabel("Signing in...");
+                break;
+        }
+        setLoginDialogVisibilityState(state.DIALOG_MODE);
     }
 
-    public void setInputState(boolean enabled) {
-        accountPasswordField.setEnabled(enabled);
-        accountUserField.setEnabled(enabled);
-        loginButton.setEnabled(enabled);
-        rememberLoginCheckbox.setEnabled(enabled);
+    private void setLoginDialogVisibilityState(DialogActivityMode mode) {
+        switch (mode) {
+            case ALL_FIELDS_ACTIVE:
+                accountUserField.setEnabled(true);
+                accountPasswordField.setEnabled(true);
+                loginButton.setEnabled(true);
+                quitButton.setEnabled(true);
+                break;
+            case LOGIN_BUTTON_BLOCK:
+                accountUserField.setEnabled(true);
+                accountPasswordField.setEnabled(true);
+                loginButton.setEnabled(false);
+                quitButton.setEnabled(true);
+                break;
+            case ALL_FIELDS_DISABLED:
+                accountUserField.setEnabled(false);
+                accountPasswordField.setEnabled(false);
+                loginButton.setEnabled(false);
+                quitButton.setEnabled(true);
+                break;
+            case CLOSED:
+                this.setVisible(false);
+                break;
+            default:
+                throw new Error("Unhandled dialog visibility state enum");
+        }
     }
 
-    public void onSuccessfulLogin() {
-        setLoginStatus("Signed in!");
-        setVisible(false);
-        signedIn = true;
-        dispose();
+    private void setLoginStatusLabel(String text) {
+        loginStatusLabel.setText("Status: " + text);
     }
 
     /**
@@ -103,6 +162,7 @@ public class SteamLoginDialog extends javax.swing.JDialog {
         accountPasswordLabel.setText("Steam Password:");
 
         loginButton.setText("Login");
+        this.getRootPane().setDefaultButton(loginButton);
         loginButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 loginButtonActionPerformed(evt);
@@ -174,8 +234,9 @@ public class SteamLoginDialog extends javax.swing.JDialog {
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(accountPasswordField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(accountPasswordLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addComponent(rememberLoginCheckbox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 22, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(rememberLoginCheckbox, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(loginButton)
                     .addComponent(quitButton))
@@ -188,42 +249,38 @@ public class SteamLoginDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
-        String username = accountUserField.getEditor().getItem().toString();
-        String password = String.valueOf(accountPasswordField.getPassword());
+        SteamClientInfo clientInfo;
 
-        setLoginStatus("Signing in...");
+        clientInfo = new SteamClientInfo();
+        clientInfo.username = accountUserField.getEditor().getItem().toString();
+        clientInfo.password = String.valueOf(accountPasswordField.getPassword());
 
-        // TODO Remove this while keeping authdata?
-        if (userInfo.containsKey(username)
-                && userInfo.get(username).getAccountPassword().equals(password)) {
-            client.setClientInfo(userInfo.get(username));
-        } else {
-            client.setClientInfo(
-                    new FrontendClientInfo(username, password, null));
+        if (accounts.userStore.containsKey(clientInfo.username)
+                && accounts.userStore.get(clientInfo.username).password.equals(clientInfo.password)) {
+            // Assuming we're using stored data.
+            clientInfo = accounts.userStore.get(clientInfo.username);
         }
 
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                client.doLogin();
-            }
-        });
+        clientInfo.sentryFile = new File(String.format(SENTRY_FILENAME_FMT,
+                clientInfo.username));
+
+        callback.run(clientInfo);
     }//GEN-LAST:event_loginButtonActionPerformed
 
     private void accountUserFieldItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_accountUserFieldItemStateChanged
-        // If there was already an account saved, load the password.
         String password;
 
-        if (userInfo.containsKey(evt.getItem().toString())) {
-            if ((password = userInfo.get(evt.getItem().toString()).getAccountPassword()) != null) {
+        String user = accountUserField.getEditor().getItem().toString();
+
+        // Load stored user / password if possible.
+        if (accounts.userStore.containsKey(user)) {
+            if ((password = accounts.userStore.get(user).password) != null) {
                 accountPasswordField.setText(password);
             }
         }
-
     }//GEN-LAST:event_accountUserFieldItemStateChanged
 
     private void quitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_quitButtonActionPerformed
-        client.quit();
     }//GEN-LAST:event_quitButtonActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPasswordField accountPasswordField;
@@ -238,4 +295,54 @@ public class SteamLoginDialog extends javax.swing.JDialog {
     private javax.swing.JCheckBox rememberLoginCheckbox;
     private javax.swing.JLabel versionNumberLabel;
     // End of variables declaration//GEN-END:variables
+
+    // TODO Use a better storage format.
+    public static class AccountStorage {
+        final static File USERDATA_FILE = new File("users.json");
+        private Map<String, SteamClientInfo> userStore;
+        Logger logger = LoggerFactory.getLogger(
+                AccountStorage.class.getSimpleName());
+
+        AccountStorage(File file) {
+            userStore = new TreeMap<>();
+            SteamClientInfo baseInfo = new SteamClientInfo();
+            baseInfo.username = "";
+            baseInfo.password = "";
+            baseInfo.machineauthcookie = "";
+            userStore.put("", baseInfo);
+
+            try {
+                if (file.exists()) {
+                    JSONObject data = new JSONObject(
+                            new JSONTokener(new FileInputStream(file)));
+
+                    JSONArray clients = data.getJSONArray("clients");
+
+                    for (int i = 0; i < clients.length(); i++) {
+                        JSONObject client = clients.getJSONObject(i);
+
+                        SteamClientInfo userInfo = new SteamClientInfo();
+                        userInfo.username = client.getString("username");
+                        userInfo.password = client.optString("password", "");
+                        userInfo.machineauthcookie =
+                                client.optString("machineauth", "");
+
+                        userStore.put(client.getString("username"), userInfo);
+                    }
+                } else {
+                    logger.info("User credential storage file does not exist.");
+                }
+            } catch (JSONException ex) {
+                logger.error("Error loading user storage.", ex);
+            } catch (FileNotFoundException ex) {
+                logger.error("Unable to find file after checking for its "
+                        + "existence.", ex);
+            }
+        }
+
+        Map<String, SteamClientInfo> getUserList() {
+            return userStore;
+        }
+    }
+
 }

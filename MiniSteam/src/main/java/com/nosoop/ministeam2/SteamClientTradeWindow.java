@@ -1,8 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package com.nosoop.ministeam;
+package com.nosoop.ministeam2;
 
 import com.nosoop.ministeam.trade.TradeDisplayItem;
 import com.nosoop.ministeam.trade.TradeOurDisplayItem;
@@ -12,6 +8,15 @@ import java.util.Collection;
 import java.util.List;
 import javax.swing.table.DefaultTableModel;
 import bundled.steamtrade.org.json.JSONException;
+import com.nosoop.ministeam2.SteamClientMainForm.SteamKitClient;
+import com.nosoop.steamtrade.TradeListener;
+import com.nosoop.steamtrade.inventory.TradeInternalAsset;
+import com.nosoop.steamtrade.inventory.TradeInternalInventory;
+import com.nosoop.steamtrade.inventory.TradeInternalItem;
+import com.nosoop.steamtrade.status.TradeEvent;
+import java.util.HashMap;
+import java.util.Map;
+import javax.swing.JOptionPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,29 +25,33 @@ import org.slf4j.LoggerFactory;
  *
  * @author nosoop < nosoop at users.noreply.github.com >
  */
-public class SteamTradeWindow extends javax.swing.JFrame {
-
-    FrontendTrade tradeListener;
+public class SteamClientTradeWindow extends javax.swing.JFrame {
+    SteamKitClient client;
     Logger logger;
+    ClientTradeListener listener;
 
     /**
      * Creates new form SteamTradeWindow
      */
-    SteamTradeWindow(FrontendTrade trade, String otherPlayerName) {
+    SteamClientTradeWindow() {
         initComponents();
-        this.logger = LoggerFactory.getLogger(SteamTradeWindow.class.getSimpleName());
+        this.logger = LoggerFactory.getLogger(SteamClientTradeWindow.class.getSimpleName());
 
         this.setLocationRelativeTo(null);
 
-        this.tradeListener = trade;
         logger.debug("Trade listener hooked into window.");
 
-        this.setTitle(String.format("Trading with %s", otherPlayerName));
-        otherOfferPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(String.format("%s's Offer", otherPlayerName)));
+        this.setTitle(String.format("Trading with %s", "%s"));
+        otherOfferPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(String.format("%s's Offer", "%s")));
         logger.debug("Setting titles and borders.");
-        
+
         this.setVisible(true);
         logger.debug("Trade window should be visible.");
+    }
+
+    public TradeListener getTradeListener() {
+        this.listener = new ClientTradeListener();
+        return this.listener;
     }
 
     public void addMessage(String name, String text) {
@@ -445,8 +454,8 @@ public class SteamTradeWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void completeTradeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_completeTradeButtonActionPerformed
-        if (tradeListener.trade.getSelf().isReady()
-                && tradeListener.trade.getPartner().isReady()) {
+        if (listener.trade.getSelf().isReady()
+                && listener.trade.getPartner().isReady()) {
             completeTradeButton.setEnabled(false);
             completeTradeButton.setLabel("Processing...");
 
@@ -454,9 +463,9 @@ public class SteamTradeWindow extends javax.swing.JFrame {
                 @Override
                 public void run() {
                     try {
-                        tradeListener.trade.getCmds().acceptTrade();
-                    } catch (JSONException ex) {
-                        logger.error("Error on complete trade button", ex);
+                        listener.trade.getCmds().acceptTrade();
+                    } catch (JSONException e) {
+                        logger.error("Unable to accept trade.", e);
                     }
                 }
             });
@@ -465,17 +474,17 @@ public class SteamTradeWindow extends javax.swing.JFrame {
 
     private void cancelTradeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelTradeButtonActionPerformed
         try {
-            tradeListener.trade.getCmds().cancelTrade();
-        } catch (JSONException ex) {
-            logger.error("Error on pressing cancel trade button", ex);
+            listener.trade.getCmds().cancelTrade();
+        } catch (JSONException e) {
+            logger.error("Unable to cancel trade.", e);
         }
     }//GEN-LAST:event_cancelTradeButtonActionPerformed
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
         try {
-            tradeListener.trade.getCmds().cancelTrade();
-        } catch (JSONException ex) {
-            logger.error("Error on closing trade window", ex);
+            listener.trade.getCmds().cancelTrade();
+        } catch (JSONException e) {
+            logger.error("Unable to close window.", e);
         }
     }//GEN-LAST:event_formWindowClosed
 
@@ -484,10 +493,10 @@ public class SteamTradeWindow extends javax.swing.JFrame {
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                tradeListener.trade.getCmds().setReady(yourOfferReadyCheckbox.isSelected());
+                listener.trade.getCmds().setReady(yourOfferReadyCheckbox.isSelected());
 
-                if (tradeListener.trade.getSelf().isReady()
-                        && tradeListener.trade.getPartner().isReady()) {
+                if (listener.trade.getSelf().isReady()
+                        && listener.trade.getPartner().isReady()) {
                     completeTradeButton.setEnabled(true);
                 }
             }
@@ -508,7 +517,7 @@ public class SteamTradeWindow extends javax.swing.JFrame {
                 targetRow = yourInventoryTable.convertRowIndexToModel(targetRow);
 
                 TradeOurDisplayItem item = (TradeOurDisplayItem) yourInventoryTable.getModel().getValueAt(targetRow, 0);
-                tradeListener.tradePutFirstValidItem(item);
+                listener.tradePutFirstValidItem(item);
             }
         }
     }//GEN-LAST:event_yourInventoryTableMouseClicked
@@ -528,7 +537,7 @@ public class SteamTradeWindow extends javax.swing.JFrame {
                 targetRow = yourOfferTable.convertRowIndexToModel(targetRow);
 
                 TradeDisplayItem item = (TradeDisplayItem) yourOfferTable.getModel().getValueAt(targetRow, 0);
-                tradeListener.tradeRemoveFirstValidItem(item);
+                listener.tradeRemoveFirstValidItem(item);
             }
         }
     }//GEN-LAST:event_yourOfferTableMouseClicked
@@ -539,7 +548,7 @@ public class SteamTradeWindow extends javax.swing.JFrame {
         String inputText = tradeChatInput.getText();
 
         if (key == java.awt.event.KeyEvent.VK_ENTER && inputText.trim().length() > 0) {
-            tradeListener.trade.getCmds().sendMessage(inputText);
+            listener.trade.getCmds().sendMessage(inputText);
 
             // TODO Add trade chat actions.
             addMessage("You", inputText);
@@ -559,7 +568,7 @@ public class SteamTradeWindow extends javax.swing.JFrame {
                 item = yourInventoryTable.getModel().getValueAt(targetRow, 0);
 
                 if (item instanceof TradeOurDisplayItem) {
-                    tradeListener.tradePutFirstValidItem(
+                    listener.tradePutFirstValidItem(
                             (TradeOurDisplayItem) item);
                 }
             }
@@ -578,7 +587,7 @@ public class SteamTradeWindow extends javax.swing.JFrame {
                 item = yourOfferTable.getModel().getValueAt(targetRow, 0);
 
                 if (item instanceof TradeDisplayItem) {
-                    tradeListener.tradeRemoveFirstValidItem(
+                    listener.tradeRemoveFirstValidItem(
                             (TradeDisplayItem) item);
                 }
             }
@@ -593,7 +602,7 @@ public class SteamTradeWindow extends javax.swing.JFrame {
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    tradeListener.loadInventory((AppContextPair) item);
+                    listener.loadInventory((AppContextPair) item);
                 }
             });
         }
@@ -618,4 +627,329 @@ public class SteamTradeWindow extends javax.swing.JFrame {
     private javax.swing.JCheckBox yourOfferReadyCheckbox;
     private javax.swing.JTable yourOfferTable;
     // End of variables declaration//GEN-END:variables
+
+    /**
+     * A TradeListener that receives user input from a window..
+     *
+     * @author nosoop < nosoop at users.noreply.github.com >
+     */
+    public class ClientTradeListener extends TradeListener {
+        SteamClientTradeWindow tradeWindow = SteamClientTradeWindow.this;
+        Map<String, TradeOurDisplayItem> myInventoryItems;
+        Map<String, TradeDisplayItem> otherOfferedItems, myOfferedItems;
+        private final short MAX_ITEMS_IN_TRADE = 256;
+        private TradeInternalItem ourTradeSlotsFilled[];
+        String otherPlayerName;
+        Logger logger;
+
+        public ClientTradeListener() {
+            super();
+
+            this.logger = LoggerFactory.getLogger(ClientTradeListener.class);
+            logger.debug("Opening up trade window.");
+
+            logger.debug("Created trade window.");
+
+            myOfferedItems = new HashMap<>();
+            otherOfferedItems = new HashMap<>();
+
+            myInventoryItems = new HashMap<>();
+
+            ourTradeSlotsFilled = new TradeInternalItem[MAX_ITEMS_IN_TRADE];
+            for (int i = 0; i < ourTradeSlotsFilled.length; i++) {
+                ourTradeSlotsFilled[i] = null;
+            }
+
+            logger.info("Trade session started.");
+        }
+
+        public final boolean tradePutFirstValidItem(TradeOurDisplayItem item) {
+            List<TradeInternalItem> itemids = item.getItemList();
+            for (TradeInternalItem itemid : itemids) {
+                if (tradePutItem(itemid)) {
+
+                    String name = item.getDisplayName();
+                    if (myOfferedItems.containsKey(name)) {
+                        myOfferedItems.get(name).incrementCount(1);
+                    } else {
+                        TradeDisplayItem it = new TradeDisplayItem(
+                                item.getClassid(), name);
+                        it.incrementCount(1);
+                        myOfferedItems.put(name, it);
+                    }
+                    tradeWindow.updateTradeCount(true, myOfferedItems.values());
+
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public final boolean tradeRemoveFirstValidItem(TradeDisplayItem dispItem) {
+            TradeOurDisplayItem myItem = myInventoryItems.get(dispItem.getDisplayName());
+            List<TradeInternalItem> itemids = myItem.getItemList();
+
+            for (TradeInternalItem itemid : itemids) {
+                if (tradeRemoveItem(itemid)) {
+
+                    // Update our offer table if there is a successful removal.
+                    String name = dispItem.getDisplayName();
+                    if (myOfferedItems.containsKey(name)) {
+                        myOfferedItems.get(name).incrementCount(-1);
+                    } else {
+                        TradeDisplayItem it = new TradeDisplayItem(
+                                dispItem.getClassid(), name);
+                        it.incrementCount(-1);
+                        myOfferedItems.put(name, it);
+                    }
+                    tradeWindow.updateTradeCount(true, myOfferedItems.values());
+
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Renders the name of an item for display in the trading window. This
+         * name must be unique enough to differentiate the special items from
+         * the normal ones. (For example, tell us if it's renamed, if it's
+         * gifted, if it has a visible craft number, so on, as similarly named
+         * items will be grouped.)
+         *
+         * @param inventoryItem
+         * @return
+         */
+        public String getItemName(TradeInternalAsset inventoryItem) {
+            String invName = inventoryItem.getDisplayName();
+
+            return invName;
+        }
+
+        public final boolean tradePutItem(TradeInternalItem item) {
+            // Make sure the item isn't in the trade already.
+            if (getSlotByItemID(item) == -1) {
+                int slotToFill = getFirstFreeSlot();
+                trade.getCmds().addItem(item, slotToFill);
+                ourTradeSlotsFilled[slotToFill] = item;
+
+                return true;
+            }
+            return false;
+        }
+
+        public final boolean tradeRemoveItem(TradeInternalItem item) {
+            int slotToRemove;
+            if ((slotToRemove = getSlotByItemID(item)) != -1) {
+                trade.getCmds().removeItem(item);
+                ourTradeSlotsFilled[slotToRemove] = null;
+
+                return true;
+            }
+            return false;
+        }
+
+        public synchronized void loadInventory(AppContextPair appcontext) {
+            /**
+             * Author's note: We're lazy and never updating the count on this in
+             * the duration of the trade. We'll just excuse it as saying it's
+             * the total item count for the inventory, and when we add supprot
+             * for other inventories, we have something to work with. This sets
+             * up our item list that is pushed to the UI.
+             */
+            TradeInternalInventory inventory;
+
+            // Clear displayed inventory items.
+            myInventoryItems.clear();
+
+            // If we don't have a copy of that inventory loaded yet, do that.
+            if (!trade.getSelf().getInventories().hasInventory(appcontext)) {
+                trade.loadOwnInventory(appcontext);
+            }
+            inventory = trade.getSelf().getInventories().getInventory(appcontext);
+
+            // Take count of inventory items.
+            for (final TradeInternalItem item : inventory.getItemList()) {
+                String invName = getItemName(item);
+
+                TradeOurDisplayItem displayItem;
+
+                if (myInventoryItems.containsKey(invName)) {
+                    displayItem = myInventoryItems.remove(invName);
+                } else {
+                    displayItem = new TradeOurDisplayItem(item.getClassid(), invName);
+                }
+
+                displayItem.incrementCount(1);
+                displayItem.addItemToList(item);
+                myInventoryItems.put(invName, displayItem);
+            }
+
+            tradeWindow.setOwnInventoryTable(myInventoryItems.values());
+        }
+
+        /**
+         * Finds the first open slot in a trade.
+         *
+         * @return The position of the first "empty" slot in the trade, -1 if
+         * there are no empty slots.
+         */
+        public final int getFirstFreeSlot() {
+            for (int i = 0; i < ourTradeSlotsFilled.length; i++) {
+                if (ourTradeSlotsFilled[i] == null) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        /**
+         * Finds an item currently in the trade based on the item's id.
+         *
+         * @param item Item to search for.
+         * @return The item's position in the trade if it is in the trade, -1 if
+         * not.
+         */
+        public final int getSlotByItemID(TradeInternalItem item) {
+            for (int i = 0; i < ourTradeSlotsFilled.length; i++) {
+                if (ourTradeSlotsFilled[i] == item) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        @Override
+        public void onError(int eid, String message) {
+            String estr;
+            switch (eid) {
+                case TradeStatusCodes.TRADE_CANCELLED:
+                    estr = "The trade has been canceled.";
+                    break;
+                case TradeStatusCodes.STATUS_PARSE_ERROR:
+                    estr = "We have encountered an error.";
+                    break;
+                case TradeStatusCodes.PARTNER_TIMED_OUT:
+                    estr = "Other user timed out.";
+                    break;
+                case TradeStatusCodes.TRADE_FAILED:
+                    estr = "Trade failed.";
+                    break;
+                default:
+                    estr = "Unknown error code " + eid + ".";
+            }
+
+            // TODO make message null checking refer to the library value.
+            if (message != null) {
+                estr += " (" + message + ")";
+            }
+
+            JOptionPane.showMessageDialog(tradeWindow, estr);
+            onTradeClosed();
+        }
+
+        @Override
+        public void onWelcome() {
+            //trade.sendMessage("[DMT] Hello!  This user is testing out an in-development third-party Steam client; I am not a bot.  Pardon any bugs.");
+            //trade.sendMessage("[DMT] For more information, feel free to check out the group: http://steamcommunity.com/groups/dmt-client");
+        }
+
+        @Override
+        public void onAfterInit() {
+            /**
+             * Author's note: We're lazy and never updating the count on this in
+             * the duration of the trade. We'll just excuse it as saying it's
+             * the total item count for the inventory, and when we add supprot
+             * for other inventories, we have something to work with. This sets
+             * up our item list that is pushed to the UI.
+             */
+            tradeWindow.loadInventorySet(trade.myAppContextData);
+        }
+
+        @Override
+        public void onUserAddItem(TradeInternalAsset inventoryItem) {
+            logger.debug("Getting name.");
+            String invName = getItemName(inventoryItem);
+
+            if (otherOfferedItems.containsKey(invName)) {
+                otherOfferedItems.get(invName).incrementCount(1);
+            } else {
+                TradeDisplayItem it = new TradeDisplayItem(
+                        inventoryItem.getClassid(), invName);
+                it.incrementCount(1);
+                otherOfferedItems.put(invName, it);
+            }
+            tradeWindow.updateTradeCount(false, otherOfferedItems.values());
+            logger.info("Item {} added.", invName);
+        }
+
+        @Override
+        public void onUserRemoveItem(TradeInternalAsset inventoryItem) {
+            String invName = getItemName(inventoryItem);
+
+            TradeDisplayItem it = otherOfferedItems.remove(invName);
+            it.incrementCount(-1);
+            otherOfferedItems.put(invName, it);
+            tradeWindow.updateTradeCount(false, otherOfferedItems.values());
+        }
+
+        @Override
+        public void onMessage(String msg) {
+            tradeWindow.addMessage(otherPlayerName, msg);
+        }
+
+        @Override
+        public void onUserSetReadyState(boolean ready) {
+            tradeWindow.otherOfferReadyCheckbox.setSelected(ready);
+
+            if (trade.getSelf().isReady() && trade.getPartner().isReady()) {
+                tradeWindow.completeTradeButton.setEnabled(true);
+            }
+        }
+
+        @Override
+        public void onUserAccept() {
+        }
+
+        @Override
+        public void onNewVersion() {
+        }
+
+        @Override
+        public void onTradeSuccess() {
+            // Trade completed!
+            // TODO Show a message dialog telling you again what you received?
+            JOptionPane.showMessageDialog(tradeWindow, "Trade completed!");
+        }
+
+        @Override
+        public void onTimer(int secondsSinceAction, int secondsSinceTrade) {
+        }
+
+        @Override
+        public void onTradeClosed() {
+            tradeWindow.dispose();
+            client.tradePoller.endCurrentTradeSession();
+        }
+
+        @Override
+        public void onUnknownAction(TradeEvent event) {
+            // Just output some stuff on unknown actions.
+            int action = event.action;
+
+            logger.debug("Unknown action {}: {}", action,
+                    event.getJSONObject());
+
+            boolean isBot = !event.steamid.equals(String.valueOf(trade.getPartnerSteamId()));
+            logger.debug("Is bot action? {}", isBot);
+
+            // TODO Complete implementation of currency.
+
+            switch (event.action) {
+                default:
+                    break;
+            }
+        }
+    }
+
 }
