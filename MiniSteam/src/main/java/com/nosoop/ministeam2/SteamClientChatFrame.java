@@ -117,6 +117,18 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
         }
     }
     
+    void sendTradeRequest(SteamID target) {
+        client.steamTrade.trade(target);
+    }
+    
+    void acceptTradeRequest(int tradeid) {
+        client.steamTrade.respondToTrade(tradeid, true);
+    }
+    
+    void cancelTradeRequest(SteamID target) {
+        client.steamTrade.cancelTrade(target);
+    }
+    
     String getOwnPersonaName() {
         return client.steamFriends.getPersonaName();
     }

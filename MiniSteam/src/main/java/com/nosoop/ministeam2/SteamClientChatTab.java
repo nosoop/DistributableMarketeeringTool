@@ -55,7 +55,13 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      * Stored user information.
      */
     SteamClientChatFrame.UserInfo userinfo;
-
+    /**
+     * Trade button status, to determine what action should be done when
+     * clicked..
+     */
+    TradeButtonState state;
+    int tradeid;
+    
     /**
      * Creates new form SteamClientChatPanel
      */
@@ -72,16 +78,19 @@ public class SteamClientChatTab extends javax.swing.JPanel {
                 updateStatusLabel(false);
             }
         });
+        
+        this.state = TradeButtonState.IDLE;
+        this.tradeid = 0;
     }
 
-    public void receiveMessage(EChatEntryType entryType,
+    void receiveMessage(EChatEntryType entryType,
             String message) {
         if (entryType == EChatEntryType.ChatMsg) {
             // If a chat message was received, show it in the window.
             chatTextBuffer.append(String.format(CHAT_MESSAGE_ENTRY_FMT,
                     userNameLabel.getText(), message));
             updateChatTextArea();
-            
+
             // Clear typing message once a message is received.
             userIsTypingTimer.stop();
         } else if (entryType == EChatEntryType.Typing) {
@@ -92,30 +101,53 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         updateStatusLabel(userIsTypingTimer.isRunning());
         logger.debug("Message received.");
     }
-    
-    public void updateChatTextArea() {
+
+    void updateChatTextArea() {
         chatTextArea.setText(chatTextBuffer.toString());
         logger.debug("Chat field updated.");
     }
 
     /**
      * Appends a message showing whether or the user is currently typing.
-     * 
+     *
      * @param isTyping Whether or not to display the typing notification.
      */
-    private void updateStatusLabel(boolean isTyping) {
+    void updateStatusLabel(boolean isTyping) {
         String status = String.format(
                 isTyping ? "%s (Typing...)" : "%s", userinfo.status);
-        
+
         userStatusLabel.setText(status);
     }
 
-    public void updateUserInfo(SteamClientChatFrame.UserInfo info) {
+    void updateUserInfo(SteamClientChatFrame.UserInfo info) {
         userinfo = info;
         userNameLabel.setText(userinfo.username);
-        
+
         // If status is changed while typing, reflect the change.
         updateStatusLabel(userIsTypingTimer.isRunning());
+    }
+
+    void updateTradeButton(TradeButtonState state, int tradeid) {
+        this.state = state;
+        this.tradeid = tradeid;
+        switch (state) {
+            case IDLE:
+                tradeButton.setEnabled(true);
+                tradeButton.setText("Send Trade Request");
+                break;
+            case DISABLED_WHILE_IN_TRADE:
+                tradeButton.setEnabled(false);
+                tradeButton.setText("Already Trading");
+                break;
+            case RECEIVED_REQUEST:
+                tradeButton.setEnabled(true);
+                tradeButton.setText("Accept Trade");
+                break;
+            case SENT_REQUEST:
+                tradeButton.setEnabled(true);
+                tradeButton.setText("Cancel Request");
+                break;
+        }
     }
 
     /**
@@ -139,6 +171,11 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         userStatusLabel.setText("[unknown status]");
 
         tradeButton.setText("Send Trade Request");
+        tradeButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tradeButtonActionPerformed(evt);
+            }
+        });
 
         chatTextArea.setColumns(20);
         chatTextArea.setFont(new java.awt.Font("Tahoma", 0, 11)); // NOI18N
@@ -163,13 +200,13 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane1)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(userNameLabel)
                             .addComponent(userStatusLabel))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 165, Short.MAX_VALUE)
-                        .addComponent(tradeButton))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(tradeButton, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(messageEntryField, javax.swing.GroupLayout.Alignment.LEADING))
                 .addContainerGap())
         );
@@ -208,9 +245,9 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             chatTextBuffer.append(String.format(CHAT_MESSAGE_ENTRY_FMT,
                     frame.getOwnPersonaName(), inputText));
             updateChatTextArea();
-            
+
             messageEntryField.setText("");
-            
+
             // Reset state of typing message thingy.
             lastTimeKeyPressed = 0;
         }
@@ -227,6 +264,21 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_messageEntryFieldKeyTyped
 
+    private void tradeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tradeButtonActionPerformed
+        switch (state) {
+            case IDLE:
+                frame.sendTradeRequest(chatter);
+                updateTradeButton(TradeButtonState.SENT_REQUEST, 0);
+                break;
+            case RECEIVED_REQUEST:
+                frame.acceptTradeRequest(tradeid);
+                break;
+            case SENT_REQUEST:
+                frame.cancelTradeRequest(chatter);
+                break;
+        }
+    }//GEN-LAST:event_tradeButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextArea chatTextArea;
     private javax.swing.JScrollPane jScrollPane1;
@@ -235,4 +287,9 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     private javax.swing.JLabel userNameLabel;
     private javax.swing.JLabel userStatusLabel;
     // End of variables declaration//GEN-END:variables
+
+    public enum TradeButtonState {
+        IDLE, DISABLED_WHILE_IN_TRADE, RECEIVED_REQUEST, SENT_REQUEST;
+    }
+
 }
