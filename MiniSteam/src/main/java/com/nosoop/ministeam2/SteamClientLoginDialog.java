@@ -68,9 +68,12 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         for (String user : accounts.userStore.keySet()) {
             model.addElement(user);
         }
+        
+        setSteamConnectionState(
+                SteamClientLoginDialog.ClientConnectivityState.CONNECTING);
     }
 
-    void setSteamConnectionState(ClientConnectivityState state) {
+    final void setSteamConnectionState(ClientConnectivityState state) {
         switch (state) {
             case CONNECTED:
                 setLoginStatusLabel("Waiting to sign in...");
