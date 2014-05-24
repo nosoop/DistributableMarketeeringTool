@@ -19,11 +19,11 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     /**
      * The client instance this window is attached to.
      */
-    SteamKitClient client;
+    private SteamKitClient client;
     /**
      * A map containing all the users we are currently chatting with.
      */
-    Map<SteamID, SteamClientChatTab> currentUsers;
+    private Map<SteamID, SteamClientChatTab> currentUsers;
     /**
      * A logging instance.
      */
@@ -44,7 +44,7 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
             return;
         
         String tabName = client.steamFriends.getFriendPersonaName(user);
-        SteamClientChatTab tab = new SteamClientChatTab(user);
+        SteamClientChatTab tab = new SteamClientChatTab(this, user);
 
         chatTabbedPane.addTab(tabName, tab);
         currentUsers.put(user, tab);
@@ -64,7 +64,7 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
      * @param entryType
      * @param message
      */
-    public void onReceivedChatMessage(SteamID sender,
+    void onReceivedChatMessage(SteamID sender,
             EChatEntryType entryType, String message) {
         SteamClientChatTab tabHandlingMessage;
 
@@ -86,7 +86,9 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     }
 
     // TODO Maybe make this an event listener?
-    public void onSendingMessage() {
+    void onSendingMessage(SteamID target, EChatEntryType entryType,
+            String message) {
+        client.steamFriends.sendChatMessage(target, entryType, message);
     }
 
     /**
@@ -113,6 +115,10 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
             chatTabbedPane.insertTab(info.username, null, updateTab, null,
                     tabNumber);
         }
+    }
+    
+    String getOwnPersonaName() {
+        return client.steamFriends.getPersonaName();
     }
 
     /**

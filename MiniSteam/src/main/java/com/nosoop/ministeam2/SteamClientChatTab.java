@@ -1,9 +1,8 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.nosoop.ministeam2;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
@@ -34,6 +33,10 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      */
     SteamID chatter;
     /**
+     * The parent frame of this tab.
+     */
+    SteamClientChatFrame frame;
+    /**
      * A text buffer containing the chat messages.
      *
      * TODO Possibly store the raw messages with timestamps instead?
@@ -44,37 +47,75 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      */
     Logger logger = LoggerFactory.getLogger(
             SteamClientChatTab.class.getSimpleName());
+    /**
+     * Timer that runs to unset the "typing..." state.
+     */
+    private Timer userIsTypingTimer;
+    /**
+     * Stored user information.
+     */
+    SteamClientChatFrame.UserInfo userinfo;
 
     /**
      * Creates new form SteamClientChatPanel
      */
-    public SteamClientChatTab(SteamID chatter) {
+    public SteamClientChatTab(SteamClientChatFrame frame, SteamID chatter) {
         this.chatter = chatter;
         this.chatTextBuffer = new StringBuffer();
+        this.frame = frame;
         initComponents();
+
+        // Creates a timer that unsets typing state after 15 seconds.
+        userIsTypingTimer = new Timer(15000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateStatusLabel(false);
+            }
+        });
     }
 
     public void receiveMessage(EChatEntryType entryType,
             String message) {
-        // Update window.
         if (entryType == EChatEntryType.ChatMsg) {
+            // If a chat message was received, show it in the window.
             chatTextBuffer.append(String.format(CHAT_MESSAGE_ENTRY_FMT,
                     userNameLabel.getText(), message));
-            logger.debug("Textual message received: {}.  Updating chat area.",
-                    message);
             updateChatTextArea();
+            
+            // Clear typing message once a message is received.
+            userIsTypingTimer.stop();
+        } else if (entryType == EChatEntryType.Typing) {
+            // If the user is busy typing, reset the timer that clears typing.
+            userIsTypingTimer.stop();
+            userIsTypingTimer.start();
         }
+        updateStatusLabel(userIsTypingTimer.isRunning());
         logger.debug("Message received.");
     }
-
+    
     public void updateChatTextArea() {
         chatTextArea.setText(chatTextBuffer.toString());
         logger.debug("Chat field updated.");
     }
-    
+
+    /**
+     * Appends a message showing whether or the user is currently typing.
+     * 
+     * @param isTyping Whether or not to display the typing notification.
+     */
+    private void updateStatusLabel(boolean isTyping) {
+        String status = String.format(
+                isTyping ? "%s (Typing...)" : "%s", userinfo.status);
+        
+        userStatusLabel.setText(status);
+    }
+
     public void updateUserInfo(SteamClientChatFrame.UserInfo info) {
-        userNameLabel.setText(info.username);
-        userStatusLabel.setText(info.status);
+        userinfo = info;
+        userNameLabel.setText(userinfo.username);
+        
+        // If status is changed while typing, reflect the change.
+        updateStatusLabel(userIsTypingTimer.isRunning());
     }
 
     /**
@@ -109,6 +150,9 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         messageEntryField.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 messageEntryFieldKeyPressed(evt);
+            }
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                messageEntryFieldKeyTyped(evt);
             }
         });
 
@@ -152,30 +196,37 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         String inputText = messageEntryField.getText();
 
         /**
-         * Notify the other user of our typing activity.
-         */
-        if (System.currentTimeMillis() - lastTimeKeyPressed
-                > MSEC_INTERVAL_TYPING) {
-            // TODO notify to the other player that we are typing
-            lastTimeKeyPressed = System.currentTimeMillis();
-        }
-
-        /**
          * Sends a message to the other player if the ENTER key is hit and there
          * is a non-zero length trimmed message.
          */
         if (key == java.awt.event.KeyEvent.VK_ENTER
                 && inputText.trim().length() > 0) {
-            // TODO send the message
-
-            messageEntryField.setText("");
+            // Send the message.
+            frame.onSendingMessage(chatter, EChatEntryType.ChatMsg, inputText);
 
             // Copy message to own chat.
-
+            chatTextBuffer.append(String.format(CHAT_MESSAGE_ENTRY_FMT,
+                    frame.getOwnPersonaName(), inputText));
+            updateChatTextArea();
+            
+            messageEntryField.setText("");
+            
             // Reset state of typing message thingy.
             lastTimeKeyPressed = 0;
         }
     }//GEN-LAST:event_messageEntryFieldKeyPressed
+
+    private void messageEntryFieldKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_messageEntryFieldKeyTyped
+        /**
+         * Notify the other user of our typing activity.
+         */
+        if (System.currentTimeMillis() - lastTimeKeyPressed
+                > MSEC_INTERVAL_TYPING) {
+            frame.onSendingMessage(chatter, EChatEntryType.Typing, "");
+            lastTimeKeyPressed = System.currentTimeMillis();
+        }
+    }//GEN-LAST:event_messageEntryFieldKeyTyped
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextArea chatTextArea;
     private javax.swing.JScrollPane jScrollPane1;
