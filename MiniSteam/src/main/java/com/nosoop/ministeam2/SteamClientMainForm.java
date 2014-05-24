@@ -2,7 +2,6 @@ package com.nosoop.ministeam2;
 
 import bundled.steamtrade.org.json.JSONException;
 import com.nosoop.inputdialog.CallbackInputFrame.DialogCallback;
-import com.nosoop.ministeam.FrontendTrade;
 import com.nosoop.steamtrade.TradeListener;
 import com.nosoop.steamtrade.TradeSession;
 import com.nosoop.steamtrade.inventory.AssetBuilder;

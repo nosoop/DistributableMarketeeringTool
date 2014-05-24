@@ -2,10 +2,11 @@ package com.nosoop.ministeam2;
 
 import bundled.steamtrade.org.json.*;
 import com.nosoop.inputdialog.CallbackInputFrame;
-import com.nosoop.ministeam.BuildProperties;
-import com.nosoop.ministeam.Util;
 import com.nosoop.ministeam2.SteamClientMainForm.SteamClientInfo;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
@@ -312,7 +313,8 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
 
             try {
                 if (file.exists()) {
-                    JSONObject data = new JSONObject(Util.readFile(file));
+                    JSONObject data = new JSONObject(
+                            new JSONTokener(new FileInputStream(file)));
 
                     JSONArray clients = data.getJSONArray("clients");
 
@@ -332,6 +334,9 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
                 }
             } catch (JSONException ex) {
                 logger.error("Error loading user storage.", ex);
+            } catch (FileNotFoundException ex) {
+                logger.error("Unable to find file after checking for its "
+                        + "existence.", ex);
             }
         }
 
