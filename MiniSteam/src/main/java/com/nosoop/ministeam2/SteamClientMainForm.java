@@ -63,6 +63,10 @@ public class SteamClientMainForm extends javax.swing.JFrame {
      */
     SteamClientLoginDialog loginDialog;
     /**
+     * Child dialog for sending and receiving Steam user messages.
+     */
+    SteamClientChatFrame chatFrame;
+    /**
      * Holding spot for friend table entries.
      */
     Map<Long, SteamFriendEntry> friendList;
@@ -99,6 +103,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 SteamClientLoginDialog.ClientConnectivityState.CONNECTING);
 
         friendList = new HashMap<>();
+        
+        chatFrame = new SteamClientChatFrame(backend);
     }
 
     synchronized void updateFriendStatus(final SteamID userid) {
@@ -488,7 +494,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     @Override
                     public void call(FriendMsgCallback callback) {
                         //mainWindow.receiveChatMessage(callback);
-                        // TODO Create window for chat message.
+                        SteamClientMainForm.this.chatFrame.onReceivedMessage(
+                                callback.getSender(), callback.getEntryType(), 
+                                callback.getMessage());
                     }
                 });
                 //</editor-fold>

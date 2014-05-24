@@ -1,5 +1,13 @@
 package com.nosoop.ministeam2;
 
+import com.nosoop.ministeam2.SteamClientMainForm.SteamKitClient;
+import java.util.HashMap;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
+import uk.co.thomasc.steamkit.types.steamid.SteamID;
+
 /**
  * A window holding Steam chat tabs, passing chat information to the appropriate
  * tab.
@@ -8,10 +16,63 @@ package com.nosoop.ministeam2;
  */
 public class SteamClientChatFrame extends javax.swing.JFrame {
     /**
+     * The client instance this window is attached to.
+     */
+    SteamKitClient client;
+    /**
+     * A map containing all the users we are currently chatting with.
+     */
+    Map<SteamID, SteamClientChatTab> currentUsers;
+    /**
+     * A logging instance.
+     */
+    Logger logger = LoggerFactory.getLogger(
+                SteamClientMainForm.class.getSimpleName());
+    
+    /**
      * Creates new form SteamClientChatFrame
      */
-    public SteamClientChatFrame() {
+    public SteamClientChatFrame(SteamKitClient client) {
+        this.client = client;
+        this.currentUsers = new HashMap<>();
         initComponents();
+    }
+
+    /**
+     * Pass the message to the specific tab, creating a new one if the user does
+     * not have their own.
+     *
+     * @param sender
+     * @param entryType
+     * @param message
+     */
+    public synchronized void onReceivedMessage(SteamID sender,
+            EChatEntryType entryType, String message) {
+        SteamClientChatTab tabHandlingMessage;
+        
+        logger.debug("Message received. Searching for tab.");
+        
+        if (!currentUsers.containsKey(sender)) {
+            String tabName = client.steamFriends.getFriendPersonaName(sender);
+            
+            tabHandlingMessage = new SteamClientChatTab();
+            
+            logger.debug("Creating new tab.");
+            chatTabbedPane.addTab(tabName, tabHandlingMessage);
+            currentUsers.put(sender, tabHandlingMessage);
+            
+            logger.debug("Tab added.");
+        } else {
+            tabHandlingMessage = currentUsers.get(sender);
+            logger.debug("Tab already exists; using existing tab.");
+        }
+        tabHandlingMessage.receiveMessage(sender, entryType, message);
+        
+        logger.debug("Message fired at tab.");
+        
+        if (entryType == EChatEntryType.ChatMsg) {
+            this.setVisible(true);
+        }
     }
 
     /**
@@ -23,24 +84,22 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jTabbedPane1 = new javax.swing.JTabbedPane();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        chatTabbedPane = new javax.swing.JTabbedPane();
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
+            .addComponent(chatTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
+            .addComponent(chatTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JTabbedPane chatTabbedPane;
     // End of variables declaration//GEN-END:variables
 }

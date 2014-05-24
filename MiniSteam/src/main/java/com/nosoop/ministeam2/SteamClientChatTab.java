@@ -1,10 +1,17 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package com.nosoop.ministeam2;
+
+import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
+import uk.co.thomasc.steamkit.types.steamid.SteamID;
 
 /**
  *
  * @author nosoop < nosoop at users.noreply.github.com >
  */
-public class SteamClientChatTab extends javax.swing.JFrame {
+public class SteamClientChatTab extends javax.swing.JPanel {
     /**
      * Number of milliseconds that must pass before we fire off another message
      * notifying the other user that we are typing.
@@ -18,10 +25,15 @@ public class SteamClientChatTab extends javax.swing.JFrame {
     long lastTimeKeyPressed = 0;
 
     /**
-     * Creates new form SteamClientChatTab
+     * Creates new form SteamClientChatPanel
      */
     public SteamClientChatTab() {
         initComponents();
+    }
+
+    public synchronized void receiveMessage(SteamID sender,
+            EChatEntryType entryType, String message) {
+        // Update window.
     }
 
     /**
@@ -39,8 +51,6 @@ public class SteamClientChatTab extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         chatTextArea = new javax.swing.JTextArea();
         messageEntryField = new javax.swing.JTextField();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         userNameLabel.setText("[unknown]");
 
@@ -60,8 +70,8 @@ public class SteamClientChatTab extends javax.swing.JFrame {
             }
         });
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -93,8 +103,6 @@ public class SteamClientChatTab extends javax.swing.JFrame {
                 .addComponent(messageEntryField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
-
-        pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void messageEntryFieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_messageEntryFieldKeyPressed
