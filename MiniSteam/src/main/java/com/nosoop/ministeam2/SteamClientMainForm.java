@@ -494,7 +494,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     @Override
                     public void call(FriendMsgCallback callback) {
                         //mainWindow.receiveChatMessage(callback);
-                        SteamClientMainForm.this.chatFrame.onReceivedMessage(
+                        SteamClientMainForm.this.chatFrame.onReceivedChatMessage(
                                 callback.getSender(), callback.getEntryType(), 
                                 callback.getMessage());
                     }

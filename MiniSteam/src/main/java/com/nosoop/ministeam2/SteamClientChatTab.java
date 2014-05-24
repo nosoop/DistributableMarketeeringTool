@@ -4,6 +4,8 @@
  */
 package com.nosoop.ministeam2;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
 import uk.co.thomasc.steamkit.types.steamid.SteamID;
 
@@ -13,27 +15,66 @@ import uk.co.thomasc.steamkit.types.steamid.SteamID;
  */
 public class SteamClientChatTab extends javax.swing.JPanel {
     /**
+     * The formatting string to use when adding a new chat message.
+     */
+    private static final String CHAT_MESSAGE_ENTRY_FMT = "%s: %s%n";
+    /**
      * Number of milliseconds that must pass before we fire off another message
      * notifying the other user that we are typing.
      *
      * Currently set to 5 seconds.
      */
-    final int MSEC_INTERVAL_TYPING = 5000;
+    private static final int MSEC_INTERVAL_TYPING = 5000;
     /**
      * The last time a key was pressed in the current chat.
      */
     long lastTimeKeyPressed = 0;
+    /**
+     * The SteamID of the person we are chatting with.
+     */
+    SteamID chatter;
+    /**
+     * A text buffer containing the chat messages.
+     *
+     * TODO Possibly store the raw messages with timestamps instead?
+     */
+    StringBuffer chatTextBuffer;
+    /**
+     * Another logging instance. Of course.
+     */
+    Logger logger = LoggerFactory.getLogger(
+            SteamClientChatTab.class.getSimpleName());
 
     /**
      * Creates new form SteamClientChatPanel
      */
-    public SteamClientChatTab() {
+    public SteamClientChatTab(SteamID chatter) {
+        this.chatter = chatter;
+        this.chatTextBuffer = new StringBuffer();
         initComponents();
     }
 
-    public synchronized void receiveMessage(SteamID sender,
-            EChatEntryType entryType, String message) {
+    public void receiveMessage(EChatEntryType entryType,
+            String message) {
         // Update window.
+        if (entryType == EChatEntryType.ChatMsg) {
+            chatTextBuffer.append(String.format(CHAT_MESSAGE_ENTRY_FMT,
+                    userNameLabel.getText(), message));
+            logger.debug("Textual message received: {}.  Updating chat area.",
+                    message);
+            updateChatTextArea();
+        }
+        logger.debug("Message received.");
+    }
+
+    public void updateChatTextArea() {
+        chatTextArea.setText(chatTextBuffer.toString());
+        logger.debug("Chat field updated.");
+    }
+    
+    public void updateUserInfo(UserInfo info) {
+        userNameLabel.setText(info.username);
+        userStatusLabel.setText(info.status);
     }
 
     /**
@@ -59,6 +100,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         tradeButton.setText("Send Trade Request");
 
         chatTextArea.setColumns(20);
+        chatTextArea.setFont(new java.awt.Font("Tahoma", 0, 11)); // NOI18N
         chatTextArea.setLineWrap(true);
         chatTextArea.setRows(5);
         chatTextArea.setWrapStyleWord(true);
@@ -142,4 +184,12 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     private javax.swing.JLabel userNameLabel;
     private javax.swing.JLabel userStatusLabel;
     // End of variables declaration//GEN-END:variables
+
+    /**
+     * A struct containing data to update the chat window with.
+     */
+    public static class UserInfo {
+        String username, status;
+    }
+
 }

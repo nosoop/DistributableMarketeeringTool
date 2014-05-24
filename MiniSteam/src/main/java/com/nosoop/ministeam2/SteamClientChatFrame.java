@@ -27,7 +27,7 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
      * A logging instance.
      */
     Logger logger = LoggerFactory.getLogger(
-                SteamClientMainForm.class.getSimpleName());
+                SteamClientChatFrame.class.getSimpleName());
     
     /**
      * Creates new form SteamClientChatFrame
@@ -46,7 +46,7 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
      * @param entryType
      * @param message
      */
-    public synchronized void onReceivedMessage(SteamID sender,
+    public void onReceivedChatMessage(SteamID sender,
             EChatEntryType entryType, String message) {
         SteamClientChatTab tabHandlingMessage;
         
@@ -54,25 +54,35 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
         
         if (!currentUsers.containsKey(sender)) {
             String tabName = client.steamFriends.getFriendPersonaName(sender);
+            tabHandlingMessage = new SteamClientChatTab(sender);
             
-            tabHandlingMessage = new SteamClientChatTab();
-            
-            logger.debug("Creating new tab.");
             chatTabbedPane.addTab(tabName, tabHandlingMessage);
             currentUsers.put(sender, tabHandlingMessage);
+            
+            SteamClientChatTab.UserInfo info = 
+                    new SteamClientChatTab.UserInfo();
+            info.username = tabName;
+            info.status = client.steamFriends.getFriendPersonaState(sender).
+                    toString();
+            tabHandlingMessage.updateUserInfo(info);
             
             logger.debug("Tab added.");
         } else {
             tabHandlingMessage = currentUsers.get(sender);
             logger.debug("Tab already exists; using existing tab.");
         }
-        tabHandlingMessage.receiveMessage(sender, entryType, message);
+        tabHandlingMessage.receiveMessage(entryType, message);
         
         logger.debug("Message fired at tab.");
         
         if (entryType == EChatEntryType.ChatMsg) {
             this.setVisible(true);
         }
+    }
+    
+    // TODO Maybe make this an event listener?
+    public void onSendingMessage() {
+        
     }
 
     /**
