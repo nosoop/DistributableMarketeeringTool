@@ -40,9 +40,14 @@ import uk.co.thomasc.steamkit.steam3.handlers.steamuser.types.*;
 import uk.co.thomasc.steamkit.steam3.steamclient.SteamClient;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.*;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.*;
+import uk.co.thomasc.steamkit.steam3.webapi.WebAPI;
+import uk.co.thomasc.steamkit.types.keyvalue.KeyValue;
 import uk.co.thomasc.steamkit.types.steamid.SteamID;
+import uk.co.thomasc.steamkit.util.KeyDictionary;
+import uk.co.thomasc.steamkit.util.WebHelpers;
 import uk.co.thomasc.steamkit.util.cSharp.events.ActionT;
 import uk.co.thomasc.steamkit.util.crypto.CryptoHelper;
+import uk.co.thomasc.steamkit.util.crypto.RSACrypto;
 
 /**
  *
@@ -260,7 +265,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
             chatFrame.addNewChatTab(user.steamid);
             chatFrame.switchToChatTab(user.steamid);
-            
+
             chatFrame.setVisible(true);
         }
     }//GEN-LAST:event_tableUsersMouseClicked
@@ -548,17 +553,26 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     public void call(LoginKeyCallback callback) {
                         /**
                          * TODO Implement support for storing the authorized
-                         * login data and enable automatic client authentication
-                         * for those that have it working.
+                         * login data.
                          */
                         // Hopefully we only need to do this once.
                         sessionId = Base64.encodeBytes(
                                 String.valueOf(callback.getUniqueId()).
                                 getBytes());
 
-                        Map<String, String> cookies = new HashMap<>();
+                        // Attempt to authenticate by API.
+                        {
+                            SteamLoginAuth auth = authenticate(callback);
+
+                            if (auth.success) {
+                                token = auth.token;
+                                return;
+                            }
+                        }
+                        logger.info("API sign-in failed. Using SteamWeb.");
 
                         // I guess we'll just have to do this manually.
+                        Map<String, String> cookies = new HashMap<>();
                         cookies.put("sessionid", sessionId);
 
                         if (!clientInfo.machineauthcookie.equals("")) {
@@ -616,7 +630,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         SteamClientTradeWindow sct =
                                 new SteamClientTradeWindow(SteamKitClient.this);
 
-                        // TODO Clean up reference to FrontendTrade.
                         TradeListener listener = sct.getTradeListener();
 
                         logger.debug("Trade window created.");
@@ -806,6 +819,49 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             steamUser.logOn(loginData);
 
             clientInfo = userLogin;
+        }
+
+        /**
+         * Authenticate the login via Steam's internal API.
+         *
+         * @param callback
+         * @return
+         */
+        SteamLoginAuth authenticate(LoginKeyCallback callback) {
+            logger.info("Attempting API auth...");
+
+            final WebAPI userAuth = new WebAPI("ISteamUserAuth", "");
+            // generate an AES session key
+            final byte[] sessionKey = CryptoHelper.GenerateRandomBlock(32);
+
+            // rsa encrypt it with the public key for the universe we're on
+            final RSACrypto rsa = new RSACrypto(KeyDictionary.getPublicKey(steamClient.getConnectedUniverse()));
+            byte[] cryptedSessionKey = rsa.encrypt(sessionKey);
+
+            final byte[] loginKey = new byte[20];
+            System.arraycopy(callback.getLoginKey().getBytes(), 0, loginKey, 0, callback.getLoginKey().length());
+
+            // aes encrypt the loginkey with our session key
+            final byte[] cryptedLoginKey = CryptoHelper.SymmetricEncrypt(loginKey, sessionKey);
+
+            KeyValue authResult;
+
+            SteamLoginAuth result = new SteamLoginAuth();
+
+            try {
+                authResult = userAuth.authenticateUser(
+                        String.valueOf(steamClient.getSteamId().convertToLong()),
+                        WebHelpers.UrlEncode(cryptedSessionKey),
+                        WebHelpers.UrlEncode(cryptedLoginKey), "POST");
+            } catch (final Exception e) {
+                result.success = false;
+                return result;
+            }
+
+            result.token = authResult.get("token").asString();
+            result.success = true;
+
+            return result;
         }
 
         public SteamFriendEntry getUserStatus(SteamID user) {
@@ -1033,22 +1089,10 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             String steamGuardText = "";
             String steamGuardId = "";
             do {
-                System.out.println("SteamWeb: Logging In...");
-
-                /*
-                 * boolean captcha = loginJSON != null &&
-                 * loginJSON.optBoolean("captcha_needed"); boolean steamGuard =
-                 * loginJSON != null &&
-                 * loginJSON.optBoolean("emailauth_needed");
-                 */
                 boolean captcha = loginJSON.optBoolean("captcha_needed");
                 boolean steamGuard = loginJSON.optBoolean("emailauth_needed");
 
                 String time = rsaJSON.getString("timestamp");
-                /*
-                 * String capGID = loginJSON == null ? null :
-                 * loginJSON.optString("captcha_gid");
-                 */
                 String capGID = loginJSON.optString("captcha_gid", null);
 
                 post = new HashMap<>();
@@ -1058,17 +1102,21 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 // Captcha
                 String capText = "";
                 if (captcha) {
-                    //assert (loginJSON != null);
                     System.out.println("SteamWeb: Captcha is needed.");
 
                     try {
                         if (Desktop.isDesktopSupported()) {
                             Desktop.getDesktop().browse(new URI("https://steamcommunity.com/public/captcha.php?gid=" + loginJSON.getString("captcha_gid")));
-                        } else {
-                            System.out.println("https://steamcommunity.com/public/captcha.php?gid=" + loginJSON.getString("captcha_gid"));
                         }
-                        System.out.println("SteamWeb: Type the captcha:");
-                        capText = scanner.nextLine();
+                        String promptMessage = String.format(
+                                "SteamWeb login failed.  Please type the "
+                                + "captcha at %s to continue.",
+                                "https://steamcommunity.com/public/"
+                                + "captcha.php?gid="
+                                + loginJSON.getString("captcha_gid"));
+
+                        capText = JOptionPane.showInputDialog(null,
+                                promptMessage, "");
                     } catch (URISyntaxException ex) {
                         throw new Error(ex);
                     }
@@ -1080,10 +1128,11 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
                 // SteamGuard
                 if (steamGuard) {
-                    //assert (loginJSON != null);
-                    System.out.println("SteamWeb: SteamGuard is needed.");
-                    System.out.println("SteamWeb: Type the code:");
-                    steamGuardText = scanner.nextLine();
+                    String promptMessage = "SteamWeb login failed. Please "
+                            + "enter the SteamGuard code sent to your e-mail.";
+                    steamGuardText = JOptionPane.showInputDialog(null,
+                            promptMessage, "");
+                    
                     steamGuardId = loginJSON.getString("emailsteamid");
                 }
 

@@ -300,6 +300,8 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
     }//GEN-LAST:event_accountUserFieldItemStateChanged
 
     private void quitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_quitButtonActionPerformed
+        // TODO Handle disposal properly when undeeded.
+        System.exit(0);
     }//GEN-LAST:event_quitButtonActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPasswordField accountPasswordField;

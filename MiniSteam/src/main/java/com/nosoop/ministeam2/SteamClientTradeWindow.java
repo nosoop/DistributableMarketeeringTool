@@ -43,7 +43,6 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
 
         logger.debug("Trade listener hooked into window.");
 
-        // TODO fix up names and stuff
         this.setTitle("Trading...");
         this.setVisible(true);
         logger.debug("Trade window should be visible.");
