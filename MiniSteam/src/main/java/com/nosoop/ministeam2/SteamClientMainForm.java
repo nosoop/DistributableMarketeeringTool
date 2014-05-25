@@ -99,6 +99,12 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         chatFrame = new SteamClientChatFrame(backend);
     }
 
+    /**
+     * Updates the status of a user, updating it through the visible friend list
+     * and by passing the information to the chat window.
+     *
+     * @param userid
+     */
     synchronized void updateFriendStatus(final SteamID userid) {
         if (userid.isIndividualAccount()) {
             if (friendList.containsKey(userid)) {
@@ -253,6 +259,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             SteamFriendEntry user = (SteamFriendEntry) tableUsers.getModel().getValueAt(targetRow, 0);
 
             chatFrame.addNewChatTab(user.steamid);
+            chatFrame.switchToChatTab(user.steamid);
+            
             chatFrame.setVisible(true);
         }
     }//GEN-LAST:event_tableUsersMouseClicked
@@ -809,6 +817,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     getFriendPersonaState(user);
             friend.relationship = backend.steamFriends.
                     getFriendRelationship(user);
+            friend.game = backend.steamFriends.getFriendGamePlayedName(user);
 
             return friend;
         }
@@ -1235,7 +1244,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
      */
     public static class SteamFriendEntry {
         SteamID steamid;
-        String username;
+        String username, game;
         EPersonaState state;
         EFriendRelationship relationship;
 

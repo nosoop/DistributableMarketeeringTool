@@ -2,6 +2,10 @@ package com.nosoop.ministeam2;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import javax.swing.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +65,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      */
     TradeButtonState state;
     int tradeid;
-    
+
     /**
      * Creates new form SteamClientChatPanel
      */
@@ -78,7 +82,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
                 updateStatusLabel(false);
             }
         });
-        
+
         this.state = TradeButtonState.IDLE;
         this.tradeid = frame.tradeRequest.TRADEID_INVALID;
     }
@@ -273,7 +277,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             case IDLE:
                 // Invite the user to a trade.
                 frame.tradeRequest.send(chatter);
-                updateTradeButton(TradeButtonState.SENT_REQUEST, 
+                updateTradeButton(TradeButtonState.SENT_REQUEST,
                         frame.tradeRequest.TRADEID_INVALID);
                 break;
             case RECEIVED_REQUEST:
@@ -288,7 +292,6 @@ public class SteamClientChatTab extends javax.swing.JPanel {
                 break;
         }
     }//GEN-LAST:event_tradeButtonActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextArea chatTextArea;
     private javax.swing.JScrollPane jScrollPane1;
@@ -301,6 +304,27 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     public enum TradeButtonState {
         IDLE, DISABLED_WHILE_IN_TRADE, RECEIVED_REQUEST, SENT_REQUEST,
         IN_TRADE;
+    }
+
+    /**
+     * Class that writes chat log files.
+     */
+    private class ChatLogger {
+        FileWriter fw;
+        PrintWriter pw;
+
+        public ChatLogger() {
+            // figure out where to write log file
+            try {
+                fw = new FileWriter(new File("pootis.log"), true);
+                pw = new PrintWriter(fw, true);
+            } catch (IOException e) {
+            }
+        }
+
+        public void writeMessage(boolean self, String message) {
+            // ...
+        }
     }
 
 }

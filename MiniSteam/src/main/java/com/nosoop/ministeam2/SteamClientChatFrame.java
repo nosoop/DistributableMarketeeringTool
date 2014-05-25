@@ -73,6 +73,21 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     }
 
     /**
+     * Switches to a tab specified by SteamID.
+     *
+     * @param user The user associated with the tab to switch to.
+     */
+    void switchToChatTab(SteamID user) {
+        for (Map.Entry<SteamID, SteamClientChatTab> entry
+                : currentUsers.entrySet()) {
+            if (entry.getKey().equals(user)) {
+                chatTabbedPane.setSelectedComponent(entry.getValue());
+                return;
+            }
+        }
+    }
+
+    /**
      * Pass the message to the specific tab, creating a new one if the user does
      * not have their own.
      *
