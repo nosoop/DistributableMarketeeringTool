@@ -42,6 +42,10 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         }
     }
 
+    /**
+     * Private enum to determine which components should be enabled and
+     * disabled.
+     */
     private enum DialogActivityMode {
         ALL_FIELDS_ACTIVE, ALL_FIELDS_DISABLED, LOGIN_BUTTON_BLOCK, CLOSED;
     }
@@ -67,11 +71,16 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         for (String user : accounts.userStore.keySet()) {
             model.addElement(user);
         }
-        
+
         setSteamConnectionState(
                 SteamClientLoginDialog.ClientConnectivityState.CONNECTING);
     }
 
+    /**
+     * Sets the appropriate connectivity state.
+     *
+     * @param state
+     */
     final void setSteamConnectionState(ClientConnectivityState state) {
         switch (state) {
             case CONNECTED:
@@ -96,6 +105,11 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         setLoginDialogVisibilityState(state.DIALOG_MODE);
     }
 
+    /**
+     * Sets component enabled states.
+     *
+     * @param mode
+     */
     private void setLoginDialogVisibilityState(DialogActivityMode mode) {
         switch (mode) {
             case ALL_FIELDS_ACTIVE:
@@ -124,6 +138,10 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         }
     }
 
+    /**
+     * Sets the status label.
+     * @param text 
+     */
     private void setLoginStatusLabel(String text) {
         loginStatusLabel.setText("Status: " + text);
     }

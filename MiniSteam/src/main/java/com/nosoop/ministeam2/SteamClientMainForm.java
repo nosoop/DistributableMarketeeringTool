@@ -3,8 +3,7 @@ package com.nosoop.ministeam2;
 import bundled.steamtrade.org.json.JSONException;
 import bundled.steamtrade.org.json.JSONObject;
 import com.nosoop.inputdialog.CallbackInputFrame.DialogCallback;
-import com.nosoop.steamtrade.TradeListener;
-import com.nosoop.steamtrade.TradeSession;
+import com.nosoop.steamtrade.*;
 import com.nosoop.steamtrade.inventory.AssetBuilder;
 import java.awt.Desktop;
 import java.awt.EventQueue;
@@ -18,13 +17,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.security.*;
 import java.security.spec.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.zip.GZIPInputStream;
 import javax.crypto.*;
@@ -538,22 +531,22 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                                 String.valueOf(callback.getUniqueId()).
                                 getBytes());
 
-                        Map<String,String> cookies = new HashMap<>();
+                        Map<String, String> cookies = new HashMap<>();
 
                         // I guess we'll just have to do this manually.
                         cookies.put("sessionid", sessionId);
 
                         if (!clientInfo.machineauthcookie.equals("")) {
-                            cookies.put("steamMachineAuth" + 
-                                    steamUser.getSteamId().convertToLong(), 
+                            cookies.put("steamMachineAuth"
+                                    + steamUser.getSteamId().convertToLong(),
                                     clientInfo.machineauthcookie);
                         }
                         try {
-                            SteamLoginAuth auth = 
-                                    SteamWebLogin.login(clientInfo.username, 
+                            SteamLoginAuth auth =
+                                    SteamWebLogin.login(clientInfo.username,
                                     clientInfo.password, cookies);
                             logger.info("SteamWeb login authenticated.");
-                            
+
                             if (auth.success) {
                                 token = auth.token;
                             }
@@ -632,7 +625,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
                             tradePoller.forceCancelTradeSession();
                         }
-                        
+
                         logger.debug("Trade polling attached.");
                         chatFrame.onSessionStart(callback);
                     }
@@ -819,10 +812,16 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         class TradePoller implements Runnable {
             TradeSession t;
 
-            public TradePoller() {
+            /**
+             * Creates a trade polling instance.
+             */
+            TradePoller() {
                 t = null;
             }
 
+            /**
+             * Poll-checking code - calls the trade update method.
+             */
             @Override
             public void run() {
                 if (isInTrade()) {
@@ -874,12 +873,13 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             boolean autoSetAFK;
             Logger logger;
 
-            public FrontendInactivityChecker() {
+            FrontendInactivityChecker() {
                 super();
 
                 this.timeLastActive = System.currentTimeMillis();
 
-                logger = LoggerFactory.getLogger(FrontendInactivityChecker.class.getSimpleName());
+                logger = LoggerFactory.getLogger(
+                        FrontendInactivityChecker.class.getSimpleName());
 
                 java.awt.Point m = getMousePoint();
                 this.lastX = m.x;
@@ -943,6 +943,22 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     }
 
     public static class SteamWebLogin {
+        /**
+         * Signs into Steam using the supplied credentials.
+         *
+         * @param username The user to sign in as.
+         * @param password The password linked to the username.
+         * @param cookies Any cookies available to bypass SteamGuard.
+         * @return
+         * @throws IOException
+         * @throws NoSuchAlgorithmException
+         * @throws InvalidKeySpecException
+         * @throws NoSuchPaddingException
+         * @throws InvalidKeyException
+         * @throws IllegalBlockSizeException
+         * @throws BadPaddingException
+         * @throws JSONException
+         */
         public static SteamLoginAuth login(String username, String password,
                 Map<String, String> cookies) throws IOException,
                 NoSuchAlgorithmException, InvalidKeySpecException,
@@ -978,11 +994,11 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             }
 
             byte[] encodedPassword = cryptRSA(
-                    rsaJSON.getString("publickey_exp"), 
-                    rsaJSON.getString("publickey_mod"), 
+                    rsaJSON.getString("publickey_exp"),
+                    rsaJSON.getString("publickey_mod"),
                     password.getBytes("ASCII"));
-            
-            String encryptedBase64Password = Base64.encodeBytes(encodedPassword);
+
+            String encryptedPassword = Base64.encodeBytes(encodedPassword);
 
             JSONObject loginJSON = null;
             String steamGuardText = "";
@@ -1000,7 +1016,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         : loginJSON.optString("captcha_gid");
 
                 post = new HashMap<>();
-                post.put("password", encryptedBase64Password);
+                post.put("password", encryptedPassword);
                 post.put("username", username);
 
                 // Captcha
@@ -1018,7 +1034,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         System.out.println("SteamWeb: Type the captcha:");
                         capText = scanner.nextLine();
                     } catch (URISyntaxException ex) {
-                        // Well, shit.
+                        throw new Error(ex);
                     }
                 }
 
@@ -1061,11 +1077,11 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
                 SteamLoginAuth auth = new SteamLoginAuth();
                 auth.success = true;
-                
-                String rawtoken = tp.getString("steamid") + "||" +
-                        tp.getString("token");
+
+                String rawtoken = tp.getString("steamid") + "||"
+                        + tp.getString("token");
                 auth.token = URLEncoder.encode(rawtoken, "UTF-8");
-                
+
                 return auth;
             } else {
                 System.out.println("SteamWeb Error: "
@@ -1075,10 +1091,10 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 return auth;
             }
         }
-        
-        private static byte[] cryptRSA(String exp, String mod, byte[] bytes) 
-                throws NoSuchAlgorithmException, InvalidKeySpecException, 
-                NoSuchPaddingException, IllegalBlockSizeException, 
+
+        private static byte[] cryptRSA(String exp, String mod, byte[] bytes)
+                throws NoSuchAlgorithmException, InvalidKeySpecException,
+                NoSuchPaddingException, IllegalBlockSizeException,
                 InvalidKeyException, BadPaddingException {
             BigInteger m = new BigInteger(mod, 16);
             BigInteger e = new BigInteger(exp, 16);
@@ -1099,14 +1115,14 @@ public class SteamClientMainForm extends javax.swing.JFrame {
          * method requests the URL via POST.
          *
          * @param url The URL to retrieve.
-         * @param reqProps Request properties to be sent.
-         * @param postParams Post parameters to be sent.
+         * @param req Request properties to be sent.
+         * @param post Post parameters to be sent.
          * @return StringBuffer containing response, default error JSON if
          * otherwise
          * @throws IOException
          */
         private static String retrievePageText(String url,
-                Map<String, String> reqProps, Map<String, String> postParams) throws
+                Map<String, String> req, Map<String, String> post) throws
                 IOException {
             BufferedReader feedReader;
             InputStreamReader feedStream;
@@ -1118,9 +1134,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             conn.setConnectTimeout(5000);
             conn.setReadTimeout(5000);
 
-            if (reqProps != null) {
-                for (String key : reqProps.keySet()) {
-                    conn.setRequestProperty(key, reqProps.get(key));
+            if (req != null) {
+                for (String key : req.keySet()) {
+                    conn.setRequestProperty(key, req.get(key));
                 }
             }
 
@@ -1131,9 +1147,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             conn.setConnectTimeout(5000);
             conn.setReadTimeout(5000);
 
-            if (postParams != null) {
+            if (post != null) {
                 DataOutputStream out = new DataOutputStream(conn.getOutputStream());
-                Set keys = postParams.keySet();
+                Set keys = post.keySet();
                 Iterator<String> keyIter = keys.iterator();
                 String content = "";
                 for (int i = 0; keyIter.hasNext(); i++) {
@@ -1141,7 +1157,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     if (i != 0) {
                         content += "&";
                     }
-                    content += key + "=" + URLEncoder.encode(postParams.get(key),
+                    content += key + "=" + URLEncoder.encode(post.get(key),
                             "UTF-8");
                 }
                 out.writeBytes(content);
@@ -1180,7 +1196,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     }
 
     /**
-     * Struct holding client login data.
+     * Container class holding client login data.
      */
     public static class SteamClientInfo {
         String username, password, authcode, token, machineauthcookie;
@@ -1188,7 +1204,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     }
 
     /**
-     * Struct containing friend data.
+     * Container class containing friend data for use in the friends list.
      */
     public static class SteamFriendEntry {
         SteamID steamid;
@@ -1201,8 +1217,12 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Container class holding the result of sign-in.
+     */
     public static class SteamLoginAuth {
         boolean success;
         String token;
     }
+
 }

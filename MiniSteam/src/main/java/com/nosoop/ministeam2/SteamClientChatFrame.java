@@ -32,6 +32,10 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
      */
     Logger logger = LoggerFactory.getLogger(
             SteamClientChatFrame.class.getSimpleName());
+    /**
+     * Refers to trade commands.
+     */
+    TradeRequestActions tradeRequest;
 
     /**
      * Creates new form SteamClientChatFrame
@@ -40,12 +44,25 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
         this.client = client;
         this.currentUsers = new HashMap<>();
         initComponents();
+
+        tradeRequest = new TradeRequestActions();
     }
 
+    /**
+     * Adds a new SteamClientChatTab instance corresponding to the given SteamID
+     * to this instance if needed.
+     *
+     * @param user
+     */
     void addNewChatTab(SteamID user) {
-        if (currentUsers.containsKey(user))
+        if (currentUsers.containsKey(user)) {
             return;
-        
+        }
+
+        if (currentUsers.isEmpty()) {
+            this.setVisible(true);
+        }
+
         String tabName = client.steamFriends.getFriendPersonaName(user);
         SteamClientChatTab tab = new SteamClientChatTab(this, user);
 
@@ -119,48 +136,54 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
                     tabNumber);
         }
     }
-    
+
+    /**
+     * Relay a received trade request to the applicable chat tab.
+     *
+     * @param callback
+     */
     void onTradeProposal(TradeProposedCallback callback) {
         SteamID proposer = callback.getOtherClient();
         addNewChatTab(proposer);
-        
+
         SteamClientChatTab tabToUpdate = currentUsers.get(proposer);
         tabToUpdate.updateTradeButton(
-                SteamClientChatTab.TradeButtonState.RECEIVED_REQUEST, 
+                SteamClientChatTab.TradeButtonState.RECEIVED_REQUEST,
                 callback.getTradeID());
     }
-    
+
+    /**
+     * Notifies all the chat tabs to disable their buttons after receiving a
+     * trade session start callback.
+     *
+     * @param callback
+     */
     void onSessionStart(SessionStartCallback callback) {
-        for (Map.Entry<SteamID,SteamClientChatTab> entry : 
-                currentUsers.entrySet()) {
-            TradeButtonState buttonState = 
-                    entry.getKey().equals(callback.getOtherClient()) ?
-                    TradeButtonState.IN_TRADE : 
-                    TradeButtonState.DISABLED_WHILE_IN_TRADE;
+        for (Map.Entry<SteamID, SteamClientChatTab> entry
+                : currentUsers.entrySet()) {
+            TradeButtonState buttonState =
+                    entry.getKey().equals(callback.getOtherClient())
+                    ? TradeButtonState.IN_TRADE
+                    : TradeButtonState.DISABLED_WHILE_IN_TRADE;
             entry.getValue().updateTradeButton(buttonState, 0);
         }
     }
-    
+
+    /**
+     * Notifies all the chat tabs to re-enable their trade buttons.
+     */
     void onTradeClosed() {
         // TODO behavior when another trade is being accepted.
-        for (Map.Entry<SteamID, SteamClientChatTab> entry :
-                currentUsers.entrySet()) {
+        for (Map.Entry<SteamID, SteamClientChatTab> entry
+                : currentUsers.entrySet()) {
             entry.getValue().updateTradeButton(TradeButtonState.IDLE, 0);
         }
     }
-    
-    void sendTradeRequest(SteamID target) {
-        client.steamTrade.trade(target);
-    }
-    
-    void acceptTradeRequest(int tradeid) {
-        client.steamTrade.respondToTrade(tradeid, true);
-    }
-    
-    void cancelTradeRequest(SteamID target) {
-        client.steamTrade.cancelTrade(target);
-    }
-    
+
+    /**
+     * Returns the name of our client.
+     * @return 
+     */
     String getOwnPersonaName() {
         return client.steamFriends.getPersonaName();
     }
@@ -194,6 +217,42 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTabbedPane chatTabbedPane;
     // End of variables declaration//GEN-END:variables
+
+    /**
+     * Wrapper class that handles passing trades between the SteamKitClient and
+     * individual chat tab instances.
+     */
+    class TradeRequestActions {
+        /**
+         * Sends a trade
+         *
+         * @param target
+         */
+        void send(SteamID target) {
+            client.steamTrade.trade(target);
+        }
+
+        /**
+         * Accepts a trade if not an invalid trade.
+         *
+         * @param tradeid
+         */
+        void accept(int tradeid) {
+            if (tradeid == 0)
+                return;
+            client.steamTrade.respondToTrade(tradeid, true);
+        }
+
+        /**
+         * Cancels a trade proposal.
+         *
+         * @param target
+         */
+        void cancel(SteamID target) {
+            client.steamTrade.cancelTrade(target);
+        }
+    }
+
     /**
      * A struct containing data to update the chat window with.
      */
