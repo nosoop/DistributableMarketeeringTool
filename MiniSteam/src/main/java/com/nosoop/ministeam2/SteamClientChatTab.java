@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
+import java.util.LinkedList;
 import javax.swing.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     /**
      * The formatting string to use when adding a new chat message.
      */
-    private static final String CHAT_MESSAGE_ENTRY_FMT = "%s: %s%n";
+    private static final String CHAT_MESSAGE_ENTRY_FMT = "%s: %s";
     /**
      * Formatting string for the location of the chatlog file to be saved.
      */
@@ -48,12 +49,6 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      */
     SteamClientChatFrame frame;
     /**
-     * A text buffer containing the chat messages.
-     *
-     * TODO Possibly store the raw messages with timestamps instead?
-     */
-    StringBuffer chatTextBuffer;
-    /**
      * Another logging instance. Of course.
      */
     Logger logger = LoggerFactory.getLogger(
@@ -76,14 +71,18 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      * Chat logging.
      */
     ChatLogger chatlogger;
+    /**
+     * The event listing.
+     */
+    SteamChatEventList chatEvents;
 
     /**
      * Creates new form SteamClientChatPanel
      */
     public SteamClientChatTab(SteamClientChatFrame frame, SteamID chatter) {
         this.chatter = chatter;
-        this.chatTextBuffer = new StringBuffer();
         this.frame = frame;
+        this.userinfo = null;
         initComponents();
 
         // Creates a timer that unsets typing state after 15 seconds.
@@ -97,17 +96,16 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         this.state = TradeButtonState.IDLE;
         this.tradeid = frame.tradeRequest.TRADEID_INVALID;
         this.chatlogger = new ChatLogger();
+        this.chatEvents = new SteamChatEventList();
     }
 
     void receiveMessage(EChatEntryType entryType,
             String message) {
         if (entryType == EChatEntryType.ChatMsg) {
             // If a chat message was received, show it in the window.
-            chatTextBuffer.append(String.format(CHAT_MESSAGE_ENTRY_FMT,
-                    userNameLabel.getText(), message));
-            chatlogger.writeMessage(false, message);
-            updateChatTextArea();
-            
+            addChatEvent(new ChatEventMessage(userinfo.username,
+                    message));
+
             // Clear typing message once a message is received.
             userIsTypingTimer.stop();
         } else if (entryType == EChatEntryType.Typing) {
@@ -119,8 +117,16 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         logger.debug("Message received.");
     }
 
-    void updateChatTextArea() {
-        chatTextArea.setText(chatTextBuffer.toString());
+    void addChatEvent(ChatEvent event) {
+        chatEvents.add(event);
+        chatlogger.writeEvent(event);
+
+        StringBuilder chatBuffer = new StringBuilder();
+        for (ChatEvent e : chatEvents) {
+            chatBuffer.append(e.toString())
+                    .append(String.format("%n", new Object[0]));
+        }
+        chatTextArea.setText(chatBuffer.toString());
         logger.debug("Chat field updated.");
     }
 
@@ -137,6 +143,18 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     }
 
     void updateUserStatus(SteamClientMainForm.SteamFriendEntry status) {
+        if (userinfo != null) {
+            if (userinfo.state != status.state) {
+                addChatEvent(new ChatEvent(String.format("%s is now %s.",
+                        status.username, status.state.name())));
+            }
+            if (!userinfo.username.equals(status.username)) {
+                addChatEvent(new ChatEvent(
+                        String.format("%s changed their name to %s.",
+                        userinfo.username, status.username)));
+            }
+        }
+
         userinfo = status;
         userNameLabel.setText(userinfo.username);
 
@@ -264,9 +282,8 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             frame.onSendingMessage(chatter, EChatEntryType.ChatMsg, inputText);
 
             // Copy message to own chat.
-            chatTextBuffer.append(String.format(CHAT_MESSAGE_ENTRY_FMT,
+            addChatEvent(new ChatEventMessage(
                     frame.getOwnPersonaName(), inputText));
-            updateChatTextArea();
 
             messageEntryField.setText("");
 
@@ -340,14 +357,14 @@ public class SteamClientChatTab extends javax.swing.JPanel {
 
             try {
                 String fileName = String.format(
-                        "%1$s_%2$tY%2$tm%2$td_%2$tH%2$tM%2$tS", 
+                        "%1$s_%2$tY%2$tm%2$td_%2$tH%2$tM%2$tS",
                         chatter.convertToLong(), new Date());
-                
+
                 String filePath = String.format(CHATLOG_FILEPATH,
                         frame.getOwnUsername(), fileName);
 
                 logger.info("Creating log file at {}.", filePath);
-                
+
                 File logFile = new File(filePath);
                 logFile.getParentFile().mkdirs();
 
@@ -358,11 +375,69 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             }
         }
 
-        public void writeMessage(boolean self, String message) {
+        public void writeEvent(ChatEvent event) {
             createLogFile();
-            
-            pw.printf("%s: %s%n", self ? frame.getOwnPersonaName()
-                    : userinfo.username, message);
+
+            pw.printf("%s%n", event.toString());
+        }
+    }
+
+    /**
+     * Describes user/chat events (person has changed status/name, sent
+     * trade...), timestamped at the time of creation.
+     */
+    static class ChatEvent {
+        String message;
+        long timestamp;
+
+        public ChatEvent(String eventMessage) {
+            this.message = eventMessage;
+            this.timestamp = System.currentTimeMillis();
+        }
+
+        @Override
+        public String toString() {
+            return "* " + message;
+        }
+    }
+
+    /**
+     * Describes user message events (e.g. "Person: Hi!").
+     */
+    static class ChatEventMessage extends ChatEvent {
+        String username;
+
+        public ChatEventMessage(String username, String message) {
+            super(message);
+            this.username = username;
+        }
+
+        @Override
+        public String toString() {
+            return String.format(CHAT_MESSAGE_ENTRY_FMT, username, message);
+        }
+    }
+
+    /**
+     * Subclass of LinkedList that holds a set number of SteamChatEvent
+     * instances.
+     */
+    static class SteamChatEventList extends LinkedList<ChatEvent> {
+        int capacity;
+
+        public SteamChatEventList() {
+            capacity = 100;
+        }
+
+        @Override
+        public boolean add(ChatEvent e) {
+            boolean added = super.add(e);
+
+            while (size() > capacity) {
+                super.poll();
+            }
+
+            return added;
         }
     }
 
