@@ -64,12 +64,11 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
         }
 
         String tabName = client.steamFriends.getFriendPersonaName(user);
-        SteamClientChatTab tab = new SteamClientChatTab(this, user);
+        SteamClientChatTab tab = new SteamClientChatTab(this, user,
+                client.getUserStatus(user));
 
         chatTabbedPane.addTab(tabName, tab);
         currentUsers.put(user, tab);
-
-        tab.updateUserStatus(client.getUserStatus(user));
     }
 
     /**

@@ -15,6 +15,7 @@ import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
 import uk.co.thomasc.steamkit.types.steamid.SteamID;
 
 /**
+ * An individual chat session.
  *
  * @author nosoop < nosoop at users.noreply.github.com >
  */
@@ -27,8 +28,8 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      * Formatting string for the location of the chatlog file to be saved.
      */
     private static final String CHATLOG_FILEPATH =
-            "." + File.separatorChar + "logs" + File.separatorChar + "%s"
-            + File.separatorChar + "%s.log";
+            "." + File.separator + "logs" + File.separator + "%s"
+            + File.separator + "%s" + File.separator + "%s.log";
     /**
      * Number of milliseconds that must pass before we fire off another message
      * notifying the other user that we are typing.
@@ -79,10 +80,11 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     /**
      * Creates new form SteamClientChatPanel
      */
-    public SteamClientChatTab(SteamClientChatFrame frame, SteamID chatter) {
+    public SteamClientChatTab(SteamClientChatFrame frame, SteamID chatter,
+            SteamClientMainForm.SteamFriendEntry userinfo) {
         this.chatter = chatter;
         this.frame = frame;
-        this.userinfo = null;
+        this.userinfo = userinfo;
         initComponents();
 
         // Creates a timer that unsets typing state after 15 seconds.
@@ -97,6 +99,8 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         this.tradeid = frame.tradeRequest.TRADEID_INVALID;
         this.chatlogger = new ChatLogger();
         this.chatEvents = new SteamChatEventList();
+
+        updateUserStatus(userinfo);
     }
 
     void receiveMessage(EChatEntryType entryType,
@@ -143,16 +147,14 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     }
 
     void updateUserStatus(SteamClientMainForm.SteamFriendEntry status) {
-        if (userinfo != null) {
-            if (userinfo.state != status.state) {
-                addChatEvent(new ChatEvent(String.format("%s is now %s.",
-                        status.username, status.state.name())));
-            }
-            if (!userinfo.username.equals(status.username)) {
-                addChatEvent(new ChatEvent(
-                        String.format("%s changed their name to %s.",
-                        userinfo.username, status.username)));
-            }
+        if (userinfo.state != status.state) {
+            addChatEvent(new ChatEvent(String.format("%s is now %s.",
+                    status.username, status.state.name())));
+        }
+        if (!userinfo.username.equals(status.username)) {
+            addChatEvent(new ChatEvent(
+                    String.format("%s changed their name to %s.",
+                    userinfo.username, status.username)));
         }
 
         userinfo = status;
@@ -357,11 +359,12 @@ public class SteamClientChatTab extends javax.swing.JPanel {
 
             try {
                 String fileName = String.format(
-                        "%1$s_%2$tY%2$tm%2$td_%2$tH%2$tM%2$tS",
-                        chatter.convertToLong(), new Date());
+                        "%1$tY-%1$tm-%1$td-%1$tH%1$tM%1$tS %2$s", new Date(),
+                        userinfo.username);
 
                 String filePath = String.format(CHATLOG_FILEPATH,
-                        frame.getOwnUsername(), fileName);
+                        frame.getOwnUsername(), chatter.convertToLong(),
+                        fileName);
 
                 logger.info("Creating log file at {}.", filePath);
 
