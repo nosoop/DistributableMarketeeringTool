@@ -105,21 +105,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 friendList.remove(userid);
             }
 
-            String friendState;
-
-            /**
-             * If the user is your friend, get their activity state (Online,
-             * Away...), otherwise, get your relationship (Invite pending...).
-             */
-            if (backend.steamFriends.getFriendRelationship(userid)
-                    == EFriendRelationship.Friend) {
-                friendState = backend.steamFriends.
-                        getFriendPersonaState(userid).name();
-            } else {
-                friendState = backend.steamFriends.
-                        getFriendRelationship(userid).name();
-            }
-
             // Only put them in the friends list if you have a relationship.
             if (backend.steamFriends.getFriendRelationship(userid)
                     != EFriendRelationship.None) {
@@ -127,7 +112,10 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 friend.steamid = userid;
                 friend.username = backend.steamFriends.
                         getFriendPersonaName(userid);
-                friend.status = friendState;
+                friend.state = backend.steamFriends.
+                        getFriendPersonaState(userid);
+                friend.relationship = backend.steamFriends.
+                        getFriendRelationship(userid);
 
                 friendList.put(userid, friend);
             }
@@ -154,7 +142,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         // TODO a way to update the table more efficently?
         for (Map.Entry<SteamID, SteamFriendEntry> keyValues : friendList.entrySet()) {
             SteamFriendEntry entry = keyValues.getValue();
-            friendTable.addRow(new Object[]{entry, entry.status});
+
+            // Display username in first cell, status in second.
+            friendTable.addRow(new Object[]{entry, entry.renderStatus()});
         }
     }
 
@@ -167,10 +157,19 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        friendPopupMenu = new javax.swing.JPopupMenu();
+        friendChatOption = new javax.swing.JMenuItem();
+        friendTradeOption = new javax.swing.JMenuItem();
         labelPlayerName = new javax.swing.JLabel();
         comboboxUserStatus = new javax.swing.JComboBox();
         jScrollPane1 = new javax.swing.JScrollPane();
         tableUsers = new javax.swing.JTable();
+
+        friendChatOption.setText("Open chat window");
+        friendPopupMenu.add(friendChatOption);
+
+        friendTradeOption.setText("Invite to trade");
+        friendPopupMenu.add(friendTradeOption);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -210,6 +209,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         tableUsers.setShowVerticalLines(false);
         tableUsers.getTableHeader().setReorderingAllowed(false);
         tableUsers.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                tableUsersMouseReleased(evt);
+            }
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 tableUsersMouseClicked(evt);
             }
@@ -252,21 +254,45 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     private void tableUsersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableUsersMouseClicked
         int targetRow = tableUsers.getSelectedRow();
 
-        if (evt.getClickCount() == 2
+        if (evt.getClickCount() == 2 && targetRow >= 0
                 && evt.getButton() == MouseEvent.BUTTON1) {
+            targetRow = tableUsers.convertRowIndexToModel(targetRow);
+            SteamFriendEntry user = (SteamFriendEntry) tableUsers.getModel().getValueAt(targetRow, 0);
 
-            if (targetRow >= 0) {
-                targetRow = tableUsers.convertRowIndexToModel(targetRow);
-
-                SteamFriendEntry user = (SteamFriendEntry) tableUsers.getModel().getValueAt(targetRow, 0);
-
-                chatFrame.addNewChatTab(user.steamid);
-                chatFrame.setVisible(true);
-            }
+            chatFrame.addNewChatTab(user.steamid);
+            chatFrame.setVisible(true);
         }
     }//GEN-LAST:event_tableUsersMouseClicked
+
+    private void tableUsersMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableUsersMouseReleased
+        int selectedRow = tableUsers.rowAtPoint(evt.getPoint());
+
+        // Show exactly which row we're acting on.
+        if (selectedRow >= 0 && selectedRow < tableUsers.getRowCount()) {
+            tableUsers.setRowSelectionInterval(selectedRow, selectedRow);
+        } else {
+            tableUsers.clearSelection();
+        }
+
+        selectedRow = tableUsers.getSelectedRow();
+
+        if (evt.getButton() == MouseEvent.BUTTON3 && selectedRow >= 0) {
+            selectedRow = tableUsers.convertRowIndexToModel(selectedRow);
+            SteamFriendEntry user = (SteamFriendEntry) tableUsers.getModel().getValueAt(selectedRow, 0);
+
+            // Show menu depending on friend relationship
+            switch (user.relationship) {
+                case Friend:
+                    friendPopupMenu.show(tableUsers, evt.getX(), evt.getY());
+                    break;
+            }
+        }
+    }//GEN-LAST:event_tableUsersMouseReleased
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox comboboxUserStatus;
+    private javax.swing.JMenuItem friendChatOption;
+    private javax.swing.JPopupMenu friendPopupMenu;
+    private javax.swing.JMenuItem friendTradeOption;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel labelPlayerName;
     private javax.swing.JTable tableUsers;
@@ -892,8 +918,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 // If mouse was not moved in the last second...
                 if (this.lastX == newX && this.lastY == newY) {
                     // Update seconds since we have been assumed AFK.
-                    int secondsSinceAFK =
-                            (int) (System.currentTimeMillis() - timeLastActive) / 1000;
+                    int secondsSinceAFK = (int) (System.currentTimeMillis() - timeLastActive) / 1000;
 
                     if (secondsSinceAFK > SECONDS_UNTIL_SNOOZE
                             && status == EPersonaState.Away && autoSetAFK) {
@@ -997,16 +1022,20 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             do {
                 System.out.println("SteamWeb: Logging In...");
 
-                /*boolean captcha = loginJSON != null
-                        && loginJSON.optBoolean("captcha_needed");
-                boolean steamGuard = loginJSON != null
-                        && loginJSON.optBoolean("emailauth_needed");*/
+                /*
+                 * boolean captcha = loginJSON != null &&
+                 * loginJSON.optBoolean("captcha_needed"); boolean steamGuard =
+                 * loginJSON != null &&
+                 * loginJSON.optBoolean("emailauth_needed");
+                 */
                 boolean captcha = loginJSON.optBoolean("captcha_needed");
                 boolean steamGuard = loginJSON.optBoolean("emailauth_needed");
 
                 String time = rsaJSON.getString("timestamp");
-                /*String capGID = loginJSON == null ? null
-                        : loginJSON.optString("captcha_gid");*/
+                /*
+                 * String capGID = loginJSON == null ? null :
+                 * loginJSON.optString("captcha_gid");
+                 */
                 String capGID = loginJSON.optString("captcha_gid", null);
 
                 post = new HashMap<>();
@@ -1203,11 +1232,23 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     public static class SteamFriendEntry {
         SteamID steamid;
         String username;
-        String status;
+        EPersonaState state;
+        EFriendRelationship relationship;
 
         @Override
         public String toString() {
             return username;
+        }
+
+        /**
+         * Returns the status to be displayed in the friend table, among other
+         * places.
+         *
+         * @return
+         */
+        String renderStatus() {
+            return relationship == EFriendRelationship.Friend
+                    ? state.name() : relationship.name();
         }
     }
 
