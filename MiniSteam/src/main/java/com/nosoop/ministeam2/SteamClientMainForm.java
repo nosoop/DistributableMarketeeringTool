@@ -116,17 +116,20 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 friendList.remove(userid);
             }
 
+            // Update applicable tab first in case of a removal.
+            SteamFriendEntry newEntry = backend.getUserStatus(userid);
+            chatFrame.onUpdatedFriendStatus(newEntry);
+
             // Only put them in the friends list if you have a relationship.
             if (backend.steamFriends.getFriendRelationship(userid)
                     != EFriendRelationship.None) {
-                friendList.put(userid, backend.getUserStatus(userid));
+                friendList.put(userid, newEntry);
             }
 
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    // Update friendd status in applicable tabs.
-                    chatFrame.onUpdatedFriendStatus(friendList.get(userid));
+                    // Update friend table.
                     updateFriendTable();
                 }
             });
@@ -140,6 +143,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         DefaultTableModel friendTable =
                 ((DefaultTableModel) tableUsers.getModel());
 
+        // Save the row to restore after clearing and filling.the table.
+        int storedPosition = tableUsers.getSelectedRow();
+
         // Fastest way to clear the table.
         friendTable.setNumRows(0);
 
@@ -149,6 +155,11 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
             // Display username in first cell, status in second.
             friendTable.addRow(new Object[]{entry, entry.renderStatus()});
+        }
+
+        // Restore row if there is a selection (row != -1)
+        if (storedPosition > 0) {
+            tableUsers.setRowSelectionInterval(storedPosition, storedPosition);
         }
     }
 
@@ -1132,7 +1143,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             + "enter the SteamGuard code sent to your e-mail.";
                     steamGuardText = JOptionPane.showInputDialog(null,
                             promptMessage, "");
-                    
+
                     steamGuardId = loginJSON.getString("emailsteamid");
                 }
 
