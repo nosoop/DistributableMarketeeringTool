@@ -6,7 +6,6 @@ import com.nosoop.ministeam2.SteamClientMainForm.SteamClientInfo;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
@@ -82,7 +81,7 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
                 setLoginStatusLabel("Connecting...");
                 break;
             case DISCONNECTED:
-                setLoginStatusLabel("Disconnected from Steam.");
+                setLoginStatusLabel("Disconnected from Steam. Retrying...");
                 break;
             case INCORRECT_LOGIN:
                 setLoginStatusLabel("Incorrect password.");

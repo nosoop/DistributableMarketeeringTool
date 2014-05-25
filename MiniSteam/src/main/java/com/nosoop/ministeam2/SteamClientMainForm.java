@@ -588,7 +588,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                                     callback.getOtherClient(), EChatEntryType.ChatMsg,
                                     "[DMT] The client has not completely initialized.");
                         } else if (!tradePoller.isInTrade()) {
-                            steamTrade.respondToTrade(callback.getTradeID(), true);
+                            chatFrame.onTradeProposal(callback);
                         } else {
                             steamFriends.sendChatMessage(
                                     callback.getOtherClient(), EChatEntryType.ChatMsg,
@@ -632,6 +632,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
                             tradePoller.forceCancelTradeSession();
                         }
+                        
+                        logger.debug("Trade polling attached.");
+                        chatFrame.onSessionStart(callback);
                     }
                 });
                 //</editor-fold>
@@ -833,6 +836,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
             public void endCurrentTradeSession() {
                 t = null;
+                logger.info("Trade ended.");
+                chatFrame.onTradeClosed();
             }
 
             public void forceCancelTradeSession() {
@@ -978,7 +983,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     password.getBytes("ASCII"));
             
             String encryptedBase64Password = Base64.encodeBytes(encodedPassword);
-            //String encryptedBase64Password = DatatypeConverter.printBase64Binary(encodedPassword);
 
             JSONObject loginJSON = null;
             String steamGuardText = "";

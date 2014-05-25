@@ -135,6 +135,10 @@ public class SteamClientChatTab extends javax.swing.JPanel {
                 tradeButton.setEnabled(true);
                 tradeButton.setText("Send Trade Request");
                 break;
+            case IN_TRADE:
+                tradeButton.setEnabled(false);
+                tradeButton.setText("In Trade");
+                break;
             case DISABLED_WHILE_IN_TRADE:
                 tradeButton.setEnabled(false);
                 tradeButton.setText("Already Trading");
@@ -289,7 +293,8 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     // End of variables declaration//GEN-END:variables
 
     public enum TradeButtonState {
-        IDLE, DISABLED_WHILE_IN_TRADE, RECEIVED_REQUEST, SENT_REQUEST;
+        IDLE, DISABLED_WHILE_IN_TRADE, RECEIVED_REQUEST, SENT_REQUEST,
+        IN_TRADE;
     }
 
 }

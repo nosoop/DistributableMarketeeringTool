@@ -1,5 +1,6 @@
 package com.nosoop.ministeam2;
 
+import com.nosoop.ministeam2.SteamClientChatTab.TradeButtonState;
 import com.nosoop.ministeam2.SteamClientMainForm.SteamKitClient;
 import java.util.HashMap;
 import java.util.Map;
@@ -7,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.PersonaStateCallback;
+import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.SessionStartCallback;
+import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeProposedCallback;
 import uk.co.thomasc.steamkit.types.steamid.SteamID;
 
 /**
@@ -114,6 +117,35 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
             chatTabbedPane.removeTabAt(tabNumber);
             chatTabbedPane.insertTab(info.username, null, updateTab, null,
                     tabNumber);
+        }
+    }
+    
+    void onTradeProposal(TradeProposedCallback callback) {
+        SteamID proposer = callback.getOtherClient();
+        addNewChatTab(proposer);
+        
+        SteamClientChatTab tabToUpdate = currentUsers.get(proposer);
+        tabToUpdate.updateTradeButton(
+                SteamClientChatTab.TradeButtonState.RECEIVED_REQUEST, 
+                callback.getTradeID());
+    }
+    
+    void onSessionStart(SessionStartCallback callback) {
+        for (Map.Entry<SteamID,SteamClientChatTab> entry : 
+                currentUsers.entrySet()) {
+            TradeButtonState buttonState = 
+                    entry.getKey().equals(callback.getOtherClient()) ?
+                    TradeButtonState.IN_TRADE : 
+                    TradeButtonState.DISABLED_WHILE_IN_TRADE;
+            entry.getValue().updateTradeButton(buttonState, 0);
+        }
+    }
+    
+    void onTradeClosed() {
+        // TODO behavior when another trade is being accepted.
+        for (Map.Entry<SteamID, SteamClientChatTab> entry :
+                currentUsers.entrySet()) {
+            entry.getValue().updateTradeButton(TradeButtonState.IDLE, 0);
         }
     }
     
