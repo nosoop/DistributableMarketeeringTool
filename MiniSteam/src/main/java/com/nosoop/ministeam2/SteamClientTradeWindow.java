@@ -8,16 +8,16 @@ import javax.swing.table.DefaultTableModel;
 import bundled.steamtrade.org.json.JSONException;
 import com.nosoop.ministeam2.SteamClientMainForm.SteamKitClient;
 import com.nosoop.steamtrade.TradeListener;
-import com.nosoop.steamtrade.inventory.TradeInternalAsset;
-import com.nosoop.steamtrade.inventory.TradeInternalInventory;
-import com.nosoop.steamtrade.inventory.TradeInternalItem;
+import com.nosoop.steamtrade.inventory.*;
 import com.nosoop.steamtrade.status.TradeEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import javax.swing.BorderFactory;
 import javax.swing.JOptionPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.thomasc.steamkit.types.steamid.SteamID;
 
 /**
  * A window that allows the user to interact in a Steam trade.
@@ -29,6 +29,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
     Logger logger;
     ClientTradeListener listener;
     StringBuffer chat;
+    String partnerName;
 
     /**
      * Creates new form SteamTradeWindow
@@ -43,10 +44,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
         logger.debug("Trade listener hooked into window.");
 
         // TODO fix up names and stuff
-        this.setTitle(String.format("Trading with %s", "%s"));
-        otherOfferPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(String.format("%s's Offer", "%s")));
-        logger.debug("Setting titles and borders.");
-
+        this.setTitle("Trading...");
         this.setVisible(true);
         logger.debug("Trade window should be visible.");
 
@@ -56,6 +54,14 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
     public TradeListener getTradeListener() {
         this.listener = new ClientTradeListener();
         return this.listener;
+    }
+    
+    void updateNames(String username) {
+        partnerName = username;
+        this.setTitle(String.format("Trading with %s", partnerName));
+        otherOfferPanel.setBorder(
+                BorderFactory.createTitledBorder(
+                String.format("%s's Offer", partnerName)));
     }
 
     public void addMessage(String name, String text) {
@@ -554,7 +560,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
             listener.trade.getCmds().sendMessage(inputText);
 
             // TODO Add trade chat actions.
-            addMessage("You", inputText);
+            addMessage(client.steamFriends.getPersonaName(), inputText);
             tradeChatInput.setText("");
         }
     }//GEN-LAST:event_tradeChatInputKeyPressed
@@ -724,9 +730,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
          * @return
          */
         public String getItemName(TradeInternalAsset inventoryItem) {
-            String invName = inventoryItem.getDisplayName();
-
-            return invName;
+            return inventoryItem.getDisplayName();
         }
 
         public final boolean tradePutItem(TradeInternalItem item) {
@@ -853,6 +857,9 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
 
         @Override
         public void onWelcome() {
+            // Update placeholders
+            updateNames(client.steamFriends.getFriendPersonaName(
+                    new SteamID(trade.getPartnerSteamId())));
         }
 
         @Override

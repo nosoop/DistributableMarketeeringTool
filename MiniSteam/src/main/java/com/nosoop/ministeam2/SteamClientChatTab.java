@@ -271,14 +271,17 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     private void tradeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tradeButtonActionPerformed
         switch (state) {
             case IDLE:
+                // Invite the user to a trade.
                 frame.tradeRequest.send(chatter);
                 updateTradeButton(TradeButtonState.SENT_REQUEST, 
                         frame.tradeRequest.TRADEID_INVALID);
                 break;
             case RECEIVED_REQUEST:
+                // Accept the trade if applicable.
                 frame.tradeRequest.accept(tradeid);
                 break;
             case SENT_REQUEST:
+                // Cancel trade if we sent one.
                 frame.tradeRequest.cancel(chatter);
                 updateTradeButton(TradeButtonState.IDLE,
                         frame.tradeRequest.TRADEID_INVALID);

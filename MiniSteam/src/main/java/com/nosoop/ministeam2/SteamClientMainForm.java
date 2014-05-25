@@ -309,7 +309,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             tradePoller = new TradePoller();
             tradeExec.scheduleAtFixedRate(tradePoller, 0, 1, TimeUnit.SECONDS);
 
-            // Schedule callbacks.
+            // Schedule callback fetching to occur every 100 ms.
             clientExec.scheduleWithFixedDelay(
                     new CallbackGetter(), 0, 100, TimeUnit.MILLISECONDS);
 
@@ -571,21 +571,11 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     // A trade session was requested by another client.
                     @Override
                     public void call(TradeProposedCallback callback) {
-                        // TODO Not automatically accept trade.
                         logger.info("Trade request received from [{}].",
                                 callback.getOtherClient().render());
 
-                        if (!readyToTrade()) {
-                            steamTrade.respondToTrade(callback.getTradeID(), false);
-                            steamFriends.sendChatMessage(
-                                    callback.getOtherClient(), EChatEntryType.ChatMsg,
-                                    "[DMT] The client has not completely initialized.");
-                        } else if (!tradePoller.isInTrade()) {
+                        if (readyToTrade() && !tradePoller.isInTrade()) {
                             chatFrame.onTradeProposal(callback);
-                        } else {
-                            steamFriends.sendChatMessage(
-                                    callback.getOtherClient(), EChatEntryType.ChatMsg,
-                                    "Already in a trade!  Give me a bit.");
                         }
                     }
                 });
@@ -689,7 +679,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         CallbackMsg jobCallback = job.getCallback();
                         final long JOBID = job.getJobId().getValue();
 
-                        CallbackMgr.this.handleSteamJobMessage(jobCallback, JOBID);
+                        handleSteamJobMessage(jobCallback, JOBID);
                     }
                 });
                 //</editor-fold>
@@ -1000,20 +990,24 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
             String encryptedPassword = Base64.encodeBytes(encodedPassword);
 
-            JSONObject loginJSON = null;
+            //JSONObject loginJSON = null;
+            JSONObject loginJSON = new JSONObject();
             String steamGuardText = "";
             String steamGuardId = "";
             do {
                 System.out.println("SteamWeb: Logging In...");
 
-                boolean captcha = loginJSON != null
+                /*boolean captcha = loginJSON != null
                         && loginJSON.optBoolean("captcha_needed");
                 boolean steamGuard = loginJSON != null
-                        && loginJSON.optBoolean("emailauth_needed");
+                        && loginJSON.optBoolean("emailauth_needed");*/
+                boolean captcha = loginJSON.optBoolean("captcha_needed");
+                boolean steamGuard = loginJSON.optBoolean("emailauth_needed");
 
                 String time = rsaJSON.getString("timestamp");
-                String capGID = loginJSON == null ? null
-                        : loginJSON.optString("captcha_gid");
+                /*String capGID = loginJSON == null ? null
+                        : loginJSON.optString("captcha_gid");*/
+                String capGID = loginJSON.optString("captcha_gid", null);
 
                 post = new HashMap<>();
                 post.put("password", encryptedPassword);
@@ -1022,7 +1016,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 // Captcha
                 String capText = "";
                 if (captcha) {
-                    assert (loginJSON != null);
+                    //assert (loginJSON != null);
                     System.out.println("SteamWeb: Captcha is needed.");
 
                     try {
@@ -1044,7 +1038,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
                 // SteamGuard
                 if (steamGuard) {
-                    assert (loginJSON != null);
+                    //assert (loginJSON != null);
                     System.out.println("SteamWeb: SteamGuard is needed.");
                     System.out.println("SteamWeb: Type the code:");
                     steamGuardText = scanner.nextLine();
