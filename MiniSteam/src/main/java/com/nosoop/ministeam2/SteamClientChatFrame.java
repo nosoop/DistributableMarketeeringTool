@@ -223,6 +223,8 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
      * individual chat tab instances.
      */
     class TradeRequestActions {
+        int TRADEID_INVALID = 0;
+        
         /**
          * Sends a trade
          *
@@ -238,7 +240,7 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
          * @param tradeid
          */
         void accept(int tradeid) {
-            if (tradeid == 0)
+            if (tradeid == TRADEID_INVALID)
                 return;
             client.steamTrade.respondToTrade(tradeid, true);
         }

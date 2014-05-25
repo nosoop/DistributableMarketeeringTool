@@ -80,7 +80,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         });
         
         this.state = TradeButtonState.IDLE;
-        this.tradeid = 0;
+        this.tradeid = frame.tradeRequest.TRADEID_INVALID;
     }
 
     void receiveMessage(EChatEntryType entryType,
@@ -272,13 +272,16 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         switch (state) {
             case IDLE:
                 frame.tradeRequest.send(chatter);
-                updateTradeButton(TradeButtonState.SENT_REQUEST, 0);
+                updateTradeButton(TradeButtonState.SENT_REQUEST, 
+                        frame.tradeRequest.TRADEID_INVALID);
                 break;
             case RECEIVED_REQUEST:
                 frame.tradeRequest.accept(tradeid);
                 break;
             case SENT_REQUEST:
                 frame.tradeRequest.cancel(chatter);
+                updateTradeButton(TradeButtonState.IDLE,
+                        frame.tradeRequest.TRADEID_INVALID);
                 break;
         }
     }//GEN-LAST:event_tradeButtonActionPerformed
