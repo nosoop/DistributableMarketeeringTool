@@ -46,15 +46,14 @@ Screenshots
 
 
 Slow Starts
-===========
+-----------
 Requires the support of Java Cryptography Extension Unlimited Strength policy files, assuming you're on the standard JRE.  
 The direct download page for them is available [here](http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html), and full instructions on how to install them can be viewed [here](http://suhothayan.blogspot.com/2012/05/how-to-install-java-cryptography.html).
 
 In the future, an "easy install" method may be added to mostly? automate the installation of the policy files.
 
-
 On the To-Do
-============
+------------
   * Re-add features including friends list modifications and chat logging.
   * Update to reflect changes in SteamTrade-Java.
   * Add direct support for the steamLogin token to bypass weblogin. (Well, that, and reimplement the old authentication method for those that actually have it working.  It sure as hell doesn't on mine.)
