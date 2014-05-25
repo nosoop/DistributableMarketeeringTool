@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Date;
 import javax.swing.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,12 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      * The formatting string to use when adding a new chat message.
      */
     private static final String CHAT_MESSAGE_ENTRY_FMT = "%s: %s%n";
+    /**
+     * Formatting string for the location of the chatlog file to be saved.
+     */
+    private static final String CHATLOG_FILEPATH =
+            "." + File.separatorChar + "logs" + File.separatorChar + "%s"
+            + File.separatorChar + "%s.log";
     /**
      * Number of milliseconds that must pass before we fire off another message
      * notifying the other user that we are typing.
@@ -65,6 +72,10 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      */
     TradeButtonState state;
     int tradeid;
+    /**
+     * Chat logging.
+     */
+    ChatLogger chatlogger;
 
     /**
      * Creates new form SteamClientChatPanel
@@ -85,6 +96,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
 
         this.state = TradeButtonState.IDLE;
         this.tradeid = frame.tradeRequest.TRADEID_INVALID;
+        this.chatlogger = new ChatLogger();
     }
 
     void receiveMessage(EChatEntryType entryType,
@@ -93,8 +105,9 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             // If a chat message was received, show it in the window.
             chatTextBuffer.append(String.format(CHAT_MESSAGE_ENTRY_FMT,
                     userNameLabel.getText(), message));
+            chatlogger.writeMessage(false, message);
             updateChatTextArea();
-
+            
             // Clear typing message once a message is received.
             userIsTypingTimer.stop();
         } else if (entryType == EChatEntryType.Typing) {
@@ -185,6 +198,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             }
         });
 
+        chatTextArea.setEditable(false);
         chatTextArea.setColumns(20);
         chatTextArea.setFont(new java.awt.Font("Tahoma", 0, 11)); // NOI18N
         chatTextArea.setLineWrap(true);
@@ -315,15 +329,40 @@ public class SteamClientChatTab extends javax.swing.JPanel {
 
         public ChatLogger() {
             // figure out where to write log file
+            fw = null;
+            pw = null;
+        }
+
+        void createLogFile() {
+            if (fw != null && pw != null) {
+                return;
+            }
+
             try {
-                fw = new FileWriter(new File("pootis.log"), true);
+                String fileName = String.format(
+                        "%1$s_%2$tY%2$tm%2$td_%2$tH%2$tM%2$tS", 
+                        chatter.convertToLong(), new Date());
+                
+                String filePath = String.format(CHATLOG_FILEPATH,
+                        frame.getOwnUsername(), fileName);
+
+                logger.info("Creating log file at {}.", filePath);
+                
+                File logFile = new File(filePath);
+                logFile.getParentFile().mkdirs();
+
+                fw = new FileWriter(logFile, true);
                 pw = new PrintWriter(fw, true);
             } catch (IOException e) {
+                logger.error("Error creating log file", e);
             }
         }
 
         public void writeMessage(boolean self, String message) {
-            // ...
+            createLogFile();
+            
+            pw.printf("%s: %s%n", self ? frame.getOwnPersonaName()
+                    : userinfo.username, message);
         }
     }
 
