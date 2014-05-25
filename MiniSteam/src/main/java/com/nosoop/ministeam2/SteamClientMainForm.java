@@ -108,21 +108,14 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             // Only put them in the friends list if you have a relationship.
             if (backend.steamFriends.getFriendRelationship(userid)
                     != EFriendRelationship.None) {
-                SteamFriendEntry friend = new SteamFriendEntry();
-                friend.steamid = userid;
-                friend.username = backend.steamFriends.
-                        getFriendPersonaName(userid);
-                friend.state = backend.steamFriends.
-                        getFriendPersonaState(userid);
-                friend.relationship = backend.steamFriends.
-                        getFriendRelationship(userid);
-
-                friendList.put(userid, friend);
+                friendList.put(userid, backend.getUserStatus(userid));
             }
 
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
+                    // Update friendd status in applicable tabs.
+                    chatFrame.onUpdatedFriendStatus(friendList.get(userid));
                     updateFriendTable();
                 }
             });
@@ -505,8 +498,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             }
                         } else {
                             form.updateFriendStatus(callback.getFriendID());
-                            // TODO use callback to update other stuff.
-                            form.chatFrame.onPersonaState(callback);
                         }
                     }
                 });
@@ -807,6 +798,19 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             steamUser.logOn(loginData);
 
             clientInfo = userLogin;
+        }
+
+        public SteamFriendEntry getUserStatus(SteamID user) {
+            SteamFriendEntry friend = new SteamFriendEntry();
+            friend.steamid = user;
+            friend.username = backend.steamFriends.
+                    getFriendPersonaName(user);
+            friend.state = backend.steamFriends.
+                    getFriendPersonaState(user);
+            friend.relationship = backend.steamFriends.
+                    getFriendRelationship(user);
+
+            return friend;
         }
 
         /**

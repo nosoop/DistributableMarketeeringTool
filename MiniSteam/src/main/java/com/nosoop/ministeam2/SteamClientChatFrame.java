@@ -1,13 +1,13 @@
 package com.nosoop.ministeam2;
 
 import com.nosoop.ministeam2.SteamClientChatTab.TradeButtonState;
+import com.nosoop.ministeam2.SteamClientMainForm.SteamFriendEntry;
 import com.nosoop.ministeam2.SteamClientMainForm.SteamKitClient;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
-import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.PersonaStateCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.SessionStartCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeProposedCallback;
 import uk.co.thomasc.steamkit.types.steamid.SteamID;
@@ -69,11 +69,7 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
         chatTabbedPane.addTab(tabName, tab);
         currentUsers.put(user, tab);
 
-        UserInfo info = new UserInfo();
-        info.username = tabName;
-        info.status = client.steamFriends.getFriendPersonaState(user).
-                toString();
-        tab.updateUserInfo(info);
+        tab.updateUserStatus(client.getUserStatus(user));
     }
 
     /**
@@ -105,35 +101,23 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
         }
     }
 
-    // TODO Maybe make this an event listener?
+    /**
+     * Passes a message from a SteamClientChatTab instance to the attached
+     * SteamKitClient.
+     *
+     * @param target The recipient of the chat message.
+     * @param entryType The type of message to send.
+     * @param message The textual representation of the message, if any.
+     */
     void onSendingMessage(SteamID target, EChatEntryType entryType,
             String message) {
         client.steamFriends.sendChatMessage(target, entryType, message);
     }
 
-    /**
-     * Relay an updated persona state to the chat tab that needs it, if
-     * applicable.
-     *
-     * @param callback
-     */
-    void onPersonaState(PersonaStateCallback callback) {
-        if (currentUsers.containsKey(callback.getFriendID())) {
-            UserInfo info = new UserInfo();
-            info.username = callback.getName();
-            info.status = callback.getState().name();
-
-            SteamClientChatTab updateTab =
-                    currentUsers.get(callback.getFriendID());
-
-            updateTab.updateUserInfo(info);
-
-            int tabNumber = chatTabbedPane.indexOfComponent(updateTab);
-
-            // TODO Better way to rename tab than by removing and reinserting?
-            chatTabbedPane.removeTabAt(tabNumber);
-            chatTabbedPane.insertTab(info.username, null, updateTab, null,
-                    tabNumber);
+    void onUpdatedFriendStatus(SteamFriendEntry friendStatus) {
+        if (currentUsers.containsKey(friendStatus.steamid)) {
+            currentUsers.get(friendStatus.steamid)
+                    .updateUserStatus(friendStatus);
         }
     }
 
@@ -182,7 +166,8 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
 
     /**
      * Returns the name of our client.
-     * @return 
+     *
+     * @return
      */
     String getOwnPersonaName() {
         return client.steamFriends.getPersonaName();
@@ -224,7 +209,7 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
      */
     class TradeRequestActions {
         int TRADEID_INVALID = 0;
-        
+
         /**
          * Sends a trade
          *
@@ -240,8 +225,9 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
          * @param tradeid
          */
         void accept(int tradeid) {
-            if (tradeid == TRADEID_INVALID)
+            if (tradeid == TRADEID_INVALID) {
                 return;
+            }
             client.steamTrade.respondToTrade(tradeid, true);
         }
 
@@ -253,13 +239,6 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
         void cancel(SteamID target) {
             client.steamTrade.cancelTrade(target);
         }
-    }
-
-    /**
-     * A struct containing data to update the chat window with.
-     */
-    public static class UserInfo {
-        String username, status;
     }
 
 }

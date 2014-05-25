@@ -54,7 +54,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     /**
      * Stored user information.
      */
-    SteamClientChatFrame.UserInfo userinfo;
+    SteamClientMainForm.SteamFriendEntry userinfo;
     /**
      * Trade button status, to determine what action should be done when
      * clicked..
@@ -114,13 +114,13 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      */
     void updateStatusLabel(boolean isTyping) {
         String status = String.format(
-                isTyping ? "%s (Typing...)" : "%s", userinfo.status);
+                isTyping ? "%s (Typing...)" : "%s", userinfo.renderStatus());
 
         userStatusLabel.setText(status);
     }
 
-    void updateUserInfo(SteamClientChatFrame.UserInfo info) {
-        userinfo = info;
+    void updateUserStatus(SteamClientMainForm.SteamFriendEntry status) {
+        userinfo = status;
         userNameLabel.setText(userinfo.username);
 
         // If status is changed while typing, reflect the change.
