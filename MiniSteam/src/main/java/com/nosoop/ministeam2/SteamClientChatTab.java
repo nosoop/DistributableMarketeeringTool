@@ -190,28 +190,10 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     void updateTradeButton(TradeButtonState state, int tradeid) {
         this.state = state;
         this.tradeid = tradeid;
-        switch (state) {
-            case IDLE:
-                tradeButton.setEnabled(true);
-                tradeButton.setText("Send Trade Request");
-                break;
-            case IN_TRADE:
-                tradeButton.setEnabled(false);
-                tradeButton.setText("In Trade");
-                break;
-            case DISABLED_WHILE_IN_TRADE:
-                tradeButton.setEnabled(false);
-                tradeButton.setText("Already Trading");
-                break;
-            case RECEIVED_REQUEST:
-                tradeButton.setEnabled(true);
-                tradeButton.setText("Accept Trade");
-                break;
-            case SENT_REQUEST:
-                tradeButton.setEnabled(true);
-                tradeButton.setText("Cancel Request");
-                break;
-        }
+        
+        tradeButton.setEnabled(state.enabled);
+        tradeButton.setText(LocalizationResources.getString
+                ("ChatTab.TradeButtonState." + state.name()));
     }
 
     /**
@@ -333,14 +315,14 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             case IDLE:
                 // Invite the user to a trade.
                 frame.tradeRequest.send(chatter);
-                updateTradeButton(TradeButtonState.SENT_REQUEST,
+                updateTradeButton(TradeButtonState.CANCEL_SENT_REQUEST,
                         frame.tradeRequest.TRADEID_INVALID);
                 break;
             case RECEIVED_REQUEST:
                 // Accept the trade if applicable.
                 frame.tradeRequest.accept(tradeid);
                 break;
-            case SENT_REQUEST:
+            case CANCEL_SENT_REQUEST:
                 // Cancel trade if we sent one.
                 frame.tradeRequest.cancel(chatter);
                 updateTradeButton(TradeButtonState.IDLE,
@@ -358,8 +340,14 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     // End of variables declaration//GEN-END:variables
 
     public enum TradeButtonState {
-        IDLE, DISABLED_WHILE_IN_TRADE, RECEIVED_REQUEST, SENT_REQUEST,
-        IN_TRADE;
+        IDLE(true), DISABLED_WHILE_IN_TRADE(false), RECEIVED_REQUEST(true), 
+        CANCEL_SENT_REQUEST(true), IN_TRADE(false);
+        
+        boolean enabled;
+
+        private TradeButtonState(boolean enabled) {
+            this.enabled = enabled;
+        }
     }
 
     /**

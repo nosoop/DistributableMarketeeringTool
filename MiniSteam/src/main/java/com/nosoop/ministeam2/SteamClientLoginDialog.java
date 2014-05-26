@@ -82,26 +82,8 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
      * @param state
      */
     final void setSteamConnectionState(ClientConnectivityState state) {
-        switch (state) {
-            case CONNECTED:
-                setLoginStatusLabel("Waiting to sign in...");
-                break;
-            case CONNECTING:
-                setLoginStatusLabel("Connecting...");
-                break;
-            case DISCONNECTED:
-                setLoginStatusLabel("Disconnected from Steam. Retrying...");
-                break;
-            case INCORRECT_LOGIN:
-                setLoginStatusLabel("Incorrect password.");
-                break;
-            case SIGNED_IN:
-                setLoginStatusLabel("Logged in!");
-                break;
-            case SIGNING_IN:
-                setLoginStatusLabel("Signing in...");
-                break;
-        }
+        setLoginStatusLabel(LocalizationResources.getString
+                ("LoginDialog.ClientConnectivityState." + state.name()));
         setLoginDialogVisibilityState(state.DIALOG_MODE);
     }
 

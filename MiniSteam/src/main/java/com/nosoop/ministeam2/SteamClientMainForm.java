@@ -1359,7 +1359,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
          * @return
          */
         String renderFriendState() {
-            return state.name();
+            return LocalizationResources.getString
+                    ("PersonaState." + state.name());
         }
     }
 
