@@ -260,6 +260,12 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         clientInfo = new SteamClientInfo();
         clientInfo.username = accountUserField.getEditor().getItem().toString();
         clientInfo.password = String.valueOf(accountPasswordField.getPassword());
+        
+        if (clientInfo.username.length() == 0 
+                || clientInfo.password.length() == 0) {
+            // TODO Not silently fail if we can't sign in with the givens.
+            return;
+        }
 
         if (accounts.userStore.containsKey(clientInfo.username)
                 && accounts.userStore.get(clientInfo.username).password.equals(clientInfo.password)) {
@@ -270,6 +276,8 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         clientInfo.sentryFile = new File(String.format(SENTRY_FILENAME_FMT,
                 clientInfo.username));
 
+        setSteamConnectionState(ClientConnectivityState.SIGNING_IN);
+        
         callback.run(clientInfo);
     }//GEN-LAST:event_loginButtonActionPerformed
 
