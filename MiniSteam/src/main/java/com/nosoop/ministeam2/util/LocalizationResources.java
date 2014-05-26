@@ -22,7 +22,7 @@ public class LocalizationResources {
                     ("com/nosoop/ministeam2/UIStrings");
         }
         
-        if (resource.containsKey(key)) {
+        if (!resource.containsKey(key)) {
             logger.error("Could not find localization string for key {}.",
                     key);
         }

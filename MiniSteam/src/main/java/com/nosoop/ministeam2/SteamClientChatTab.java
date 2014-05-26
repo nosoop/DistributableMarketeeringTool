@@ -94,8 +94,8 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      */
     private SteamChatEventList chatEvents;
     /**
-     * The maximum number of events to keep visible in the chat window. Chat logs keep
-     * everything.
+     * The maximum number of events to keep visible in the chat window. Chat
+     * logs keep everything.
      */
     private static final int CHAT_EVENT_CAPACITY = 100;
 
@@ -122,7 +122,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         this.chatlogger = new ChatLogger();
         this.chatEvents = new SteamChatEventList();
 
-        updateUserStatus(userinfo);
+        receiveUserStatus(userinfo);
     }
 
     /**
@@ -151,6 +151,30 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     }
 
     /**
+     * Receives a user status update event from the parent SteamClientChatFrame
+     * instance.
+     *
+     * @param status An updated user status.
+     */
+    final void receiveUserStatus(SteamClientMainForm.SteamFriendEntry status) {
+        if (userinfo.getPersonaState() != status.getPersonaState()) {
+            addChatEvent(new ChatEvent(String.format("%s is now %s.",
+                    status.getUsername(), status.renderFriendState())));
+        }
+        if (!userinfo.getUsername().equals(status.getUsername())) {
+            addChatEvent(new ChatEvent(
+                    String.format("%s changed their name to %s.",
+                    userinfo.getUsername(), status.getUsername())));
+        }
+
+        userinfo = status;
+        userNameLabel.setText(userinfo.getUsername());
+
+        // If status is changed while typing, reflect the change.
+        updateStatusLabel(userIsTypingTimer.isRunning());
+    }
+
+    /**
      * Adds a user event to the list of current chat events, updating the text
      * box.
      *
@@ -174,29 +198,11 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      *
      * @param isTyping Whether or not to display the typing notification.
      */
-    void updateStatusLabel(boolean isTyping) {
+    private void updateStatusLabel(boolean isTyping) {
         String status = String.format(
                 isTyping ? "%s (Typing...)" : "%s", userinfo.renderUserStatus());
 
         userStatusLabel.setText(status);
-    }
-
-    final void updateUserStatus(SteamClientMainForm.SteamFriendEntry status) {
-        if (userinfo.getPersonaState() != status.getPersonaState()) {
-            addChatEvent(new ChatEvent(String.format("%s is now %s.",
-                    status.getUsername(), status.renderFriendState())));
-        }
-        if (!userinfo.getUsername().equals(status.getUsername())) {
-            addChatEvent(new ChatEvent(
-                    String.format("%s changed their name to %s.",
-                    userinfo.getUsername(), status.getUsername())));
-        }
-
-        userinfo = status;
-        userNameLabel.setText(userinfo.getUsername());
-
-        // If status is changed while typing, reflect the change.
-        updateStatusLabel(userIsTypingTimer.isRunning());
     }
 
     void updateTradeButton(TradeButtonState state, int tradeid) {
@@ -375,7 +381,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         FileWriter fw;
         PrintWriter pw;
 
-        public ChatLogger() {
+        ChatLogger() {
             // figure out where to write log file
             fw = null;
             pw = null;
@@ -408,7 +414,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             }
         }
 
-        public void writeEvent(ChatEvent event) {
+        void writeEvent(ChatEvent event) {
             createLogFile();
 
             String dateTime = String.format(DATE_TIME_FMT,
@@ -429,7 +435,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         String message;
         long timestamp;
 
-        public ChatEvent(String eventMessage) {
+        ChatEvent(String eventMessage) {
             this.message = eventMessage;
             this.timestamp = System.currentTimeMillis();
         }
@@ -446,7 +452,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     private static class ChatEventMessage extends ChatEvent {
         String username;
 
-        public ChatEventMessage(String username, String message) {
+        ChatEventMessage(String username, String message) {
             super(message);
             this.username = username;
         }

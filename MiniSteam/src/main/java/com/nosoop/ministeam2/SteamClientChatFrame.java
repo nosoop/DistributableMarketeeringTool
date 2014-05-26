@@ -3,6 +3,7 @@ package com.nosoop.ministeam2;
 import com.nosoop.ministeam2.SteamClientChatTab.TradeButtonState;
 import com.nosoop.ministeam2.SteamClientMainForm.SteamFriendEntry;
 import com.nosoop.ministeam2.SteamClientMainForm.SteamKitClient;
+import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
@@ -131,23 +132,28 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     void onUpdatedFriendStatus(SteamFriendEntry friendStatus) {
         if (currentUsers.containsKey(friendStatus.steamid)) {
             currentUsers.get(friendStatus.steamid)
-                    .updateUserStatus(friendStatus);
+                    .receiveUserStatus(friendStatus);
         }
     }
 
     /**
-     * Relay a received trade request to the applicable chat tab.
+     * Relay a received trade request to the applicable chat tab, as long as we
+     * aren't in a trade already.
      *
      * @param callback
      */
     void onTradeProposal(TradeProposedCallback callback) {
-        SteamID proposer = callback.getOtherClient();
-        addNewChatTab(proposer);
+        // TODO Don't silently drop trade requests?
+        if (!client.tradePoller.isInTrade()) {
+            SteamID proposer = callback.getOtherClient();
+            addNewChatTab(proposer);
 
-        SteamClientChatTab tabToUpdate = currentUsers.get(proposer);
-        tabToUpdate.updateTradeButton(
-                SteamClientChatTab.TradeButtonState.RECEIVED_REQUEST,
-                callback.getTradeID());
+            SteamClientChatTab tabToUpdate = currentUsers.get(proposer);
+
+            tabToUpdate.updateTradeButton(
+                    SteamClientChatTab.TradeButtonState.RECEIVED_REQUEST,
+                    callback.getTradeID());
+        }
     }
 
     /**
@@ -171,7 +177,6 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
      * Notifies all the chat tabs to re-enable their trade buttons.
      */
     void onTradeClosed() {
-        // TODO behavior when another trade is being accepted.
         for (Map.Entry<SteamID, SteamClientChatTab> entry
                 : currentUsers.entrySet()) {
             entry.getValue().updateTradeButton(TradeButtonState.IDLE, 0);
@@ -180,8 +185,6 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
 
     /**
      * Returns the name of our client.
-     *
-     * @return
      */
     String getOwnPersonaName() {
         return client.steamFriends.getPersonaName();
@@ -189,8 +192,6 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
 
     /**
      * Returns the username given in sign-in information stored by the client.
-     *
-     * @return
      */
     String getOwnUsername() {
         return client.clientInfo.username;
@@ -206,6 +207,12 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     private void initComponents() {
 
         chatTabbedPane = new javax.swing.JTabbedPane();
+
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentHidden(java.awt.event.ComponentEvent evt) {
+                formComponentHidden(evt);
+            }
+        });
 
         chatTabbedPane.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
         chatTabbedPane.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -265,6 +272,28 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
 
         setVisible(chatTabbedPane.getTabCount() != 0);
     }//GEN-LAST:event_chatTabbedPaneMouseReleased
+
+    /**
+     * Possibly close all the chat tabs when the window is hidden.
+     */
+    private void formComponentHidden(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_formComponentHidden
+        // TODO Create preference to hide window when close button is pressed.
+        if (1 == 0) {
+            return;
+        }
+
+        for (Component component : chatTabbedPane.getComponents()) {
+            if (component instanceof SteamClientChatTab) {
+                SteamClientChatTab tab = (SteamClientChatTab) component;
+                tab.cleanup();
+                chatTabbedPane.remove(tab);
+                currentUsers.remove(tab.chatter);
+
+                tab = null;
+                assert (tab == null);
+            }
+        }
+    }//GEN-LAST:event_formComponentHidden
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTabbedPane chatTabbedPane;
     // End of variables declaration//GEN-END:variables

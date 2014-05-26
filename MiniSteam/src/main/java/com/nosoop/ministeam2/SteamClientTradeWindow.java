@@ -848,8 +848,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
                     estr = "Unknown error code " + eid + ".";
             }
 
-            // TODO make message null checking refer to the library value.
-            if (message != null) {
+            if (!message.equals(TradeStatusCodes.EMPTY_MESSAGE)) {
                 estr += " (" + message + ")";
             }
 

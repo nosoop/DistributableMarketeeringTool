@@ -258,7 +258,6 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
     private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
         SteamClientInfo clientInfo;
 
-        // TODO Require both username and password before field is enabled.
         clientInfo = new SteamClientInfo();
         clientInfo.username = accountUserField.getEditor().getItem().toString();
         clientInfo.password = String.valueOf(accountPasswordField.getPassword());

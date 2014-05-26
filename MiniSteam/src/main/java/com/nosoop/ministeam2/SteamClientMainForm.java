@@ -390,7 +390,14 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         if (callback.getResult() != EResult.OK) {
                             logger.info("Unable to connect to Steam: {}",
                                     callback.getResult().getClass().getName());
-                            // TODO Set not running.
+
+                            clientExec.schedule(new Runnable() {
+                                @Override
+                                public void run() {
+                                    logger.info("Retrying connection.");
+                                    steamClient.connect();
+                                }
+                            }, 30, TimeUnit.SECONDS);
                         } else if (loginOnConnectedCallback) {
                             // Sign in client if we disconnected after login.
                             // (See: LoggedOnCallback)
@@ -459,11 +466,10 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             return;
                         }
 
-                        if (callback.getResult() == EResult.InvalidPassword ||
-                                callback.getResult() == EResult.PasswordNotSet) {
+                        if (callback.getResult() == EResult.InvalidPassword
+                                || callback.getResult() == EResult.PasswordNotSet) {
                             // Notified that user info is incorrect.
                             // TODO Figure out how to handle an invalid password.
-                            //loginDialog.setLoginStatus("Password is invalid.");
                             loginDialog.setSteamConnectionState(
                                     SteamClientLoginDialog.ClientConnectivityState.INCORRECT_LOGIN);
                             loginOnConnectedCallback = false;
@@ -1062,7 +1068,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 NoSuchAlgorithmException, InvalidKeySpecException,
                 NoSuchPaddingException, InvalidKeyException,
                 IllegalBlockSizeException, BadPaddingException, JSONException {
-            
+
             // Build cookie request property
             Map<String, String> reqp = new HashMap<>();
             StringBuilder sb = new StringBuilder();
@@ -1359,8 +1365,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
          * @return
          */
         String renderFriendState() {
-            return LocalizationResources.getString
-                    ("PersonaState." + state.name());
+            return LocalizationResources.getString("PersonaState." + state.name());
         }
     }
 
