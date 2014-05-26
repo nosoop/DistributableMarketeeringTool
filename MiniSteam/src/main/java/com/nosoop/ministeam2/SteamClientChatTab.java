@@ -2,6 +2,7 @@ package com.nosoop.ministeam2;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -46,7 +47,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      *
      * Currently set to 5 seconds.
      */
-    private static final int MSEC_INTERVAL_TYPING = 5000;
+    private static final int MILLISEC_INTERVAL_TYPING = 5000;
     /**
      * The last time a key was pressed in the current chat.
      */
@@ -292,8 +293,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
          * Sends a message to the other player if the ENTER key is hit and there
          * is a non-zero length trimmed message.
          */
-        if (key == java.awt.event.KeyEvent.VK_ENTER
-                && inputText.trim().length() > 0) {
+        if (key == KeyEvent.VK_ENTER && inputText.trim().length() > 0) {
             // Send the message.
             frame.onSendingMessage(chatter, EChatEntryType.ChatMsg, inputText);
 
@@ -313,7 +313,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
          * Notify the other user of our typing activity.
          */
         if (System.currentTimeMillis() - lastTimeKeyPressed
-                > MSEC_INTERVAL_TYPING) {
+                > MILLISEC_INTERVAL_TYPING) {
             frame.onSendingMessage(chatter, EChatEntryType.Typing, "");
             lastTimeKeyPressed = System.currentTimeMillis();
         }

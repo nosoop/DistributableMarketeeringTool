@@ -1061,9 +1061,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 NoSuchAlgorithmException, InvalidKeySpecException,
                 NoSuchPaddingException, InvalidKeyException,
                 IllegalBlockSizeException, BadPaddingException, JSONException {
-
-            Scanner scanner = new Scanner(System.in);
-
+            
             // Build cookie request property
             Map<String, String> reqp = new HashMap<>();
             StringBuilder sb = new StringBuilder();
