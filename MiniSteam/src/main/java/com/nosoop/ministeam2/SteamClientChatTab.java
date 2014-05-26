@@ -31,6 +31,16 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             "." + File.separator + "logs" + File.separator + "%s"
             + File.separator + "%s" + File.separator + "%s.log";
     /**
+     * Formatting string for the filename.
+     */
+    private static final String CHATLOG_FILENAME = 
+            "%1$tY-%1$tm-%1$td-%1$tH%1$tM%1$tS %2$s";
+    /**
+     * Formatting string for date / time.
+     */
+    private static final String DATE_TIME_FMT =
+            "[%1$tm/%1$td/%1$tY %1$tI:%1$tM:%1$tS %1$Tp]";
+    /**
      * Number of milliseconds that must pass before we fire off another message
      * notifying the other user that we are typing.
      *
@@ -146,7 +156,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         userStatusLabel.setText(status);
     }
 
-    void updateUserStatus(SteamClientMainForm.SteamFriendEntry status) {
+    final void updateUserStatus(SteamClientMainForm.SteamFriendEntry status) {
         if (userinfo.state != status.state) {
             addChatEvent(new ChatEvent(String.format("%s is now %s.",
                     status.username, status.state.name())));
@@ -359,7 +369,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
 
             try {
                 String fileName = String.format(
-                        "%1$tY-%1$tm-%1$td-%1$tH%1$tM%1$tS %2$s", new Date(),
+                        CHATLOG_FILENAME, new Date(),
                         userinfo.username);
 
                 String filePath = String.format(CHATLOG_FILEPATH,
@@ -381,7 +391,10 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         public void writeEvent(ChatEvent event) {
             createLogFile();
 
-            pw.printf("%s%n", event.toString());
+            String dateTime = String.format(DATE_TIME_FMT, 
+                    new Date(event.timestamp));
+            
+            pw.printf("%s %s%n", dateTime, event.toString());
         }
     }
 
