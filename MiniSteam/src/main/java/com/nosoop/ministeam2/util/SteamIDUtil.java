@@ -13,12 +13,14 @@ import uk.co.thomasc.steamkit.types.steamid.SteamID;
 public class SteamIDUtil {
     final static String STEAMID_READABLE = "%s_%d_%d";
 
-    static String convertReadable(SteamID id) {
+    public static String convertReadable(SteamID id) {
         return String.format(STEAMID_READABLE,
-                getAccountTypeChar(id), getUniverse(id), id.getAccountID());
+                getAccountTypeChar(id), getUniverse(id),
+                // Convert account number.
+                (int) (id.convertToLong()) >> 1);
     }
 
-    static char getAccountTypeChar(SteamID id) {
+    public static char getAccountTypeChar(SteamID id) {
         switch (id.getAccountType()) {
             case Individual:
                 return 'U';
@@ -29,7 +31,7 @@ public class SteamIDUtil {
         }
     }
 
-    static int getUniverse(SteamID id) {
+    public static int getUniverse(SteamID id) {
         switch (id.getAccountUniverse()) {
             case Invalid:
                 return 0;

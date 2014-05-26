@@ -1,6 +1,7 @@
 package com.nosoop.ministeam2;
 
 import com.nosoop.ministeam2.util.LocalizationResources;
+import com.nosoop.ministeam2.util.SteamIDUtil;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -33,6 +34,10 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             "." + File.separator + "logs" + File.separator + "%s"
             + File.separator + "%s" + File.separator + "%s.log";
     /**
+     * A quick hack to get the system-specific newline sequence.
+     */
+    private static final String NEWLINE = String.format("%n", new Object[0]);
+    /**
      * Formatting string for the filename.
      */
     private static final String CHATLOG_FILENAME =
@@ -52,15 +57,15 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     /**
      * The last time a key was pressed in the current chat.
      */
-    long lastTimeKeyPressed = 0;
+    private long lastTimeKeyPressed = 0;
     /**
      * The SteamID of the person we are chatting with.
      */
-    SteamID chatter;
+    final SteamID chatter;
     /**
      * The parent frame of this tab.
      */
-    SteamClientChatFrame frame;
+    private SteamClientChatFrame frame;
     /**
      * Another logging instance. Of course.
      */
@@ -73,21 +78,26 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     /**
      * Stored user information.
      */
-    SteamClientMainForm.SteamFriendEntry userinfo;
+    private SteamClientMainForm.SteamFriendEntry userinfo;
     /**
      * Trade button status, to determine what action should be done when
      * clicked..
      */
-    TradeButtonState state;
-    int tradeid;
+    private TradeButtonState state;
+    private int tradeid;
     /**
      * Chat logging.
      */
-    ChatLogger chatlogger;
+    private ChatLogger chatlogger;
     /**
      * The event listing.
      */
-    SteamChatEventList chatEvents;
+    private SteamChatEventList chatEvents;
+    /**
+     * The maximum number of events to keep visible in the chat window. Chat logs keep
+     * everything.
+     */
+    private static final int CHAT_EVENT_CAPACITY = 100;
 
     /**
      * Creates new form SteamClientChatPanel
@@ -150,10 +160,10 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         chatEvents.add(event);
         chatlogger.writeEvent(event);
 
+        // Rebuild the textarea text.
         StringBuilder chatBuffer = new StringBuilder();
         for (ChatEvent e : chatEvents) {
-            chatBuffer.append(e.toString())
-                    .append(String.format("%n", new Object[0]));
+            chatBuffer.append(e.toString()).append(NEWLINE);
         }
         chatTextArea.setText(chatBuffer.toString());
         logger.debug("Chat field updated.");
@@ -192,12 +202,11 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     void updateTradeButton(TradeButtonState state, int tradeid) {
         this.state = state;
         this.tradeid = tradeid;
-        
+
         tradeButton.setEnabled(state.enabled);
-        tradeButton.setText(LocalizationResources.getString
-                ("ChatTab.TradeButtonState." + state.name()));
+        tradeButton.setText(LocalizationResources.getString("ChatTab.TradeButtonState." + state.name()));
     }
-    
+
     /**
      * Called when the tab is closed to close the log file.
      */
@@ -350,9 +359,8 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     // End of variables declaration//GEN-END:variables
 
     public enum TradeButtonState {
-        IDLE(true), DISABLED_WHILE_IN_TRADE(false), RECEIVED_REQUEST(true), 
+        IDLE(true), DISABLED_WHILE_IN_TRADE(false), RECEIVED_REQUEST(true),
         CANCEL_SENT_REQUEST(true), IN_TRADE(false);
-        
         boolean enabled;
 
         private TradeButtonState(boolean enabled) {
@@ -379,13 +387,14 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             }
 
             try {
-                String fileName = String.format(
-                        CHATLOG_FILENAME, new Date(),
+                // YYYY-mm-dd-HHMMSS <name>.log
+                String fileName = String.format(CHATLOG_FILENAME, new Date(),
                         userinfo.getUsername());
 
+                // ./logs/<account name>/<shortsteamid>/<filename>
                 String filePath = String.format(CHATLOG_FILEPATH,
-                        frame.getOwnUsername(), chatter.convertToLong(),
-                        fileName);
+                        frame.getOwnUsername(),
+                        SteamIDUtil.convertReadable(chatter), fileName);
 
                 logger.info("Creating log file at {}.", filePath);
 
@@ -452,18 +461,15 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      * Subclass of LinkedList that holds a set number of SteamChatEvent
      * instances.
      */
-    private static class SteamChatEventList extends LinkedList<ChatEvent> {
-        int capacity;
-
-        public SteamChatEventList() {
-            capacity = 100;
+    private class SteamChatEventList extends LinkedList<ChatEvent> {
+        SteamChatEventList() {
         }
 
         @Override
         public boolean add(ChatEvent e) {
             boolean added = super.add(e);
 
-            while (size() > capacity) {
+            while (size() > CHAT_EVENT_CAPACITY) {
                 super.poll();
             }
 
