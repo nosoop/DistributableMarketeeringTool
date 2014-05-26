@@ -50,6 +50,7 @@ import uk.co.thomasc.steamkit.util.crypto.CryptoHelper;
 import uk.co.thomasc.steamkit.util.crypto.RSACrypto;
 
 /**
+ * The main window for the Distributable Marketeering Tool.
  *
  * @author nosoop < nosoop at users.noreply.github.com >
  */
@@ -154,7 +155,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             SteamFriendEntry entry = keyValues.getValue();
 
             // Display username in first cell, status in second.
-            friendTable.addRow(new Object[]{entry, entry.renderStatus()});
+            friendTable.addRow(new Object[]{entry, entry.renderUserStatus()});
         }
 
         // Restore row if there is a selection (row != -1)
@@ -1095,7 +1096,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
             String encryptedPassword = Base64.encodeBytes(encodedPassword);
 
-            //JSONObject loginJSON = null;
             JSONObject loginJSON = new JSONObject();
             String steamGuardText = "";
             String steamGuardId = "";
@@ -1304,13 +1304,42 @@ public class SteamClientMainForm extends javax.swing.JFrame {
      */
     public static class SteamFriendEntry {
         SteamID steamid;
-        String username, game;
-        EPersonaState state;
-        EFriendRelationship relationship;
+        private String username, game;
+        private EPersonaState state;
+        private EFriendRelationship relationship;
 
         @Override
         public String toString() {
             return username;
+        }
+
+        /**
+         * Returns the username held by this SteamFriendEntry instance.
+         *
+         * @return The username field.
+         */
+        String getUsername() {
+            return username;
+        }
+
+        /**
+         * Returns the status of the user.
+         *
+         * @return An EPersonaState value representing the current status of the
+         * user.
+         */
+        EPersonaState getPersonaState() {
+            return state;
+        }
+
+        /**
+         * Returns the client's relationship with the user.
+         *
+         * @return An EFriendRelationship value representing the relationship
+         * with the user.
+         */
+        EFriendRelationship getRelationship() {
+            return relationship;
         }
 
         /**
@@ -1319,9 +1348,18 @@ public class SteamClientMainForm extends javax.swing.JFrame {
          *
          * @return
          */
-        String renderStatus() {
+        String renderUserStatus() {
             return relationship == EFriendRelationship.Friend
-                    ? state.name() : relationship.name();
+                    ? renderFriendState() : relationship.name();
+        }
+
+        /**
+         * Renders the state of the user, localizing if necessary.
+         *
+         * @return
+         */
+        String renderFriendState() {
+            return state.name();
         }
     }
 
