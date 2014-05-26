@@ -245,7 +245,10 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_chatTabbedPaneStateChanged
 
     /**
-     * Removes the tab, performing cleanup as necessary.
+     * Removes the tab. Performs cleanup by closing open logs, removing the chat
+     * from the tab pane, removing the SteamID associated with the chat from the
+     * list of users with tabs open, and attempts to force cleanup by setting
+     * the tab reference to null.
      */
     private void chatTabbedPaneMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_chatTabbedPaneMouseReleased
         SteamClientChatTab tab = (SteamClientChatTab) chatTabbedPane
@@ -255,6 +258,9 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
             tab.cleanup();
             chatTabbedPane.remove(tab);
             currentUsers.remove(tab.chatter);
+
+            tab = null;
+            assert (tab == null);
         }
 
         setVisible(chatTabbedPane.getTabCount() != 0);

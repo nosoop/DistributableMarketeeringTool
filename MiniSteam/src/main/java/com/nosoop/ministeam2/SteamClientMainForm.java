@@ -1,5 +1,6 @@
 package com.nosoop.ministeam2;
 
+import com.nosoop.ministeam2.util.LocalizationResources;
 import bundled.steamtrade.org.json.JSONException;
 import bundled.steamtrade.org.json.JSONObject;
 import com.nosoop.inputdialog.CallbackInputFrame.DialogCallback;

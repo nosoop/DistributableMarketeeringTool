@@ -1,15 +1,15 @@
-package com.nosoop.ministeam2;
+package com.nosoop.ministeam2.util;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 /**
+ * Obtains the build properties from a file,
  *
  * @author nosoop < nosoop at users.noreply.github.com >
  */
 public class BuildProperties {
-
     private static final Properties properties;
 
     /**
@@ -46,10 +46,10 @@ public class BuildProperties {
     public static String getBuildVersion() {
         return properties.getProperty("buildversion");
     }
-    
+
     /**
      * Gets the build time.
-     * 
+     *
      * @return A (@code String) with the build time.
      */
     public static String getBuildTime() {

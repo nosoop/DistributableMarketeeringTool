@@ -1,5 +1,7 @@
 package com.nosoop.ministeam2;
 
+import com.nosoop.ministeam2.util.LocalizationResources;
+import com.nosoop.ministeam2.util.BuildProperties;
 import bundled.steamtrade.org.json.*;
 import com.nosoop.inputdialog.CallbackInputFrame;
 import com.nosoop.ministeam2.SteamClientMainForm.SteamClientInfo;

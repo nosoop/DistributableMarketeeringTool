@@ -1,4 +1,4 @@
-package com.nosoop.ministeam2;
+package com.nosoop.ministeam2.util;
 
 import java.util.ResourceBundle;
 

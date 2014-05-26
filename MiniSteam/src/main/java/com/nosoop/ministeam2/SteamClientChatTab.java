@@ -1,5 +1,6 @@
 package com.nosoop.ministeam2;
 
+import com.nosoop.ministeam2.util.LocalizationResources;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
