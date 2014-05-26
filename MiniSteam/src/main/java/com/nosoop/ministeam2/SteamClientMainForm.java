@@ -189,7 +189,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        labelPlayerName.setText("[unknown]");
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("com/nosoop/ministeam2/UIStrings"); // NOI18N
+        labelPlayerName.setText(bundle.getString("Steam.UndefinedName")); // NOI18N
 
         comboboxUserStatus.setModel(new javax.swing.DefaultComboBoxModel(EPersonaState.values()));
         comboboxUserStatus.addActionListener(new java.awt.event.ActionListener() {
@@ -457,7 +458,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             return;
                         }
 
-                        if (callback.getResult() == EResult.InvalidPassword) {
+                        if (callback.getResult() == EResult.InvalidPassword ||
+                                callback.getResult() == EResult.PasswordNotSet) {
                             // Notified that user info is incorrect.
                             // TODO Figure out how to handle an invalid password.
                             //loginDialog.setLoginStatus("Password is invalid.");
@@ -465,7 +467,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                                     SteamClientLoginDialog.ClientConnectivityState.INCORRECT_LOGIN);
                             loginOnConnectedCallback = false;
                             steamClient.disconnect();
-                            steamClient.connect();
                         }
 
                         if (callback.getResult() == EResult.OK) {
@@ -797,7 +798,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
          * @param userLogin
          */
         void login(SteamClientInfo userLogin) {
-            logger.info("Connected to Steam.  Logging in as user {}.",
+            logger.info("Logging in as user {}.",
                     userLogin.username);
 
             byte[] sentryHash = null;

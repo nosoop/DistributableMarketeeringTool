@@ -77,7 +77,9 @@
       <Properties>
         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
           <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-            <TitledBorder title="Your Offer"/>
+            <TitledBorder title="Your Offer">
+              <ResourceString PropertyName="titleX" bundle="com/nosoop/ministeam2/UIStrings.properties" key="TradeWindow.Labels.YourOffer" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+            </TitledBorder>
           </Border>
         </Property>
       </Properties>
@@ -153,7 +155,9 @@
         </Container>
         <Component class="javax.swing.JCheckBox" name="yourOfferReadyCheckbox">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Ready to trade."/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+              <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="TradeWindow.Labels.ReadyToTrade" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+            </Property>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="yourOfferReadyCheckboxActionPerformed"/>
@@ -165,7 +169,9 @@
       <Properties>
         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
           <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-            <TitledBorder title="Other Person&apos;s Offer"/>
+            <TitledBorder title="Other Person&apos;s Offer">
+              <ResourceString PropertyName="titleX" bundle="com/nosoop/ministeam2/UIStrings.properties" key="TradeWindow.Labels.PartnerOffer" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+            </TitledBorder>
           </Border>
         </Property>
       </Properties>
@@ -237,7 +243,9 @@
         </Container>
         <Component class="javax.swing.JCheckBox" name="otherOfferReadyCheckbox">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Ready to trade"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+              <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="TradeWindow.Labels.ReadyToTrade" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+            </Property>
             <Property name="enabled" type="boolean" value="false"/>
           </Properties>
           <AuxValues>
@@ -250,7 +258,9 @@
       <Properties>
         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
           <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-            <TitledBorder title="Your Inventory"/>
+            <TitledBorder title="Your Inventory">
+              <ResourceString PropertyName="titleX" bundle="com/nosoop/ministeam2/UIStrings.properties" key="TradeWindow.Labels.YourInventory" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+            </TitledBorder>
           </Border>
         </Property>
       </Properties>
@@ -300,12 +310,12 @@
                 <Property name="columnModel" type="javax.swing.table.TableColumnModel" editor="org.netbeans.modules.form.editors2.TableColumnModelEditor">
                   <TableColumnModel selectionModel="0">
                     <Column maxWidth="-1" minWidth="-1" prefWidth="-1" resizable="true">
-                      <Title/>
+                      <Title value="Item"/>
                       <Editor/>
                       <Renderer/>
                     </Column>
                     <Column maxWidth="64" minWidth="-1" prefWidth="-1" resizable="true">
-                      <Title/>
+                      <Title value="Quantity"/>
                       <Editor/>
                       <Renderer/>
                     </Column>
@@ -318,8 +328,8 @@
                 </Property>
               </Properties>
               <Events>
-                <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="yourInventoryTableMouseClicked"/>
                 <EventHandler event="mouseReleased" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="yourInventoryTableMouseReleased"/>
+                <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="yourInventoryTableMouseClicked"/>
               </Events>
             </Component>
           </SubComponents>
@@ -345,7 +355,9 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Tahoma" size="11" style="0"/>
         </Property>
-        <Property name="label" type="java.lang.String" value="Trade!"/>
+        <Property name="label" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="TradeWindow.Labels.CompleteTradeButton" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="completeTradeButtonActionPerformed"/>
@@ -359,7 +371,9 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Tahoma" size="11" style="0"/>
         </Property>
-        <Property name="label" type="java.lang.String" value="Cancel"/>
+        <Property name="label" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="TradeWindow.Labels.CancelButton" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cancelTradeButtonActionPerformed"/>
@@ -369,7 +383,9 @@
       <Properties>
         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
           <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-            <TitledBorder title="Trade Chat"/>
+            <TitledBorder title="Trade Chat">
+              <ResourceString PropertyName="titleX" bundle="com/nosoop/ministeam2/UIStrings.properties" key="TradeWindow.Labels.TradeChat" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+            </TitledBorder>
           </Border>
         </Property>
       </Properties>

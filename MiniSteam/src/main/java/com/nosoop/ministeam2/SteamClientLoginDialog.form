@@ -111,19 +111,25 @@
     </Component>
     <Component class="javax.swing.JLabel" name="accountUserLabel">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Steam Username:"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="LoginDialog.Username" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="accountPasswordLabel">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Steam Password:"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="LoginDialog.Labels.Password" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JPasswordField" name="accountPasswordField">
     </Component>
     <Component class="javax.swing.JButton" name="loginButton">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Login"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="LoginDialog.Labels.LoginButton" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loginButtonActionPerformed"/>
@@ -134,7 +140,9 @@
     </Component>
     <Component class="javax.swing.JButton" name="quitButton">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Cancel"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="LoginDialog.Labels.CancelButton" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="quitButtonActionPerformed"/>
@@ -147,12 +155,16 @@
     </Component>
     <Component class="javax.swing.JLabel" name="loginStatusLabel">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Status: Waiting to sign in..."/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="LoginDialog.ClientConnectivityState.CONNECTING" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel2">
       <Properties>
-        <Property name="text" type="java.lang.String" value="(Powered by SteamKit-Java and SteamTrade-Java code)"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="String.format(LocalizationResources.getString(&quot;LoginDialog.FmtLabels.PoweredBy&quot;), POWERED_BY)" type="code"/>
+        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JComboBox" name="accountUserField">

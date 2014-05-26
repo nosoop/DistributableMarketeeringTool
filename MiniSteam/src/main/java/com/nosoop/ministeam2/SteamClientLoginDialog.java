@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
  * @author nosoop < nosoop at users.noreply.github.com >
  */
 public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> {
+    // The projects that power the application.
+    static final String[] POWERED_BY = {"SteamKit-Java", "SteamTrade-Java"};
     // Filename format for saved SSFN data.
     static final String SENTRY_FILENAME_FMT = "sentry_%s.bin";
     /**
@@ -82,8 +84,8 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
      * @param state
      */
     final void setSteamConnectionState(ClientConnectivityState state) {
-        setLoginStatusLabel(LocalizationResources.getString
-                ("LoginDialog.ClientConnectivityState." + state.name()));
+        setLoginStatusLabel(LocalizationResources.getString(
+                "LoginDialog.ClientConnectivityState." + state.name()));
         setLoginDialogVisibilityState(state.DIALOG_MODE);
     }
 
@@ -122,7 +124,8 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
 
     /**
      * Sets the status label.
-     * @param text 
+     *
+     * @param text
      */
     private void setLoginStatusLabel(String text) {
         loginStatusLabel.setText("Status: " + text);
@@ -159,11 +162,12 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
 
         versionNumberLabel.setText("Version " + BuildProperties.getBuildVersion() + ", build " + BuildProperties.getBuildTime());
 
-        accountUserLabel.setText("Steam Username:");
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("com/nosoop/ministeam2/UIStrings"); // NOI18N
+        accountUserLabel.setText(bundle.getString("LoginDialog.Username")); // NOI18N
 
-        accountPasswordLabel.setText("Steam Password:");
+        accountPasswordLabel.setText(bundle.getString("LoginDialog.Labels.Password")); // NOI18N
 
-        loginButton.setText("Login");
+        loginButton.setText(bundle.getString("LoginDialog.Labels.LoginButton")); // NOI18N
         this.getRootPane().setDefaultButton(loginButton);
         loginButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -171,7 +175,7 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
             }
         });
 
-        quitButton.setText("Cancel");
+        quitButton.setText(bundle.getString("LoginDialog.Labels.CancelButton")); // NOI18N
         quitButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 quitButtonActionPerformed(evt);
@@ -180,9 +184,9 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
 
         rememberLoginCheckbox.setText("Remember login details");
 
-        loginStatusLabel.setText("Status: Waiting to sign in...");
+        loginStatusLabel.setText(bundle.getString("LoginDialog.ClientConnectivityState.CONNECTING")); // NOI18N
 
-        jLabel2.setText("(Powered by SteamKit-Java and SteamTrade-Java code)");
+        jLabel2.setText(String.format(LocalizationResources.getString("LoginDialog.FmtLabels.PoweredBy"), POWERED_BY));
 
         accountUserField.setEditable(true);
         accountUserField.addItemListener(new java.awt.event.ItemListener() {
@@ -252,6 +256,7 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
     private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
         SteamClientInfo clientInfo;
 
+        // TODO Require both username and password before field is enabled.
         clientInfo = new SteamClientInfo();
         clientInfo.username = accountUserField.getEditor().getItem().toString();
         clientInfo.password = String.valueOf(accountPasswordField.getPassword());

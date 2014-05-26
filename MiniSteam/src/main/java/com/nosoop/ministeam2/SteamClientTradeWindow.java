@@ -173,7 +173,8 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
             }
         });
 
-        yourOfferPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Your Offer"));
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("com/nosoop/ministeam2/UIStrings"); // NOI18N
+        yourOfferPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("TradeWindow.Labels.YourOffer"))); // NOI18N
 
         yourOfferTable.setAutoCreateRowSorter(true);
         yourOfferTable.setModel(new javax.swing.table.DefaultTableModel(
@@ -213,7 +214,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
         jScrollPane2.setViewportView(yourOfferTable);
         yourOfferTable.getColumnModel().getColumn(1).setMaxWidth(64);
 
-        yourOfferReadyCheckbox.setText("Ready to trade.");
+        yourOfferReadyCheckbox.setText(bundle.getString("TradeWindow.Labels.ReadyToTrade")); // NOI18N
         yourOfferReadyCheckbox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 yourOfferReadyCheckboxActionPerformed(evt);
@@ -241,7 +242,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        otherOfferPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Other Person's Offer"));
+        otherOfferPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("TradeWindow.Labels.PartnerOffer"))); // NOI18N
 
         otherOfferTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -273,7 +274,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
         jScrollPane1.setViewportView(otherOfferTable);
         otherOfferTable.getColumnModel().getColumn(1).setMaxWidth(64);
 
-        otherOfferReadyCheckbox.setText("Ready to trade");
+        otherOfferReadyCheckbox.setText(bundle.getString("TradeWindow.Labels.ReadyToTrade")); // NOI18N
         otherOfferReadyCheckbox.setEnabled(false);
 
         javax.swing.GroupLayout otherOfferPanelLayout = new javax.swing.GroupLayout(otherOfferPanel);
@@ -297,7 +298,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        yourInventoryPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Your Inventory"));
+        yourInventoryPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("TradeWindow.Labels.YourInventory"))); // NOI18N
 
         yourInventoryTable.setAutoCreateRowSorter(true);
         yourInventoryTable.setModel(new javax.swing.table.DefaultTableModel(
@@ -327,15 +328,17 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
         yourInventoryTable.setShowVerticalLines(false);
         yourInventoryTable.getTableHeader().setReorderingAllowed(false);
         yourInventoryTable.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                yourInventoryTableMouseClicked(evt);
-            }
             public void mouseReleased(java.awt.event.MouseEvent evt) {
                 yourInventoryTableMouseReleased(evt);
             }
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                yourInventoryTableMouseClicked(evt);
+            }
         });
         jScrollPane3.setViewportView(yourInventoryTable);
+        yourInventoryTable.getColumnModel().getColumn(0).setHeaderValue("Item");
         yourInventoryTable.getColumnModel().getColumn(1).setMaxWidth(64);
+        yourInventoryTable.getColumnModel().getColumn(1).setHeaderValue("Quantity");
 
         yourInventoriesComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "[Scraping trade page for your inventories...]" }));
         yourInventoriesComboBox.setEnabled(false);
@@ -368,7 +371,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
 
         completeTradeButton.setEnabled(false);
         completeTradeButton.setFont(new java.awt.Font("Tahoma", 0, 11)); // NOI18N
-        completeTradeButton.setLabel("Trade!");
+        completeTradeButton.setLabel(bundle.getString("TradeWindow.Labels.CompleteTradeButton")); // NOI18N
         completeTradeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 completeTradeButtonActionPerformed(evt);
@@ -376,14 +379,14 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
         });
 
         cancelTradeButton.setFont(new java.awt.Font("Tahoma", 0, 11)); // NOI18N
-        cancelTradeButton.setLabel("Cancel");
+        cancelTradeButton.setLabel(bundle.getString("TradeWindow.Labels.CancelButton")); // NOI18N
         cancelTradeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelTradeButtonActionPerformed(evt);
             }
         });
 
-        tradeChatPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Trade Chat"));
+        tradeChatPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("TradeWindow.Labels.TradeChat"))); // NOI18N
 
         tradeChatInput.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
