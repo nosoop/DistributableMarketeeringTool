@@ -195,6 +195,15 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         tradeButton.setText(LocalizationResources.getString
                 ("ChatTab.TradeButtonState." + state.name()));
     }
+    
+    /**
+     * Called when the tab is closed to close the log file.
+     */
+    void cleanup() {
+        if (chatlogger.pw != null) {
+            chatlogger.pw.close();
+        }
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.

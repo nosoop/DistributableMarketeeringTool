@@ -3,13 +3,13 @@ package com.nosoop.ministeam2;
 import com.nosoop.ministeam2.SteamClientChatTab.TradeButtonState;
 import com.nosoop.ministeam2.SteamClientMainForm.SteamFriendEntry;
 import com.nosoop.ministeam2.SteamClientMainForm.SteamKitClient;
+import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
-import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.SessionStartCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeProposedCallback;
+import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.*;
 import uk.co.thomasc.steamkit.types.steamid.SteamID;
 
 /**
@@ -208,6 +208,16 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
         chatTabbedPane = new javax.swing.JTabbedPane();
 
         chatTabbedPane.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
+        chatTabbedPane.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                chatTabbedPaneMouseReleased(evt);
+            }
+        });
+        chatTabbedPane.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                chatTabbedPaneStateChanged(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -222,6 +232,33 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    /**
+     * Sets the title to the current chatting user on tab panel state change.
+     */
+    private void chatTabbedPaneStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_chatTabbedPaneStateChanged
+        // TODO Custom formatting for title
+        int tabIndex = chatTabbedPane.getSelectedIndex();
+        if (tabIndex != -1) {
+            setTitle(chatTabbedPane.getTitleAt(tabIndex));
+        }
+    }//GEN-LAST:event_chatTabbedPaneStateChanged
+
+    /**
+     * Removes the tab, performing cleanup as necessary.
+     */
+    private void chatTabbedPaneMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_chatTabbedPaneMouseReleased
+        SteamClientChatTab tab = (SteamClientChatTab) chatTabbedPane
+                .getSelectedComponent();
+
+        if (tab != null && evt.getButton() == MouseEvent.BUTTON2) {
+            tab.cleanup();
+            chatTabbedPane.remove(tab);
+            currentUsers.remove(tab.chatter);
+        }
+
+        setVisible(chatTabbedPane.getTabCount() != 0);
+    }//GEN-LAST:event_chatTabbedPaneMouseReleased
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTabbedPane chatTabbedPane;
     // End of variables declaration//GEN-END:variables
