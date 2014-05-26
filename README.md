@@ -14,11 +14,12 @@ Notable Features
 ----------------
   * A reworked trading interface.  With a similar-yet-different UI to Steam Trading, similar items are grouped as uniquely as possible (well, they should be, anyways), making it easy to count out that they have a number of metal, a number of crates of a specific series, so on.  Adding items is as simple as selecting something and then repeatedly right-clicking.  (As stackables aren't supported yet, functionality might be changed for this to be even easier following the support.)
   * Multiple copies, multiple logins.
-  * Chat logging.  Separated by however many Steam logins you have, chat history is archived by your conversee's Steam id, by date and time.  _Miiiiiiiight_ be a tad bit feature creep, but why not.
+  * Chat logging.  Separated by however many Steam logins you have, chat history is archived by your conversee's Steam id, by date and time.  Events such as name and status changes are properly reflected as well.  _Miiiiiiiight_ be a tad bit feature creep, but why not.
 
 Where It Falls Flat
 -------------------
   * Group chatting.  If you're looking to get yourself scammed with the "friend as middleman" bait and switch, well, it's not going to work here.
+  * Memory usage!  Well, crap!  Given how poorly written it is, you're looking at about 130 MB in memory usage compared to the ~90 MB you use running Steam itself.  Assuming Windows with default VM settings, anyways.  That said, it might be comfy with a heap size of ~64MB if you restrain it.
   * Everything else Steam does!  No voice chatting or running games here (maybe some game coordinator stuff to craft items).
 
 Screenshots
@@ -60,3 +61,4 @@ On the To-Do
   * Update to reflect changes in SteamTrade-Java.
   * Add direct support for the steamLogin token to bypass weblogin. (Well, that, and reimplement the old authentication method for those that actually have it working.  It sure as hell doesn't on mine.)
   * Import sentry files from an installed client to skip SteamGuard, using [the JSON conversion library](https://github.com/nosoop/vdf-json-java) to read where the sentryfile is, of course.
+  * Create a lightweight project revolving around Steam web chat and trade offers?  It looks as if we're headed down that route, anyways.
