@@ -919,7 +919,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             + steamUser.getSteamId().convertToLong(),
                             clientInfo.machineauthcookie);
                 }
-                
+
                 // Attempt to sign in.
                 try {
                     SteamLoginAuth auth = SteamWebLogin.login(
@@ -1141,7 +1141,14 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 post.put("password", encryptedPassword);
                 post.put("username", username);
 
-                // Captcha
+                //<editor-fold defaultstate="collapsed" desc="Captcha verification">
+                /**
+                 * If we're getting a captcha after signing in _ever_, something
+                 * might be screwy. Captchas only show up on multiple failed
+                 * logins, right? But, well, it's here for reference.
+                 *
+                 * Might be usable once we do the light client, though.
+                 */
                 String capText = "";
                 if (captcha) {
                     System.out.println("SteamWeb: Captcha is needed.");
@@ -1163,15 +1170,21 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         throw new Error(ex);
                     }
                 }
-
                 post.put("captchagid", captcha ? capGID : "-1");
                 post.put("captcha_text", captcha ? capText : "");
-                // Captcha end
+                //</editor-fold>
 
-                // SteamGuard
+                //<editor-fold defaultstate="collapsed" desc="SteamGuard verification">
+                /**
+                 * On the other hand, you're more likely to put up with
+                 * SteamGuard, if you don't have the machine auth cookie set up.
+                 */
                 if (steamGuard) {
+                    String domain = loginJSON.getString("emaildomain");
+
                     String promptMessage = "SteamWeb login failed. Please "
-                            + "enter the SteamGuard code sent to your e-mail.";
+                            + "enter the SteamGuard code sent to your e-mail"
+                            + " at " + domain + ".";
                     steamGuardText = JOptionPane.showInputDialog(null,
                             promptMessage, "");
 
@@ -1180,7 +1193,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
                 post.put("emailauth", steamGuardText);
                 post.put("emailsteamid", steamGuardId);
-                // SteamGuard end
+                //</editor-fold>
 
                 post.put("rsatimestamp", time);
 
@@ -1375,8 +1388,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         /**
          * Returns the status to be displayed in the friend table, among other
          * places.
-         *
-         * @return
          */
         String renderUserStatus() {
             return relationship == EFriendRelationship.Friend
@@ -1385,17 +1396,19 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
         /**
          * Renders the state of the user, localizing if necessary.
-         *
-         * @return
          */
         String renderFriendState() {
-            return LocalizationResources.getString("EPersonaState." + 
-                    state.name());
+            return LocalizationResources.getString("EPersonaState."
+                    + state.name());
         }
-        
+
+        /**
+         * Renders the relationship between us and this user, localizing as
+         * needed.
+         */
         String renderFriendRelationship() {
-            return LocalizationResources.getString("EFriendRelationship." + 
-                    relationship.name());
+            return LocalizationResources.getString("EFriendRelationship."
+                    + relationship.name());
         }
     }
 

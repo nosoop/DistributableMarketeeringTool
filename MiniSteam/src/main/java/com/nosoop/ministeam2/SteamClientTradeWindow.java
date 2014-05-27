@@ -946,18 +946,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
             // Just output some stuff on unknown actions.
             int action = event.action;
 
-            logger.debug("Unknown action {}: {}", action,
-                    event.getJSONObject());
-
-            boolean isBot = !event.steamid.equals(String.valueOf(trade.getPartnerSteamId()));
-            logger.debug("Is bot action? {}", isBot);
-
-            // TODO Complete implementation of currency.
-
-            switch (event.action) {
-                default:
-                    break;
-            }
+            logger.debug("Unknown action {}", action);
         }
     }
 
