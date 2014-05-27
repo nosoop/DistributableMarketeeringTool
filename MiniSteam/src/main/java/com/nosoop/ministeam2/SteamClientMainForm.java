@@ -1380,7 +1380,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
          */
         String renderUserStatus() {
             return relationship == EFriendRelationship.Friend
-                    ? renderFriendState() : relationship.name();
+                    ? renderFriendState() : renderFriendRelationship();
         }
 
         /**
@@ -1389,7 +1389,13 @@ public class SteamClientMainForm extends javax.swing.JFrame {
          * @return
          */
         String renderFriendState() {
-            return LocalizationResources.getString("PersonaState." + state.name());
+            return LocalizationResources.getString("EPersonaState." + 
+                    state.name());
+        }
+        
+        String renderFriendRelationship() {
+            return LocalizationResources.getString("EFriendRelationship." + 
+                    relationship.name());
         }
     }
 
