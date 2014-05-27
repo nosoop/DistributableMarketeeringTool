@@ -571,52 +571,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 msg.handle(LoginKeyCallback.class, new ActionT<LoginKeyCallback>() {
                     @Override
                     public void call(LoginKeyCallback callback) {
-                        /**
-                         * TODO Implement support for storing the authorized
-                         * login data.
-                         */
-                        // Hopefully we only need to do this once.
-                        sessionId = Base64.encodeBytes(
-                                String.valueOf(callback.getUniqueId()).
-                                getBytes());
-
-                        // Attempt to authenticate by API.
-                        {
-                            SteamLoginAuth auth = authenticate(callback);
-
-                            if (auth.success) {
-                                token = auth.token;
-                                return;
-                            }
-                        }
-                        logger.info("API sign-in failed. Using SteamWeb.");
-
-                        // I guess we'll just have to do this manually.
-                        Map<String, String> cookies = new HashMap<>();
-                        cookies.put("sessionid", sessionId);
-
-                        if (!clientInfo.machineauthcookie.equals("")) {
-                            cookies.put("steamMachineAuth"
-                                    + steamUser.getSteamId().convertToLong(),
-                                    clientInfo.machineauthcookie);
-                        }
-                        try {
-                            SteamLoginAuth auth =
-                                    SteamWebLogin.login(clientInfo.username,
-                                    clientInfo.password, cookies);
-                            logger.info("SteamWeb login authenticated.");
-
-                            if (auth.success) {
-                                token = auth.token;
-                            }
-                        } catch (IOException | NoSuchAlgorithmException |
-                                InvalidKeySpecException |
-                                NoSuchPaddingException | InvalidKeyException |
-                                IllegalBlockSizeException |
-                                BadPaddingException | JSONException e) {
-                            logger.error("SteamWeb Login Failre", e);
-                        }
-
+                        clientExec.schedule(new LoginHelper(callback), 0,
+                                TimeUnit.SECONDS);
                         // Once authenticated, you can set other things.
                     }
                 });
@@ -800,7 +756,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         }
 
         /**
-         * Signs in the client, using applicable files.
+         * Signs in the client, using data received from
+         * SteamClientLoginDialog..
          *
          * @param userLogin
          */
@@ -847,7 +804,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
          * @param callback
          * @return
          */
-        SteamLoginAuth authenticate(LoginKeyCallback callback) {
+        private SteamLoginAuth authenticate(LoginKeyCallback callback) {
             logger.info("Attempting API auth...");
 
             final WebAPI userAuth = new WebAPI("ISteamUserAuth", "");
@@ -855,14 +812,18 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             final byte[] sessionKey = CryptoHelper.GenerateRandomBlock(32);
 
             // rsa encrypt it with the public key for the universe we're on
-            final RSACrypto rsa = new RSACrypto(KeyDictionary.getPublicKey(steamClient.getConnectedUniverse()));
+            final RSACrypto rsa = new RSACrypto(
+                    KeyDictionary.getPublicKey(
+                    steamClient.getConnectedUniverse()));
             byte[] cryptedSessionKey = rsa.encrypt(sessionKey);
 
             final byte[] loginKey = new byte[20];
-            System.arraycopy(callback.getLoginKey().getBytes(), 0, loginKey, 0, callback.getLoginKey().length());
+            System.arraycopy(callback.getLoginKey().getBytes(), 0, loginKey, 0,
+                    callback.getLoginKey().length());
 
             // aes encrypt the loginkey with our session key
-            final byte[] cryptedLoginKey = CryptoHelper.SymmetricEncrypt(loginKey, sessionKey);
+            final byte[] cryptedLoginKey = CryptoHelper.
+                    SymmetricEncrypt(loginKey, sessionKey);
 
             KeyValue authResult;
 
@@ -874,6 +835,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         WebHelpers.UrlEncode(cryptedSessionKey),
                         WebHelpers.UrlEncode(cryptedLoginKey), "POST");
             } catch (final Exception e) {
+                logger.error("Failed to authenticate on web login.", e);
                 result.success = false;
                 return result;
             }
@@ -910,6 +872,69 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 // 'null' when empty.
                 while ((msg = steamClient.getCallback(true)) != null) {
                     callbackManager.handleSteamMessage(msg);
+                }
+            }
+        }
+
+        /**
+         * Because logging in is a slightly long process, we wrap it up in a
+         * runnable and schedule it to be executed by the client.
+         */
+        private class LoginHelper implements Runnable {
+            LoginKeyCallback callback;
+
+            LoginHelper(LoginKeyCallback callback) {
+                this.callback = callback;
+            }
+
+            @Override
+            public void run() {
+                /**
+                 * TODO Implement support for storing the authorized login data.
+                 */
+                // Hopefully we only need to do this once.
+                sessionId = Base64.encodeBytes(
+                        String.valueOf(callback.getUniqueId()).
+                        getBytes());
+
+                // Attempt to authenticate by API.
+                {
+                    SteamLoginAuth auth = authenticate(callback);
+
+                    if (auth.success) {
+                        token = auth.token;
+                        return;
+                    }
+                }
+                // Failing the API sign-in, we sign in through the web form.
+                logger.info("API sign-in failed. Using SteamWeb.");
+
+                // Put the sessionid as a cookie for the request.
+                Map<String, String> cookies = new HashMap<>();
+                cookies.put("sessionid", sessionId);
+
+                // Provide machine auth cookie if available to skip SteamGuard.
+                if (!clientInfo.machineauthcookie.equals("")) {
+                    cookies.put("steamMachineAuth"
+                            + steamUser.getSteamId().convertToLong(),
+                            clientInfo.machineauthcookie);
+                }
+                
+                // Attempt to sign in.
+                try {
+                    SteamLoginAuth auth = SteamWebLogin.login(
+                            clientInfo.username, clientInfo.password, cookies);
+                    logger.info("SteamWeb login authenticated.");
+
+                    if (auth.success) {
+                        token = auth.token;
+                    }
+                } catch (IOException | NoSuchAlgorithmException |
+                        InvalidKeySpecException |
+                        NoSuchPaddingException | InvalidKeyException |
+                        IllegalBlockSizeException |
+                        BadPaddingException | JSONException e) {
+                    logger.error("SteamWeb Login Failre", e);
                 }
             }
         }
@@ -969,7 +994,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
          *
          * @author nosoop < nosoop at users.noreply.github.com >
          */
-        class FrontendInactivityChecker implements Runnable {
+        private class FrontendInactivityChecker implements Runnable {
             final int SECONDS_UNTIL_AWAY = 5 * 60; // 5 minutes
             final int SECONDS_UNTIL_SNOOZE = 60 * 60 * 2; // 2 hours
             long timeLastActive;
@@ -1250,21 +1275,22 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             conn.setReadTimeout(5000);
 
             if (post != null) {
-                DataOutputStream out = new DataOutputStream(conn.getOutputStream());
-                Set keys = post.keySet();
-                Iterator<String> keyIter = keys.iterator();
-                String content = "";
-                for (int i = 0; keyIter.hasNext(); i++) {
-                    String key = keyIter.next();
-                    if (i != 0) {
-                        content += "&";
+                try (DataOutputStream out = new DataOutputStream(
+                        conn.getOutputStream())) {
+                    Set keys = post.keySet();
+                    Iterator<String> keyIter = keys.iterator();
+                    String content = "";
+                    for (int i = 0; keyIter.hasNext(); i++) {
+                        String key = keyIter.next();
+                        if (i != 0) {
+                            content += "&";
+                        }
+                        content += key + "=" + URLEncoder.encode(post.get(key),
+                                "UTF-8");
                     }
-                    content += key + "=" + URLEncoder.encode(post.get(key),
-                            "UTF-8");
+                    out.writeBytes(content);
+                    out.flush();
                 }
-                out.writeBytes(content);
-                out.flush();
-                out.close();
             }
 
             InputStream netStream;
@@ -1272,7 +1298,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             try {
                 netStream = conn.getInputStream();
             } catch (java.io.IOException ee) {
-                // Grab the JSON message from the error stream.
                 netStream = conn.getErrorStream();
             }
 
@@ -1282,7 +1307,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 }
 
                 feedStream = new InputStreamReader(netStream);
-
                 feedReader = new BufferedReader(feedStream);
 
                 String line;

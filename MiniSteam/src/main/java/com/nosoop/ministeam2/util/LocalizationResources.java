@@ -23,8 +23,7 @@ public class LocalizationResources {
         }
         
         if (!resource.containsKey(key)) {
-            logger.error("Could not find localization string for key {}.",
-                    key);
+            logger.error("Could not find localization string for key {}.", key);
         }
         
         return resource.getString(key);
