@@ -561,7 +561,6 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
         if (key == java.awt.event.KeyEvent.VK_ENTER && inputText.trim().length() > 0) {
             listener.trade.getCmds().sendMessage(inputText);
 
-            // TODO Add trade chat actions.
             addMessage(client.steamFriends.getPersonaName(), inputText);
             tradeChatInput.setText("");
         }
