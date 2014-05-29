@@ -63,7 +63,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
                 String.format("%s's Offer", partnerName)));
     }
 
-    public void addMessage(String name, String text) {
+    void addMessage(String name, String text) {
         chat.append(String.format("%s: %s%n", name, text));
 
         tradeChatArea.setText(chat.toString());
@@ -78,7 +78,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
      *
      * @param items
      */
-    public void setOwnInventoryTable(Collection<TradePersonalDisplayItem> items) {
+    void setOwnInventoryTable(Collection<TradePersonalDisplayItem> items) {
         javax.swing.JTable modifiedTable = yourInventoryTable;
 
         DefaultTableModel table = (DefaultTableModel) modifiedTable.getModel();
@@ -99,7 +99,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
      * @param items Collection of TradeDisplayItem instances to update the
      * table.
      */
-    public void updateTradeCount(boolean me, Collection<TradeDisplayItem> items) {
+    void updateTradeCount(boolean me, Collection<TradeDisplayItem> items) {
         javax.swing.JTable modifiedTable = me ? yourOfferTable : otherOfferTable;
 
         DefaultTableModel table = (DefaultTableModel) modifiedTable.getModel();
@@ -124,7 +124,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
      * @param appContexts A list of named AppContextPairs to be added to the
      * dropdown.
      */
-    public void loadInventorySet(List<AppContextPair> appContexts) {
+    void loadInventorySet(List<AppContextPair> appContexts) {
         final javax.swing.DefaultComboBoxModel model =
                 (javax.swing.DefaultComboBoxModel) yourInventoriesComboBox.getModel();
 
@@ -650,10 +650,9 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
         Map<String, TradeDisplayItem> otherOfferedItems, myOfferedItems;
         private final short MAX_ITEMS_IN_TRADE = 256;
         private TradeInternalItem ourTradeSlotsFilled[];
-        String otherPlayerName;
         Logger logger;
 
-        public ClientTradeListener() {
+        ClientTradeListener() {
             super();
 
             this.logger = LoggerFactory.getLogger(ClientTradeListener.class);
@@ -674,7 +673,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
             logger.info("Trade session started.");
         }
 
-        public final boolean tradePutFirstValidItem(TradePersonalDisplayItem item) {
+        final boolean tradePutFirstValidItem(TradePersonalDisplayItem item) {
             List<TradeInternalItem> itemids = item.getItemList();
             for (TradeInternalItem itemid : itemids) {
                 if (tradePutItem(itemid)) {
@@ -696,7 +695,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
             return false;
         }
 
-        public final boolean tradeRemoveFirstValidItem(TradeDisplayItem dispItem) {
+        final boolean tradeRemoveFirstValidItem(TradeDisplayItem dispItem) {
             TradePersonalDisplayItem myItem = myInventoryItems.get(dispItem.getDisplayName());
             List<TradeInternalItem> itemids = myItem.getItemList();
 
@@ -731,11 +730,11 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
          * @param inventoryItem
          * @return
          */
-        public String getItemName(TradeInternalAsset inventoryItem) {
+        String getItemName(TradeInternalAsset inventoryItem) {
             return inventoryItem.getDisplayName();
         }
 
-        public final boolean tradePutItem(TradeInternalItem item) {
+        final boolean tradePutItem(TradeInternalItem item) {
             // Make sure the item isn't in the trade already.
             if (getSlotByItemID(item) == -1) {
                 int slotToFill = getFirstFreeSlot();
@@ -747,7 +746,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
             return false;
         }
 
-        public final boolean tradeRemoveItem(TradeInternalItem item) {
+        final boolean tradeRemoveItem(TradeInternalItem item) {
             int slotToRemove;
             if ((slotToRemove = getSlotByItemID(item)) != -1) {
                 trade.getCmds().removeItem(item);
@@ -758,7 +757,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
             return false;
         }
 
-        public synchronized void loadInventory(AppContextPair appcontext) {
+        synchronized void loadInventory(AppContextPair appcontext) {
             /**
              * Author's note: We're lazy and never updating the count on this in
              * the duration of the trade. We'll just excuse it as saying it's
@@ -803,7 +802,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
          * @return The position of the first "empty" slot in the trade, -1 if
          * there are no empty slots.
          */
-        public final int getFirstFreeSlot() {
+        private int getFirstFreeSlot() {
             for (int i = 0; i < ourTradeSlotsFilled.length; i++) {
                 if (ourTradeSlotsFilled[i] == null) {
                     return i;
@@ -819,7 +818,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
          * @return The item's position in the trade if it is in the trade, -1 if
          * not.
          */
-        public final int getSlotByItemID(TradeInternalItem item) {
+        private int getSlotByItemID(TradeInternalItem item) {
             for (int i = 0; i < ourTradeSlotsFilled.length; i++) {
                 if (ourTradeSlotsFilled[i] == item) {
                     return i;
@@ -830,6 +829,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
 
         @Override
         public void onError(int eid, String message) {
+            logger.debug("Listener received onError event id {}.", eid);
             String estr;
             switch (eid) {
                 case TradeStatusCodes.TRADE_CANCELLED:
@@ -851,6 +851,8 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
             if (!message.equals(TradeStatusCodes.EMPTY_MESSAGE)) {
                 estr += " (" + message + ")";
             }
+            
+            logger.debug("Listener received dialog message {}.", estr);
 
             JOptionPane.showMessageDialog(tradeWindow, estr);
             onTradeClosed();
@@ -904,7 +906,7 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
 
         @Override
         public void onMessage(String msg) {
-            tradeWindow.addMessage(otherPlayerName, msg);
+            tradeWindow.addMessage(partnerName, msg);
         }
 
         @Override
@@ -950,19 +952,19 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
         }
     }
 
-    public class TradeDisplayItem implements Comparable<TradeDisplayItem> {
+    private class TradeDisplayItem implements Comparable<TradeDisplayItem> {
         int classid;
         String displayName;
         int count;
 
-        public TradeDisplayItem(int classid, String displayName) {
+        TradeDisplayItem(int classid, String displayName) {
             this.classid = classid;
             this.displayName = displayName;
 
             this.count = 0;
         }
 
-        public String getDisplayName() {
+        String getDisplayName() {
             return displayName;
         }
 
@@ -971,15 +973,15 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
             return displayName;
         }
 
-        public void incrementCount(int factor) {
+        void incrementCount(int factor) {
             count += factor;
         }
 
-        public int getCount() {
+        int getCount() {
             return count;
         }
 
-        public int getClassid() {
+        int getClassid() {
             return classid;
         }
 
@@ -995,20 +997,20 @@ public class SteamClientTradeWindow extends javax.swing.JFrame {
         }
     }
 
-    public class TradePersonalDisplayItem extends TradeDisplayItem {
+    private class TradePersonalDisplayItem extends TradeDisplayItem {
         List<TradeInternalItem> itemAddList;
 
-        public TradePersonalDisplayItem(int classid, String displayName) {
+        TradePersonalDisplayItem(int classid, String displayName) {
             super(classid, displayName);
 
             itemAddList = new ArrayList<>();
         }
 
-        public void addItemToList(TradeInternalItem item) {
+        void addItemToList(TradeInternalItem item) {
             itemAddList.add(item);
         }
 
-        public List<TradeInternalItem> getItemList() {
+        List<TradeInternalItem> getItemList() {
             return itemAddList;
         }
     }
