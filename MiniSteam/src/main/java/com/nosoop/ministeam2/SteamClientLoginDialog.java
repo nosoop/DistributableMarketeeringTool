@@ -28,6 +28,11 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
      * Stores users as loaded from a file.
      */
     AccountStorage accounts;
+    /**
+     * Current login token.
+     */
+    String machineAuthCookie;
+    String loginToken;
 
     /**
      * Package-private enum to communicate signing-in status.
@@ -75,6 +80,9 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         for (String user : accounts.userStore.keySet()) {
             model.addElement(user);
         }
+        
+        machineAuthCookie = null;
+        loginToken = null;
 
         setSteamConnectionState(
                 SteamClientLoginDialog.ClientConnectivityState.CONNECTING);
@@ -151,8 +159,9 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         quitButton = new javax.swing.JButton();
         rememberLoginCheckbox = new javax.swing.JCheckBox();
         loginStatusLabel = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
+        poweredByLabel = new javax.swing.JLabel();
         accountUserField = new javax.swing.JComboBox();
+        advancedSignInLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("DMT - Sign In");
@@ -188,12 +197,20 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
 
         loginStatusLabel.setText(bundle.getString("LoginDialog.ClientConnectivityState.CONNECTING")); // NOI18N
 
-        jLabel2.setText(String.format(LocalizationResources.getString("LoginDialog.FmtLabels.PoweredBy"), POWERED_BY));
+        poweredByLabel.setText(String.format(LocalizationResources.getString("LoginDialog.FmtLabels.PoweredBy"), POWERED_BY));
 
         accountUserField.setEditable(true);
         accountUserField.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 accountUserFieldItemStateChanged(evt);
+            }
+        });
+
+        advancedSignInLabel.setText("<html><u>Advanced sign-in...</u></html>");
+        advancedSignInLabel.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        advancedSignInLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                advancedSignInLabelMouseClicked(evt);
             }
         });
 
@@ -204,8 +221,10 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(poweredByLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(loginStatusLabel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(projectNameLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 362, Short.MAX_VALUE)
+                    .addComponent(versionNumberLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(accountUserLabel)
@@ -218,9 +237,8 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
                                 .addComponent(loginButton, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(quitButton, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(rememberLoginCheckbox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addComponent(projectNameLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 362, Short.MAX_VALUE)
-                    .addComponent(versionNumberLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(rememberLoginCheckbox, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(advancedSignInLabel))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -229,7 +247,7 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
                 .addContainerGap()
                 .addComponent(projectNameLabel)
                 .addGap(8, 8, 8)
-                .addComponent(jLabel2)
+                .addComponent(poweredByLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(versionNumberLabel)
                 .addGap(18, 18, 18)
@@ -242,8 +260,11 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(accountPasswordField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(accountPasswordLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(advancedSignInLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(rememberLoginCheckbox, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(loginButton)
                     .addComponent(quitButton))
@@ -273,6 +294,14 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
             // Assuming we're using stored data.
             clientInfo = accounts.userStore.get(clientInfo.username);
         }
+        
+        if (machineAuthCookie != null) {
+            clientInfo.machineauthcookie = machineAuthCookie;
+        }
+        
+        if (loginToken != null) {
+            clientInfo.token = loginToken;
+        }
 
         clientInfo.sentryFile = new File(String.format(SENTRY_FILENAME_FMT,
                 clientInfo.username));
@@ -283,12 +312,11 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
     }//GEN-LAST:event_loginButtonActionPerformed
 
     private void accountUserFieldItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_accountUserFieldItemStateChanged
-        String password;
-
         String user = accountUserField.getEditor().getItem().toString();
 
         // Load stored user / password if possible.
         if (accounts.userStore.containsKey(user)) {
+            String password;
             if ((password = accounts.userStore.get(user).password) != null) {
                 accountPasswordField.setText(password);
             }
@@ -299,14 +327,35 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         // TODO Handle disposal properly when undeeded.
         System.exit(0);
     }//GEN-LAST:event_quitButtonActionPerformed
+
+    private void advancedSignInLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_advancedSignInLabelMouseClicked
+        SteamClientLoginAdvanced dialog = new SteamClientLoginAdvanced(this, 
+                true);
+
+        String user = accountUserField.getEditor().getItem().toString();
+        if (accounts.userStore.containsKey(user)) {
+            String authCookie;
+            if ((authCookie = accounts.userStore.get(user).machineauthcookie) 
+                    != null) {
+                dialog.setAuthCookieField(authCookie);
+            }
+        }
+        
+        dialog.setVisible(true);
+        SteamClientLoginAdvanced.Response response = dialog.getResponse();
+        machineAuthCookie = response.authCookie;
+        loginToken = response.loginToken;
+    }//GEN-LAST:event_advancedSignInLabelMouseClicked
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPasswordField accountPasswordField;
     private javax.swing.JLabel accountPasswordLabel;
     private javax.swing.JComboBox accountUserField;
     private javax.swing.JLabel accountUserLabel;
-    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel advancedSignInLabel;
     private javax.swing.JButton loginButton;
     private javax.swing.JLabel loginStatusLabel;
+    private javax.swing.JLabel poweredByLabel;
     private javax.swing.JLabel projectNameLabel;
     private javax.swing.JButton quitButton;
     private javax.swing.JCheckBox rememberLoginCheckbox;

@@ -31,8 +31,10 @@
           <Group type="102" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="jLabel2" max="32767" attributes="0"/>
+                  <Component id="poweredByLabel" max="32767" attributes="0"/>
                   <Component id="loginStatusLabel" alignment="1" max="32767" attributes="0"/>
+                  <Component id="projectNameLabel" pref="362" max="32767" attributes="0"/>
+                  <Component id="versionNumberLabel" alignment="0" max="32767" attributes="0"/>
                   <Group type="102" alignment="0" attributes="0">
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="accountUserLabel" min="-2" max="-2" attributes="0"/>
@@ -47,11 +49,10 @@
                               <EmptySpace max="32767" attributes="0"/>
                               <Component id="quitButton" min="-2" pref="107" max="-2" attributes="0"/>
                           </Group>
-                          <Component id="rememberLoginCheckbox" alignment="0" max="32767" attributes="0"/>
+                          <Component id="rememberLoginCheckbox" alignment="1" max="32767" attributes="0"/>
+                          <Component id="advancedSignInLabel" alignment="0" max="32767" attributes="0"/>
                       </Group>
                   </Group>
-                  <Component id="projectNameLabel" pref="362" max="32767" attributes="0"/>
-                  <Component id="versionNumberLabel" alignment="0" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -63,7 +64,7 @@
               <EmptySpace max="-2" attributes="0"/>
               <Component id="projectNameLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace min="-2" pref="8" max="-2" attributes="0"/>
-              <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
+              <Component id="poweredByLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="versionNumberLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace type="separate" max="-2" attributes="0"/>
@@ -80,8 +81,11 @@
                       <Component id="accountPasswordLabel" alignment="3" min="-2" pref="14" max="-2" attributes="0"/>
                   </Group>
               </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="advancedSignInLabel" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="32767" attributes="0"/>
               <Component id="rememberLoginCheckbox" min="-2" pref="23" max="-2" attributes="0"/>
-              <EmptySpace pref="12" max="32767" attributes="0"/>
+              <EmptySpace type="unrelated" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="loginButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="quitButton" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -160,7 +164,7 @@
         </Property>
       </Properties>
     </Component>
-    <Component class="javax.swing.JLabel" name="jLabel2">
+    <Component class="javax.swing.JLabel" name="poweredByLabel">
       <Properties>
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
           <Connection code="String.format(LocalizationResources.getString(&quot;LoginDialog.FmtLabels.PoweredBy&quot;), POWERED_BY)" type="code"/>
@@ -176,6 +180,17 @@
       </Properties>
       <Events>
         <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="accountUserFieldItemStateChanged"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JLabel" name="advancedSignInLabel">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="&lt;html&gt;&lt;u&gt;Advanced sign-in...&lt;/u&gt;&lt;/html&gt;"/>
+        <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
+          <Color id="Hand Cursor"/>
+        </Property>
+      </Properties>
+      <Events>
+        <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="advancedSignInLabelMouseClicked"/>
       </Events>
     </Component>
   </SubComponents>
