@@ -34,19 +34,9 @@ Outside of the Maven dependencies that'll be grabbed for you, you will also need
 
 Just compile and build at this point.  Compiled binaries from that will be available where you'd expect them to be, along with a `lib/` subfolder for the other libraries.
 
-At the moment, you'll want a `users.json` file in the working directory with the following to get past the sign-in prompt:
-```
-{
-    "clients": [
-        {
-            "username": "$username",
-            "password": "$password",
-            "machineauth": "$steamMachineAuthCookieValueFromWebLogin"
-        }
-    ]
-}
-```
-... (yeah, plaintext, gross.) Plus a `sentry_($username).bin` sentry file, also in the working directory to skip past SteamGuard the first time, if you'd like that.  The `machineauth` key in the JSON file is for skipping through the weblogin.  Other methods of getting past signing in will be available soon, hopefully.  The initial client SteamGuard prompt works now, but the weblogin to fully authenticate the client after signing in still does not stick.
+Signing in can be handled straight from the application now.  To take advantage of web sign-ins, use the advanced sign-in link and fill out the additional fields as needed.  Otherwise, a prompt from SteamGuard will be provided for you to sign in and the client will be treated as a new device.
+
+Account information can be saved into a `users` subfolder via the "Remember login details" checkbox.  Do note that the file is saved as JSON data lightly encrypted with the XOR operation using the username -- *it is not at all secure* and should not be considered as such.
 
 Slow Starts
 -----------
