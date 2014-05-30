@@ -5,9 +5,15 @@ import com.nosoop.ministeam2.util.BuildProperties;
 import bundled.steamtrade.org.json.*;
 import com.nosoop.inputdialog.CallbackInputFrame;
 import com.nosoop.ministeam2.SteamClientMainForm.SteamClientInfo;
+import com.nosoop.ministeam2.util.XorStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
@@ -74,13 +80,14 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
             }
         });
 
-        accounts = new AccountStorage(new File("users.json"));
+        //accounts = new AccountStorage(new File("users.json"));
+        accounts = new AccountStorage();
 
         final DefaultComboBoxModel model = (DefaultComboBoxModel) accountUserField.getModel();
         for (String user : accounts.userStore.keySet()) {
             model.addElement(user);
         }
-        
+
         machineAuthCookie = null;
         loginToken = null;
 
@@ -139,6 +146,36 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
      */
     private void setLoginStatusLabel(String text) {
         loginStatusLabel.setText("Status: " + text);
+    }
+
+    private void writeClientInfoToFile(SteamClientInfo info) {
+        String userPath = "." + File.separator + "users" + File.separator
+                + info.username;
+        File userFile = new File(userPath);
+
+        userFile.getParentFile().mkdirs();
+
+        Map<String, String> keyValues = new HashMap<>();
+        keyValues.put("username", info.username);
+        keyValues.put("password", info.password);
+
+        if (info.machineauthcookie != null) {
+            keyValues.put("authcookie", info.machineauthcookie);
+        }
+
+        if (info.token != null) {
+            keyValues.put("logintoken", info.token);
+        }
+
+        JSONObject data = new JSONObject(keyValues);
+
+        try (FileOutputStream fos = new FileOutputStream(userFile);
+                XorStream.XorOutputStream xos =
+                new XorStream.XorOutputStream(fos,
+                info.username.getBytes("UTF-8"))) {
+            xos.write(data.toString().getBytes("UTF-8"));
+        } catch (IOException e) {
+        }
     }
 
     /**
@@ -282,8 +319,8 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         clientInfo = new SteamClientInfo();
         clientInfo.username = accountUserField.getEditor().getItem().toString();
         clientInfo.password = String.valueOf(accountPasswordField.getPassword());
-        
-        if (clientInfo.username.length() == 0 
+
+        if (clientInfo.username.length() == 0
                 || clientInfo.password.length() == 0) {
             // TODO Not silently fail if we can't sign in with the givens.
             return;
@@ -294,11 +331,11 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
             // Assuming we're using stored data.
             clientInfo = accounts.userStore.get(clientInfo.username);
         }
-        
+
         if (machineAuthCookie != null) {
             clientInfo.machineauthcookie = machineAuthCookie;
         }
-        
+
         if (loginToken != null) {
             clientInfo.token = loginToken;
         }
@@ -306,8 +343,12 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         clientInfo.sentryFile = new File(String.format(SENTRY_FILENAME_FMT,
                 clientInfo.username));
 
+        if (rememberLoginCheckbox.isSelected()) {
+            writeClientInfoToFile(clientInfo);
+        }
+
         setSteamConnectionState(ClientConnectivityState.SIGNING_IN);
-        
+
         callback.run(clientInfo);
     }//GEN-LAST:event_loginButtonActionPerformed
 
@@ -329,24 +370,23 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
     }//GEN-LAST:event_quitButtonActionPerformed
 
     private void advancedSignInLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_advancedSignInLabelMouseClicked
-        SteamClientLoginAdvanced dialog = new SteamClientLoginAdvanced(this, 
+        SteamClientLoginAdvanced dialog = new SteamClientLoginAdvanced(this,
                 true);
 
         String user = accountUserField.getEditor().getItem().toString();
         if (accounts.userStore.containsKey(user)) {
             String authCookie;
-            if ((authCookie = accounts.userStore.get(user).machineauthcookie) 
+            if ((authCookie = accounts.userStore.get(user).machineauthcookie)
                     != null) {
                 dialog.setAuthCookieField(authCookie);
             }
         }
-        
+
         dialog.setVisible(true);
         SteamClientLoginAdvanced.Response response = dialog.getResponse();
         machineAuthCookie = response.authCookie;
         loginToken = response.loginToken;
     }//GEN-LAST:event_advancedSignInLabelMouseClicked
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPasswordField accountPasswordField;
     private javax.swing.JLabel accountPasswordLabel;
@@ -368,6 +408,43 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
         private Map<String, SteamClientInfo> userStore;
         Logger logger = LoggerFactory.getLogger(
                 AccountStorage.class.getSimpleName());
+
+        AccountStorage() {
+            userStore = new TreeMap<>();
+            SteamClientInfo baseInfo = new SteamClientInfo();
+            baseInfo.username = "";
+            baseInfo.password = "";
+            baseInfo.machineauthcookie = "";
+            userStore.put("", baseInfo);
+
+            String userPath = "." + File.separator + "users" + File.separator;
+            File userDirectory = new File(userPath);
+            userDirectory.mkdirs();
+
+            File[] userFiles = userDirectory.listFiles();
+
+            for (File user : userFiles) {
+                try (FileInputStream fis = new FileInputStream(user);
+                        XorStream.XorInputStream xis =
+                        new XorStream.XorInputStream(fis,
+                        user.getName().getBytes("UTF-8"))) {
+                    byte[] bytes = new byte[(int) user.length()];
+                    xis.read(bytes);
+                    
+                    JSONObject userJSON = new JSONObject(
+                            new String(bytes, "UTF-8"));
+                    
+                    SteamClientInfo userInfo = new SteamClientInfo();
+                    userInfo.username = userJSON.getString("username");
+                    userInfo.password = userJSON.getString("password");
+                    userInfo.token = userJSON.optString("logintoken");
+                    userInfo.machineauthcookie = userJSON.optString("authcookie");
+                    
+                    userStore.put(userInfo.username, userInfo);
+                } catch (IOException | JSONException e) {
+                }
+            }
+        }
 
         AccountStorage(File file) {
             userStore = new TreeMap<>();

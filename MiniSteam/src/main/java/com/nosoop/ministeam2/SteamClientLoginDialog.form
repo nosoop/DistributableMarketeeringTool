@@ -81,7 +81,6 @@
                       <Component id="accountPasswordLabel" alignment="3" min="-2" pref="14" max="-2" attributes="0"/>
                   </Group>
               </Group>
-              <EmptySpace max="-2" attributes="0"/>
               <Component id="advancedSignInLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="32767" attributes="0"/>
               <Component id="rememberLoginCheckbox" min="-2" pref="23" max="-2" attributes="0"/>
