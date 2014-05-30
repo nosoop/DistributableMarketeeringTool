@@ -50,6 +50,7 @@ public class SteamClientLoginAdvanced extends javax.swing.JDialog {
         saveButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setResizable(false);
 
         authCookieField.setToolTipText("steamMachineAuth cookie to bypass SteamGuard when attempting sign-in via web.");
 
@@ -62,6 +63,11 @@ public class SteamClientLoginAdvanced extends javax.swing.JDialog {
         loginTokenLabel.setText("Steam login token:");
 
         cancelButton.setText("Cancel");
+        cancelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cancelButtonActionPerformed(evt);
+            }
+        });
 
         saveButton.setText("Save");
         saveButton.addActionListener(new java.awt.event.ActionListener() {
@@ -117,6 +123,10 @@ public class SteamClientLoginAdvanced extends javax.swing.JDialog {
         result.authCookie = authCookieField.getText();
         result.loginToken = loginTokenField.getText();
     }//GEN-LAST:event_saveButtonActionPerformed
+
+    private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
+        this.setVisible(false);
+    }//GEN-LAST:event_cancelButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField authCookieField;
