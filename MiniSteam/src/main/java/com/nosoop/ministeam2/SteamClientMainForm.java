@@ -202,7 +202,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         friendTradeOption = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         friendRemoveOption = new javax.swing.JMenuItem();
-        friendRequestPopupMenu = new javax.swing.JMenu();
+        friendRequestedPopupMenu = new javax.swing.JPopupMenu();
+        clientMenu = new javax.swing.JPopupMenu();
+        changeNameOption = new javax.swing.JMenuItem();
         labelPlayerName = new javax.swing.JLabel();
         comboboxUserStatus = new javax.swing.JComboBox();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -234,11 +236,22 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         });
         friendPopupMenu.add(friendRemoveOption);
 
-        friendRequestPopupMenu.setText("jMenu1");
+        changeNameOption.setText(bundle.getString("ClientMenu.ChangeName")); // NOI18N
+        changeNameOption.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                changeNameOptionActionPerformed(evt);
+            }
+        });
+        clientMenu.add(changeNameOption);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         labelPlayerName.setText(bundle.getString("Steam.UndefinedName")); // NOI18N
+        labelPlayerName.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                labelPlayerNameMouseReleased(evt);
+            }
+        });
 
         comboboxUserStatus.setModel(new javax.swing.DefaultComboBoxModel(EPersonaState.values()));
         comboboxUserStatus.addActionListener(new java.awt.event.ActionListener() {
@@ -377,11 +390,16 @@ public class SteamClientMainForm extends javax.swing.JFrame {
      * Open up a chat with a friend.
      */
     private void friendChatOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_friendChatOptionActionPerformed
-        SteamFriendEntry user = getSelectedFriendFromTable();
-        chatFrame.addNewChatTab(user.steamid);
-        chatFrame.switchToChatTab(user.steamid);
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                SteamFriendEntry user = getSelectedFriendFromTable();
+                chatFrame.addNewChatTab(user.steamid);
+                chatFrame.switchToChatTab(user.steamid);
 
-        chatFrame.setVisible(true);
+                chatFrame.setVisible(true);
+            }
+        });
     }//GEN-LAST:event_friendChatOptionActionPerformed
 
     /**
@@ -390,15 +408,36 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     private void friendTradeOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_friendTradeOptionActionPerformed
         SteamFriendEntry user = getSelectedFriendFromTable();
         backend.steamTrade.trade(user.steamid);
-        
+
         // TODO Open chat window and update sent trade status.
     }//GEN-LAST:event_friendTradeOptionActionPerformed
+
+    private void changeNameOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changeNameOptionActionPerformed
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                String name = JOptionPane.showInputDialog(null,
+                        "Change your profile name:",
+                        backend.steamFriends.getPersonaName());
+                
+                if (name != null && !name.equals(name)) {
+                    backend.steamFriends.setPersonaName(name);
+                }
+            }
+        });
+    }//GEN-LAST:event_changeNameOptionActionPerformed
+
+    private void labelPlayerNameMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_labelPlayerNameMouseReleased
+        clientMenu.show(labelPlayerName, evt.getX(), evt.getY());
+    }//GEN-LAST:event_labelPlayerNameMouseReleased
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenuItem changeNameOption;
+    private javax.swing.JPopupMenu clientMenu;
     private javax.swing.JComboBox comboboxUserStatus;
     private javax.swing.JMenuItem friendChatOption;
     private javax.swing.JPopupMenu friendPopupMenu;
     private javax.swing.JMenuItem friendRemoveOption;
-    private javax.swing.JMenu friendRequestPopupMenu;
+    private javax.swing.JPopupMenu friendRequestedPopupMenu;
     private javax.swing.JMenuItem friendTradeOption;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
