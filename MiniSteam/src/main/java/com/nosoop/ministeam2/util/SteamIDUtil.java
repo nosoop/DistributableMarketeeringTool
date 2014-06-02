@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import uk.co.thomasc.steamkit.types.steamid.SteamID;
 
@@ -21,7 +22,15 @@ import uk.co.thomasc.steamkit.types.steamid.SteamID;
  * @author nosoop < nosoop at users.noreply.github.com >
  */
 public class SteamIDUtil {
-    final static String STEAMID_READABLE = "%s_%d_%d";
+    /**
+     * Format for readable SteamIDs.
+     */
+    private final static String STEAMID_READABLE = "%s_%d_%d";
+    /**
+     * Pattern to test if a given long number is a SteamID64.
+     */
+    public final static Pattern STEAMID64_PATTERN = 
+            Pattern.compile("765611(\\d){11}");
 
     public static String convertReadable(SteamID id) {
         return String.format(STEAMID_READABLE,

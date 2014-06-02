@@ -4,6 +4,7 @@ import com.nosoop.ministeam2.util.LocalizationResources;
 import bundled.steamtrade.org.json.JSONException;
 import bundled.steamtrade.org.json.JSONObject;
 import com.nosoop.inputdialog.CallbackInputFrame.DialogCallback;
+import com.nosoop.ministeam2.util.SteamIDUtil;
 import com.nosoop.steamtrade.*;
 import com.nosoop.steamtrade.inventory.AssetBuilder;
 import java.awt.Desktop;
@@ -205,6 +206,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         friendRequestedPopupMenu = new javax.swing.JPopupMenu();
         clientMenu = new javax.swing.JPopupMenu();
         changeNameOption = new javax.swing.JMenuItem();
+        jSeparator2 = new javax.swing.JPopupMenu.Separator();
+        addFriendOption = new javax.swing.JMenuItem();
         labelPlayerName = new javax.swing.JLabel();
         comboboxUserStatus = new javax.swing.JComboBox();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -243,6 +246,15 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             }
         });
         clientMenu.add(changeNameOption);
+        clientMenu.add(jSeparator2);
+
+        addFriendOption.setText(bundle.getString("ClientMenu.AddFriend")); // NOI18N
+        addFriendOption.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addFriendOptionActionPerformed(evt);
+            }
+        });
+        clientMenu.add(addFriendOption);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -419,8 +431,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 String name = JOptionPane.showInputDialog(null,
                         "Change your profile name:",
                         backend.steamFriends.getPersonaName());
-                
-                if (name != null && !name.equals(name)) {
+
+                if (name != null && !name.equals(name) && name.length() > 0) {
                     backend.steamFriends.setPersonaName(name);
                 }
             }
@@ -430,7 +442,79 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     private void labelPlayerNameMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_labelPlayerNameMouseReleased
         clientMenu.show(labelPlayerName, evt.getX(), evt.getY());
     }//GEN-LAST:event_labelPlayerNameMouseReleased
+
+    private void addFriendOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addFriendOptionActionPerformed
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                // TODO Add support for URLs.
+                String id = JOptionPane.showInputDialog(null,
+                        "Enter the SteamID64 or profile name of the person "
+                        + "you'd like to add:", "");
+                
+                if (id == null || id.length() == 0) {
+                    return;
+                }
+
+                long pid;
+
+                // Resolve vanity URL to a profile id if necessary.
+                if (!SteamIDUtil.STEAMID64_PATTERN.matcher(id).matches()) {
+                    try {
+                        pid = SteamIDUtil
+                                .resolveSteamVanityURLToSteamID64(id);
+                    } catch (IOException | JSONException e) {
+                        return;
+                    }
+                } else {
+                    pid = Long.parseLong(id);
+                }
+                
+                SteamID sid = new SteamID(pid);
+                
+                // Check if they are already on our list.
+                if (friendList.containsKey(sid)) {
+                    try {
+                        String name = SteamIDUtil.
+                                resolveSteamID64ToUserName(pid);
+                        
+                        String prompt = String.format(
+                                "You already have %s added.", name);
+                        JOptionPane.showMessageDialog(null, prompt);
+                    } catch (JSONException | IOException e) {
+                    }
+                    return;
+                }
+                
+                // Check if we are trying to add ourselves.
+                if (backend.steamUser.getSteamId().equals(sid)) {
+                    JOptionPane.showMessageDialog(null,
+                            "Don't be silly, you can't add yourself!\n"
+                            + "Though loving yourself is good.");
+                    return;
+                }
+
+                // Confirm add.
+                try {
+                    String name = SteamIDUtil.
+                            resolveSteamID64ToUserName(pid);
+                    String prompt = String.format(
+                            "Send a friend request to %s?", name);
+
+                    int result = JOptionPane.showConfirmDialog(null, prompt,
+                            "Confirm Friend Add",
+                            JOptionPane.YES_NO_OPTION);
+
+                    if (result == JOptionPane.YES_OPTION) {
+                        backend.steamFriends.addFriend(new SteamID(pid));
+                    }
+                } catch (JSONException | IOException e) {
+                }
+            }
+        });
+    }//GEN-LAST:event_addFriendOptionActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenuItem addFriendOption;
     private javax.swing.JMenuItem changeNameOption;
     private javax.swing.JPopupMenu clientMenu;
     private javax.swing.JComboBox comboboxUserStatus;
@@ -441,6 +525,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     private javax.swing.JMenuItem friendTradeOption;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JLabel labelPlayerName;
     private javax.swing.JTable tableUsers;
     // End of variables declaration//GEN-END:variables
