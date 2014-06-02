@@ -1,5 +1,8 @@
 package com.nosoop.ministeam2;
 
+import java.security.NoSuchAlgorithmException;
+import javax.crypto.Cipher;
+import javax.swing.JOptionPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +30,16 @@ public class Main {
         }
         //</editor-fold>
 
+        try {
+            int keyLength = Cipher.getMaxAllowedKeyLength("AES");
+            
+            if (keyLength == 128) {
+                JOptionPane.showMessageDialog(null, "The JCE Unlimited Strength policy files are not installed.\nTerminating.");
+                System.exit(1);
+            }
+        } catch (NoSuchAlgorithmException e) {
+        }
+        
         /* Create and display the form */
         new SteamClientMainForm();
     }
