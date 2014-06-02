@@ -187,6 +187,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         // Rebuild the textarea text.
         StringBuilder chatBuffer = new StringBuilder();
         for (ChatEvent e : chatEvents) {
+            // TODO custom formatting of chatbox text.
             chatBuffer.append(e.toString()).append(NEWLINE);
         }
         chatTextArea.setText(chatBuffer.toString());
@@ -205,12 +206,28 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         userStatusLabel.setText(status);
     }
 
+    /**
+     * Updates the trade button, pushing a chat state if the change in state
+     * calls for it.
+     *
+     * @param state
+     * @param tradeid
+     */
     void updateTradeButton(TradeButtonState state, int tradeid) {
         this.state = state;
         this.tradeid = tradeid;
 
         tradeButton.setEnabled(state.enabled);
-        tradeButton.setText(LocalizationResources.getString("ChatTab.TradeButtonState." + state.name()));
+        tradeButton.setText(LocalizationResources.getString(
+                "ChatTab.TradeButtonState." + state.name()));
+
+        switch (state) {
+            case RECEIVED_REQUEST:
+                String msg = String.format("%s has requested to trade.",
+                        userinfo.getUsername());
+                addChatEvent(new ChatEvent(msg));
+                break;
+        }
     }
 
     /**
@@ -387,6 +404,9 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             pw = null;
         }
 
+        /**
+         * Creates and opens a log file if it does not exist.
+         */
         void createLogFile() {
             if (fw != null && pw != null) {
                 return;
@@ -414,11 +434,16 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             }
         }
 
+        /**
+         * Writes an event to a file.
+         */
         void writeEvent(ChatEvent event) {
             createLogFile();
 
             String dateTime = String.format(DATE_TIME_FMT,
                     new Date(event.timestamp));
+            
+            // TODO Custom formatting of file-written events.
 
             pw.printf("%s %s%n", dateTime, event.toString());
         }
