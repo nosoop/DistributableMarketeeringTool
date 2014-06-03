@@ -24,6 +24,7 @@ public class LocalizationResources {
         
         if (!resource.containsKey(key)) {
             logger.error("Could not find localization string for key {}.", key);
+            return String.format("${%s}", key);
         }
         
         return resource.getString(key);
