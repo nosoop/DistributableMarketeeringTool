@@ -176,10 +176,14 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     /**
      * Notifies all the chat tabs to re-enable their trade buttons.
      */
-    void onTradeClosed() {
+    void onTradeClosed(SteamID partner) {
         for (Map.Entry<SteamID, SteamClientChatTab> entry
                 : currentUsers.entrySet()) {
             entry.getValue().updateTradeButton(TradeButtonState.IDLE, 0);
+            
+            if (entry.getKey().equals(partner)) {
+                entry.getValue().closeTrade();
+            }
         }
     }
 

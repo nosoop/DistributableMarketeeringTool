@@ -68,7 +68,9 @@
     </Component>
     <Component class="javax.swing.JButton" name="tradeButton">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Send Trade Request"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="ChatTab.TradeButtonState.IDLE" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="tradeButtonActionPerformed"/>

@@ -11,7 +11,7 @@
         <MenuItem class="javax.swing.JMenuItem" name="friendChatOption">
           <Properties>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-              <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="MainForm.Labels.FriendPopupMenu.Chat" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+              <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="FriendPopupMenu.Chat" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
             </Property>
           </Properties>
           <Events>
@@ -21,7 +21,7 @@
         <MenuItem class="javax.swing.JMenuItem" name="friendTradeOption">
           <Properties>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-              <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="MainForm.Labels.FriendPopupMenu.Trade" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+              <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="FriendPopupMenu.Trade" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
             </Property>
           </Properties>
           <Events>
@@ -33,7 +33,7 @@
         <MenuItem class="javax.swing.JMenuItem" name="friendRemoveOption">
           <Properties>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-              <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="MainForm.Labels.FriendPopupMenu.Remove" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+              <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="FriendPopupMenu.Remove" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
             </Property>
           </Properties>
           <Events>

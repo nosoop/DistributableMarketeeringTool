@@ -158,12 +158,14 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      */
     final void receiveUserStatus(SteamClientMainForm.SteamFriendEntry status) {
         if (userinfo.getPersonaState() != status.getPersonaState()) {
-            addChatEvent(new ChatEvent(String.format("%s is now %s.",
+            addChatEvent(new ChatEvent(String.format(LocalizationResources
+                    .getString("ChatEvent.Fmt.StatusChange"),
                     status.getUsername(), status.renderFriendState())));
         }
         if (!userinfo.getUsername().equals(status.getUsername())) {
             addChatEvent(new ChatEvent(
-                    String.format("%s changed their name to %s.",
+                    String.format(LocalizationResources
+                    .getString("ChatEvent.Fmt.NameChange"),
                     userinfo.getUsername(), status.getUsername())));
         }
 
@@ -172,6 +174,10 @@ public class SteamClientChatTab extends javax.swing.JPanel {
 
         // If status is changed while typing, reflect the change.
         updateStatusLabel(userIsTypingTimer.isRunning());
+    }
+    
+    void closeTrade() {
+        addChatEvent(new ChatEvent("The trade has been closed."));
     }
 
     /**
@@ -200,8 +206,9 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      * @param isTyping Whether or not to display the typing notification.
      */
     private void updateStatusLabel(boolean isTyping) {
-        String status = String.format(
-                isTyping ? "%s (Typing...)" : "%s", userinfo.renderUserStatus());
+        String status = String.format(isTyping
+                ? LocalizationResources.getString("ChatEvent.Fmt.Label.Typing")
+                : "%s", userinfo.renderUserStatus());
 
         userStatusLabel.setText(status);
     }
@@ -223,7 +230,8 @@ public class SteamClientChatTab extends javax.swing.JPanel {
 
         switch (state) {
             case RECEIVED_REQUEST:
-                String msg = String.format("%s has requested to trade.",
+                String msg = String.format(LocalizationResources
+                        .getString("ChatEvent.Fmt.TradeRequest"),
                         userinfo.getUsername());
                 addChatEvent(new ChatEvent(msg));
                 break;
@@ -261,7 +269,8 @@ public class SteamClientChatTab extends javax.swing.JPanel {
 
         userStatusLabel.setText("[unknown status]");
 
-        tradeButton.setText("Send Trade Request");
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("com/nosoop/ministeam2/UIStrings"); // NOI18N
+        tradeButton.setText(bundle.getString("ChatTab.TradeButtonState.IDLE")); // NOI18N
         tradeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tradeButtonActionPerformed(evt);

@@ -214,7 +214,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         tableUsers = new javax.swing.JTable();
 
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("com/nosoop/ministeam2/UIStrings"); // NOI18N
-        friendChatOption.setText(bundle.getString("MainForm.Labels.FriendPopupMenu.Chat")); // NOI18N
+        friendChatOption.setText(bundle.getString("FriendPopupMenu.Chat")); // NOI18N
         friendChatOption.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 friendChatOptionActionPerformed(evt);
@@ -222,7 +222,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         });
         friendPopupMenu.add(friendChatOption);
 
-        friendTradeOption.setText(bundle.getString("MainForm.Labels.FriendPopupMenu.Trade")); // NOI18N
+        friendTradeOption.setText(bundle.getString("FriendPopupMenu.Trade")); // NOI18N
         friendTradeOption.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 friendTradeOptionActionPerformed(evt);
@@ -231,7 +231,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         friendPopupMenu.add(friendTradeOption);
         friendPopupMenu.add(jSeparator1);
 
-        friendRemoveOption.setText(bundle.getString("MainForm.Labels.FriendPopupMenu.Remove")); // NOI18N
+        friendRemoveOption.setText(bundle.getString("FriendPopupMenu.Remove")); // NOI18N
         friendRemoveOption.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 friendRemoveOptionActionPerformed(evt);
@@ -1188,9 +1188,10 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             }
 
             public void endCurrentTradeSession() {
+                SteamID partner = new SteamID(t.getPartnerSteamId());
                 t = null;
                 logger.info("Trade ended.");
-                chatFrame.onTradeClosed();
+                chatFrame.onTradeClosed(partner);
             }
 
             public void forceCancelTradeSession() {
