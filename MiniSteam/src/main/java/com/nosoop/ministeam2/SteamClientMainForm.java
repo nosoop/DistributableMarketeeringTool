@@ -4,6 +4,7 @@ import com.nosoop.ministeam2.util.LocalizationResources;
 import bundled.steamtrade.org.json.JSONException;
 import bundled.steamtrade.org.json.JSONObject;
 import com.nosoop.inputdialog.CallbackInputFrame.DialogCallback;
+import com.nosoop.ministeam2.util.SteamCommunityProfileData;
 import com.nosoop.ministeam2.util.SteamIDUtil;
 import com.nosoop.steamtrade.*;
 import com.nosoop.steamtrade.inventory.AssetBuilder;
@@ -453,33 +454,40 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     return;
                 }
 
-                long pid;
-
-                // Resolve vanity URL to a profile id if necessary.
-                if (!SteamIDUtil.STEAMID64_PATTERN.matcher(id).matches()) {
-                    try {
-                        pid = SteamIDUtil
-                                .resolveSteamVanityURLToSteamID64(id);
-                    } catch (IOException | JSONException e) {
-                        return;
+                // Grab name and profile id.
+                SteamCommunityProfileData userProfile;
+                try {
+                    if (!SteamIDUtil.STEAMID64_PATTERN.matcher(id).matches()) {
+                        userProfile = SteamCommunityProfileData
+                                .getDataForVanityName(id);
+                    } else {
+                        userProfile = SteamCommunityProfileData.
+                                getDataForSteamID64(Long.parseLong(id));
                     }
-                } else {
-                    pid = Long.parseLong(id);
+                } catch (IOException | JSONException e) {
+                    return;
                 }
 
-                SteamID sid = new SteamID(pid);
+                if (userProfile == null) {
+                    return;
+                }
+
+                SteamID sid = new SteamID(userProfile.steamID64);
+
+                // Check if it isn't an individual account, just in case.
+                if (!sid.isIndividualAccount()) {
+                    String prompt = String.format(
+                            "%d is not a valid Steam user account.",
+                            userProfile.steamID);
+                    JOptionPane.showMessageDialog(null, prompt);
+                    return;
+                }
 
                 // Check if they are already on our list.
                 if (friendList.containsKey(sid)) {
-                    try {
-                        String name = SteamIDUtil.
-                                resolveSteamID64ToUserName(pid);
-
-                        String prompt = String.format(
-                                "You already have %s added.", name);
-                        JOptionPane.showMessageDialog(null, prompt);
-                    } catch (JSONException | IOException e) {
-                    }
+                    String prompt = String.format(
+                            "You already have %s added.", userProfile.steamID);
+                    JOptionPane.showMessageDialog(null, prompt);
                     return;
                 }
 
@@ -492,20 +500,15 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 }
 
                 // Confirm add.
-                try {
-                    String name = SteamIDUtil.
-                            resolveSteamID64ToUserName(pid);
-                    String prompt = String.format(
-                            "Send a friend request to %s?", name);
+                String prompt = String.format(
+                        "Send a friend request to %s?", userProfile.steamID);
 
-                    int result = JOptionPane.showConfirmDialog(null, prompt,
-                            "Confirm Friend Add",
-                            JOptionPane.YES_NO_OPTION);
+                int result = JOptionPane.showConfirmDialog(null, prompt,
+                        "Confirm Friend Add",
+                        JOptionPane.YES_NO_OPTION);
 
-                    if (result == JOptionPane.YES_OPTION) {
-                        backend.steamFriends.addFriend(new SteamID(pid));
-                    }
-                } catch (JSONException | IOException e) {
+                if (result == JOptionPane.YES_OPTION) {
+                    backend.steamFriends.addFriend(sid);
                 }
             }
         });
