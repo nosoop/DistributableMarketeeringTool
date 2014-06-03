@@ -80,22 +80,19 @@ public class SteamClientMainForm extends javax.swing.JFrame {
      */
     public SteamClientMainForm() {
         /**
-         * Initialize the sign-in form; data is passed to it while the client is
-         * running.
+         * Initialize the sign-in form; on submission of form information we
+         * start the client.
          */
         loginDialog = new SteamClientLoginDialog(
                 new DialogCallback<SteamClientInfo>() {
             @Override
             public void run(SteamClientInfo returnValue) {
-                SteamClientMainForm.this.backend.login(returnValue);
+                backend = new SteamKitClient(returnValue);
             }
         });
         loginDialog.setVisible(true);
-
-        /**
-         * Initialize the Steam client.
-         */
-        backend = new SteamKitClient();
+        loginDialog.setSteamConnectionState(
+                SteamClientLoginDialog.ClientConnectivityState.SIGN_IN_WAITING);
 
         /**
          * Show components.
@@ -451,7 +448,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 String id = JOptionPane.showInputDialog(null,
                         "Enter the SteamID64 or profile name of the person "
                         + "you'd like to add:", "");
-                
+
                 if (id == null || id.length() == 0) {
                     return;
                 }
@@ -469,15 +466,15 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 } else {
                     pid = Long.parseLong(id);
                 }
-                
+
                 SteamID sid = new SteamID(pid);
-                
+
                 // Check if they are already on our list.
                 if (friendList.containsKey(sid)) {
                     try {
                         String name = SteamIDUtil.
                                 resolveSteamID64ToUserName(pid);
-                        
+
                         String prompt = String.format(
                                 "You already have %s added.", name);
                         JOptionPane.showMessageDialog(null, prompt);
@@ -485,7 +482,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     }
                     return;
                 }
-                
+
                 // Check if we are trying to add ourselves.
                 if (backend.steamUser.getSteamId().equals(sid)) {
                     JOptionPane.showMessageDialog(null,
@@ -548,7 +545,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         SteamClientInfo clientInfo;
         boolean loginOnConnectedCallback;
 
-        public SteamKitClient() {
+        SteamKitClient(SteamClientInfo loginInfo) {
             steamClient = new SteamClient();
             steamTrade = steamClient.getHandler(SteamTrading.class);
             steamUser = steamClient.getHandler(SteamUser.class);
@@ -571,7 +568,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             clientExec.scheduleWithFixedDelay(
                     new CallbackGetter(), 0, 100, TimeUnit.MILLISECONDS);
 
-            loginOnConnectedCallback = false;
+            clientInfo = loginInfo;
+            loginOnConnectedCallback = true;
         }
 
         /**
@@ -616,7 +614,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             login(clientInfo);
                         } else {
                             loginDialog.setSteamConnectionState(
-                                    SteamClientLoginDialog.ClientConnectivityState.CONNECTED);
+                                    SteamClientLoginDialog.ClientConnectivityState.SIGN_IN_WAITING);
                         }
                     }
                 });
