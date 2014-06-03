@@ -597,6 +597,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         && !(msg instanceof SessionTokenCallback)) {
                     logger.info("Received callback {}.",
                             msg.getClass().getSimpleName());
+                } else {
+                    logger.debug("Received callback {}.",
+                            msg.getClass().getSimpleName());
                 }
 
                 /**

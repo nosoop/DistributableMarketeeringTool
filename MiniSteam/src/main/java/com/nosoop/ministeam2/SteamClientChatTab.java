@@ -231,12 +231,14 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     }
 
     /**
-     * Called when the tab is closed to close the log file.
+     * Called when the tab is closed to close the log file and do other
+     * maintenance work.
      */
     void cleanup() {
         if (chatlogger.pw != null) {
             chatlogger.pw.close();
         }
+        frame.sendMessage(chatter, EChatEntryType.LeftConversation, "");
     }
 
     /**
@@ -328,7 +330,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
          */
         if (key == KeyEvent.VK_ENTER && inputText.trim().length() > 0) {
             // Send the message.
-            frame.onSendingMessage(chatter, EChatEntryType.ChatMsg, inputText);
+            frame.sendMessage(chatter, EChatEntryType.ChatMsg, inputText);
 
             // Copy message to own chat.
             addChatEvent(new ChatEventMessage(
@@ -347,7 +349,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
          */
         if (System.currentTimeMillis() - lastTimeKeyPressed
                 > MILLISEC_INTERVAL_TYPING) {
-            frame.onSendingMessage(chatter, EChatEntryType.Typing, "");
+            frame.sendMessage(chatter, EChatEntryType.Typing, "");
             lastTimeKeyPressed = System.currentTimeMillis();
         }
     }//GEN-LAST:event_messageEntryFieldKeyTyped
@@ -442,7 +444,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
 
             String dateTime = String.format(DATE_TIME_FMT,
                     new Date(event.timestamp));
-            
+
             // TODO Custom formatting of file-written events.
 
             pw.printf("%s %s%n", dateTime, event.toString());

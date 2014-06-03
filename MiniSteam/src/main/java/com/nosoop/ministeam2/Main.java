@@ -38,6 +38,7 @@ public class Main {
                 System.exit(1);
             }
         } catch (NoSuchAlgorithmException e) {
+            return;
         }
         
         /* Create and display the form */

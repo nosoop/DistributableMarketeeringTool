@@ -60,10 +60,6 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
             return;
         }
 
-        if (currentUsers.isEmpty()) {
-            this.setVisible(true);
-        }
-
         String tabName = client.steamFriends.getFriendPersonaName(user);
         SteamClientChatTab tab = new SteamClientChatTab(this, user,
                 client.getUserStatus(user));
@@ -102,6 +98,10 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
         logger.debug("Message received. Searching for tab.");
 
         if (!currentUsers.containsKey(sender)) {
+            if (entryType != EChatEntryType.ChatMsg) {
+                // and not anything else then drop
+                return;
+            }
             addNewChatTab(sender);
             logger.debug("Tab added.");
         }
@@ -109,7 +109,7 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
         tabHandlingMessage = currentUsers.get(sender);
         tabHandlingMessage.receiveMessage(entryType, message);
 
-        logger.debug("Message fired at tab.");
+        logger.debug("Message of type {} fired at tab.", entryType);
 
         if (entryType == EChatEntryType.ChatMsg) {
             this.setVisible(true);
@@ -124,7 +124,7 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
      * @param entryType The type of message to send.
      * @param message The textual representation of the message, if any.
      */
-    void onSendingMessage(SteamID target, EChatEntryType entryType,
+    void sendMessage(SteamID target, EChatEntryType entryType,
             String message) {
         client.steamFriends.sendChatMessage(target, entryType, message);
     }
