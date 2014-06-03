@@ -52,8 +52,6 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     /**
      * Adds a new SteamClientChatTab instance corresponding to the given SteamID
      * to this instance if needed.
-     *
-     * @param user
      */
     void addNewChatTab(SteamID user) {
         if (currentUsers.containsKey(user)) {
@@ -70,8 +68,6 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
 
     /**
      * Switches to a tab specified by SteamID.
-     *
-     * @param user The user associated with the tab to switch to.
      */
     void switchToChatTab(SteamID user) {
         for (Map.Entry<SteamID, SteamClientChatTab> entry
@@ -86,10 +82,6 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     /**
      * Pass the message to the specific tab, creating a new one if the user does
      * not have their own.
-     *
-     * @param sender
-     * @param entryType
-     * @param message
      */
     void onReceivedChatMessage(SteamID sender,
             EChatEntryType entryType, String message) {
@@ -139,8 +131,6 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     /**
      * Relay a received trade request to the applicable chat tab, as long as we
      * aren't in a trade already.
-     *
-     * @param callback
      */
     void onTradeProposal(TradeProposedCallback callback) {
         // TODO Don't silently drop trade requests?
@@ -153,16 +143,15 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
             tabToUpdate.updateTradeButton(
                     SteamClientChatTab.TradeButtonState.RECEIVED_REQUEST,
                     callback.getTradeID());
-            
+
             this.setVisible(true);
         }
     }
 
     /**
      * Notifies all the chat tabs to disable their buttons after receiving a
-     * trade session start callback.
-     *
-     * @param callback
+     * trade session start callback, updating a specific tab if we are in a
+     * trade with them specifically.
      */
     void onSessionStart(SessionStartCallback callback) {
         for (Map.Entry<SteamID, SteamClientChatTab> entry
@@ -176,13 +165,15 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     }
 
     /**
-     * Notifies all the chat tabs to re-enable their trade buttons.
+     * Notifies all the chat tabs to re-enable their trade buttons, as well as
+     * adding a message to an existing chat tab specific to the trade being
+     * closed.
      */
     void onTradeClosed(SteamID partner) {
         for (Map.Entry<SteamID, SteamClientChatTab> entry
                 : currentUsers.entrySet()) {
             entry.getValue().updateTradeButton(TradeButtonState.IDLE, 0);
-            
+
             if (entry.getKey().equals(partner)) {
                 entry.getValue().closeTrade();
             }
@@ -197,7 +188,8 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
     }
 
     /**
-     * Returns the username given in sign-in information stored by the client.
+     * Returns the username given in sign-in information stored by the client,
+     * used for chat logging.
      */
     String getOwnUsername() {
         return client.clientInfo.username;

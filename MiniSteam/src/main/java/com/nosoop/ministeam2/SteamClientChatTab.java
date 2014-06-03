@@ -157,11 +157,16 @@ public class SteamClientChatTab extends javax.swing.JPanel {
      * @param status An updated user status.
      */
     final void receiveUserStatus(SteamClientMainForm.SteamFriendEntry status) {
+        // Their persona state has changed.
         if (userinfo.getPersonaState() != status.getPersonaState()) {
             addChatEvent(new ChatEvent(String.format(LocalizationResources
                     .getString("ChatEvent.Fmt.StatusChange"),
-                    status.getUsername(), status.renderFriendState())));
+                    status.getUsername(), status.renderFriendStatus())));
         }
+        
+        // TODO add event for in-game-ness.
+        
+        // Their screen name has changed.
         if (!userinfo.getUsername().equals(status.getUsername())) {
             addChatEvent(new ChatEvent(
                     String.format(LocalizationResources

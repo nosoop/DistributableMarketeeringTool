@@ -1636,16 +1636,29 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         /**
          * Returns the status to be displayed in the friend table, among other
          * places.
+         * 
+         * Includes the game that they are currently playing, if any.
          */
         String renderUserStatus() {
-            return relationship == EFriendRelationship.Friend
-                    ? renderFriendState() : renderFriendRelationship();
+            switch (relationship) {
+                case Friend:
+                    // Get localized status.
+                    String fs = renderFriendStatus();
+                    
+                    // Append game if available.
+                    if (game != null && game.length() > 0) {
+                        fs = String.format("%s (in %s)", fs, game);
+                    }
+                    return fs;
+                default:
+                    return renderFriendRelationship();
+            }
         }
 
         /**
-         * Renders the state of the user, localizing if necessary.
+         * Renders the persona state of the user, localizing if necessary.
          */
-        String renderFriendState() {
+        String renderFriendStatus() {
             return LocalizationResources.getString("EPersonaState."
                     + state.name());
         }
