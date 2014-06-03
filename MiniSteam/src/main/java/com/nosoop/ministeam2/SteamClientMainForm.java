@@ -1080,7 +1080,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         WebHelpers.UrlEncode(cryptedSessionKey),
                         WebHelpers.UrlEncode(cryptedLoginKey), "POST");
             } catch (final Exception e) {
-                //logger.error("Failed to authenticate on web login.", e);
                 logger.error("Failed to authenticate on web login.");
                 result.success = false;
                 return result;
@@ -1095,13 +1094,10 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         public SteamFriendEntry getUserStatus(SteamID user) {
             SteamFriendEntry friend = new SteamFriendEntry();
             friend.steamid = user;
-            friend.username = backend.steamFriends.
-                    getFriendPersonaName(user);
-            friend.state = backend.steamFriends.
-                    getFriendPersonaState(user);
-            friend.relationship = backend.steamFriends.
-                    getFriendRelationship(user);
-            friend.game = backend.steamFriends.getFriendGamePlayedName(user);
+            friend.username = steamFriends.getFriendPersonaName(user);
+            friend.state = steamFriends.getFriendPersonaState(user);
+            friend.relationship = steamFriends.getFriendRelationship(user);
+            friend.game = steamFriends.getFriendGamePlayedName(user);
 
             return friend;
         }
@@ -1140,18 +1136,24 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                  */
                 // Hopefully we only need to do this once.
                 sessionId = Base64.encodeBytes(
-                        String.valueOf(callback.getUniqueId()).
-                        getBytes());
+                        String.valueOf(callback.getUniqueId()).getBytes());
 
-                // Attempt to authenticate by API.
-                {
-                    SteamLoginAuth auth = authenticate(callback);
-
-                    if (auth.success) {
-                        token = auth.token;
+                // If we have the token stored, we can just use that.
+                if (clientInfo.token != null) {
+                    if (tokenValid(clientInfo.token)) {
+                        token = clientInfo.token;
                         return;
                     }
+                    // else remove token
                 }
+                
+                // Attempt to authenticate by API.
+                SteamLoginAuth apiAuth = authenticate(callback);
+                if (apiAuth.success) {
+                    token = apiAuth.token;
+                    return;
+                }
+                
                 // Failing the API sign-in, we sign in through the web form.
                 logger.info("API sign-in failed. Using SteamWeb.");
 
@@ -1182,6 +1184,15 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         BadPaddingException | JSONException e) {
                     logger.error("SteamWeb Login Failre", e);
                 }
+            }
+            
+            /**
+             * Verifies that a given token is of the expected format.
+             * Format is URLEncoded ${longSteamID}||...
+             */
+            private boolean tokenValid(String token) {
+                // TODO Write a token validation method to verify proper format.
+                return true;
             }
         }
 
@@ -1606,18 +1617,13 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
         /**
          * Returns the username held by this SteamFriendEntry instance.
-         *
-         * @return The username field.
          */
         String getUsername() {
             return username;
         }
 
         /**
-         * Returns the status of the user.
-         *
-         * @return An EPersonaState value representing the current status of the
-         * user.
+         * Returns an EPersonaState value representing the status of the user.
          */
         EPersonaState getPersonaState() {
             return state;
