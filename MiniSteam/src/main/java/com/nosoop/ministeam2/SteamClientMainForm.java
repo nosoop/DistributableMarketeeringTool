@@ -87,14 +87,16 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         loginDialog = new SteamClientLoginDialog(
                 new DialogCallback<SteamClientInfo>() {
             @Override
-            public void run(SteamClientInfo returnValue) {
-                backend = new SteamKitClient(returnValue);
+            public void run(final SteamClientInfo returnValue) {
+                backend.init(returnValue);
             }
         });
         loginDialog.setVisible(true);
         loginDialog.setSteamConnectionState(
                 SteamClientLoginDialog.ClientConnectivityState.SIGN_IN_WAITING);
 
+        backend = new SteamKitClient();
+        
         /**
          * Show components.
          */
@@ -423,22 +425,25 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     }//GEN-LAST:event_friendTradeOptionActionPerformed
 
     private void changeNameOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changeNameOptionActionPerformed
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                String name = JOptionPane.showInputDialog(null,
-                        "Change your profile name:",
-                        backend.steamFriends.getPersonaName());
+        final String name = JOptionPane.showInputDialog(null,
+                "Change your profile name:",
+                backend.steamFriends.getPersonaName());
 
-                if (name != null && !name.equals(name) && name.length() > 0) {
+        if (name != null && !name.equals(backend.steamFriends.getPersonaName()) 
+                && name.length() > 0) {
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
                     backend.steamFriends.setPersonaName(name);
                 }
-            }
-        });
+            });
+        }
     }//GEN-LAST:event_changeNameOptionActionPerformed
 
     private void labelPlayerNameMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_labelPlayerNameMouseReleased
-        clientMenu.show(labelPlayerName, evt.getX(), evt.getY());
+        if (evt.getButton() == MouseEvent.BUTTON3) {
+            clientMenu.show(labelPlayerName, evt.getX(), evt.getY());
+        }
     }//GEN-LAST:event_labelPlayerNameMouseReleased
 
     private void addFriendOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addFriendOptionActionPerformed
@@ -548,15 +553,17 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         SteamClientInfo clientInfo;
         boolean loginOnConnectedCallback;
 
-        SteamKitClient(SteamClientInfo loginInfo) {
+        SteamKitClient() {
+            tradeExec = Executors.newSingleThreadScheduledExecutor();
+            clientExec = Executors.newSingleThreadScheduledExecutor();
+        }
+        
+        void init(SteamClientInfo loginInfo) {
             steamClient = new SteamClient();
             steamTrade = steamClient.getHandler(SteamTrading.class);
             steamUser = steamClient.getHandler(SteamUser.class);
             steamFriends = steamClient.getHandler(SteamFriends.class);
             steamGC = steamClient.getHandler(SteamGameCoordinator.class);
-
-            tradeExec = Executors.newSingleThreadScheduledExecutor();
-            clientExec = Executors.newSingleThreadScheduledExecutor();
 
             callbackManager = new CallbackMgr();
 
