@@ -96,7 +96,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 SteamClientLoginDialog.ClientConnectivityState.SIGN_IN_WAITING);
 
         backend = new SteamKitClient();
-        
+
         /**
          * Show components.
          */
@@ -204,6 +204,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         friendRemoveOption = new javax.swing.JMenuItem();
         friendRequestedPopupMenu = new javax.swing.JPopupMenu();
+        acceptFriendRequestOption = new javax.swing.JMenuItem();
         clientMenu = new javax.swing.JPopupMenu();
         changeNameOption = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
@@ -238,6 +239,14 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             }
         });
         friendPopupMenu.add(friendRemoveOption);
+
+        acceptFriendRequestOption.setText("jMenuItem1");
+        acceptFriendRequestOption.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                acceptFriendRequestOptionActionPerformed(evt);
+            }
+        });
+        friendRequestedPopupMenu.add(acceptFriendRequestOption);
 
         changeNameOption.setText(bundle.getString("ClientMenu.ChangeName")); // NOI18N
         changeNameOption.addActionListener(new java.awt.event.ActionListener() {
@@ -378,6 +387,10 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 case Friend:
                     friendPopupMenu.show(tableUsers, evt.getX(), evt.getY());
                     break;
+                case RequestRecipient:
+                    friendRequestedPopupMenu.show(tableUsers, evt.getX(),
+                            evt.getY());
+                    break;
             }
         }
     }//GEN-LAST:event_tableUsersMouseReleased
@@ -429,7 +442,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 "Change your profile name:",
                 backend.steamFriends.getPersonaName());
 
-        if (name != null && !name.equals(backend.steamFriends.getPersonaName()) 
+        if (name != null && !name.equals(backend.steamFriends.getPersonaName())
                 && name.length() > 0) {
             EventQueue.invokeLater(new Runnable() {
                 @Override
@@ -518,7 +531,16 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             }
         });
     }//GEN-LAST:event_addFriendOptionActionPerformed
+
+    private void acceptFriendRequestOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_acceptFriendRequestOptionActionPerformed
+        SteamFriendEntry user = getSelectedFriendFromTable();
+
+        if (user != null) {
+            backend.steamFriends.addFriend(user.steamid);
+        }
+    }//GEN-LAST:event_acceptFriendRequestOptionActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenuItem acceptFriendRequestOption;
     private javax.swing.JMenuItem addFriendOption;
     private javax.swing.JMenuItem changeNameOption;
     private javax.swing.JPopupMenu clientMenu;
@@ -557,7 +579,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             tradeExec = Executors.newSingleThreadScheduledExecutor();
             clientExec = Executors.newSingleThreadScheduledExecutor();
         }
-        
+
         void init(SteamClientInfo loginInfo) {
             steamClient = new SteamClient();
             steamTrade = steamClient.getHandler(SteamTrading.class);

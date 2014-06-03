@@ -47,6 +47,16 @@
       <Layout class="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout">
         <Property name="useNullLayout" type="boolean" value="true"/>
       </Layout>
+      <SubComponents>
+        <MenuItem class="javax.swing.JMenuItem" name="acceptFriendRequestOption">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="jMenuItem1"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="acceptFriendRequestOptionActionPerformed"/>
+          </Events>
+        </MenuItem>
+      </SubComponents>
     </Container>
     <Container class="javax.swing.JPopupMenu" name="clientMenu">
 

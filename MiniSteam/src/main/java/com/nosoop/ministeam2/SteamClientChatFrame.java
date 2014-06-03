@@ -153,6 +153,8 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
             tabToUpdate.updateTradeButton(
                     SteamClientChatTab.TradeButtonState.RECEIVED_REQUEST,
                     callback.getTradeID());
+            
+            this.setVisible(true);
         }
     }
 
