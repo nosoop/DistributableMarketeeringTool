@@ -14,7 +14,7 @@ Notable Features
 ----------------
   * A reworked trading interface.  With a similar-yet-different UI to Steam Trading, similar items are grouped as uniquely as possible (well, they should be, anyways), making it easy to count out that they have a number of metal, a number of crates of a specific series, so on.  Adding items is as simple as selecting something and then repeatedly right-clicking.  (As stackables aren't supported yet, functionality might be changed for this to be even easier following the support.)
   * Multiple copies, multiple logins.
-  * Chat logging.  Separated by however many Steam logins you have, chat history is archived by your conversee's Steam id, by date and time.  Events such as name and status changes are properly reflected as well.  _Miiiiiiiight_ be a tad bit feature creep, but why not.
+  * Chat logging.  Separated by however many Steam logins you have, chat history is archived by your conversee's Steam id, by date and time.  Events such as name and status changes are properly reflected as well.
 
 Where It Falls Flat
 -------------------
@@ -32,11 +32,11 @@ It compiles nicely and can be run standalone, outside of an IDE now!  The prefer
 
 Outside of the Maven dependencies that'll be grabbed for you, you will also need to download and/or compile copies of [SteamTrade-Java](https://github.com/nosoop/SteamTrade-Java) and [SteamKit-Java, in which you'll have to pick one of the number available](https://github.com/Top-Cat/SteamKit-Java/network).
 
-Just compile and build at this point.  Compiled binaries from that will be available where you'd expect them to be, along with a `lib/` subfolder for the other libraries.
+Just compile and build at this point.  Compiled binaries from that will be available where you'd expect them to be, along with a `lib/` subfolder for the other libraries.  Libraries still need a bit of cleanup.
 
 Signing in can be handled straight from the application now.  To take advantage of web sign-ins, use the advanced sign-in link and fill out the additional fields as needed.  Otherwise, a prompt from SteamGuard will be provided for you to sign in and the client will be treated as a new device.
 
-Account information can be saved into a `users` subfolder via the "Remember login details" checkbox.  Do note that the file is saved as JSON data lightly encrypted with the XOR operation using the username -- *it is not at all secure* and should not be considered as such.
+Account information can be saved into a `users` subfolder by ticking the "Remember / update login details" checkbox before signing in.  Do note that the file is saved as JSON data lightly encrypted with the XOR operation using the username -- **it is not at all secure** and should not be considered as such.
 
 Slow Starts
 -----------
@@ -47,8 +47,7 @@ In the future, an "easy install" method may be added to mostly? automate the ins
 
 On the To-Do
 ------------
-  * Re-add features including friends list modifications and chat logging.
-  * Update to reflect changes in SteamTrade-Java.
-  * Add direct support for the steamLogin token to bypass weblogin. (Well, that, and reimplement the old authentication method for those that actually have it working.  It sure as hell doesn't on mine.)
+  * Update to reflect changes in SteamTrade-Java, namely for currencies.  Stackables soon, too.
+  * Reimplement the old authentication method for those that actually have it working.  It sure as hell doesn't on mine.
   * Import sentry files from an installed client to skip SteamGuard, using [the JSON conversion library](https://github.com/nosoop/vdf-json-java) to read where the sentryfile is, of course.
   * Create a lightweight project revolving around Steam web chat and trade offers?  It looks as if we're headed down that route, anyways.
