@@ -377,6 +377,11 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
                     != null) {
                 dialog.setAuthCookieField(authCookie);
             }
+            
+            String token;
+            if ((token = accounts.userStore.get(user).token) != null) {
+                dialog.setLoginTokenField(token);
+            }
         }
 
         dialog.setVisible(true);
