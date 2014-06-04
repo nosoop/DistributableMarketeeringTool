@@ -122,6 +122,8 @@ public class SteamClientLoginAdvanced extends javax.swing.JDialog {
     private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
         result.authCookie = authCookieField.getText();
         result.loginToken = loginTokenField.getText();
+        
+        this.setVisible(false);
     }//GEN-LAST:event_saveButtonActionPerformed
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed

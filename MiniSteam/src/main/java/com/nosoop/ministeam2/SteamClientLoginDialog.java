@@ -6,12 +6,10 @@ import bundled.steamtrade.org.json.*;
 import com.nosoop.inputdialog.CallbackInputFrame;
 import com.nosoop.ministeam2.SteamClientMainForm.SteamClientInfo;
 import com.nosoop.ministeam2.util.XorStream;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -230,7 +228,7 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
             }
         });
 
-        rememberLoginCheckbox.setText("Remember login details");
+        rememberLoginCheckbox.setText(bundle.getString("LoginDialog.Labels.RememberLogin")); // NOI18N
 
         loginStatusLabel.setText(bundle.getString("LoginDialog.ClientConnectivityState.CONNECTING")); // NOI18N
 
@@ -297,7 +295,6 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(accountPasswordField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(accountPasswordLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(advancedSignInLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(rememberLoginCheckbox, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)

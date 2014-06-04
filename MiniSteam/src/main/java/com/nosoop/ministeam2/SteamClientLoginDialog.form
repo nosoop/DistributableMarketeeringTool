@@ -153,7 +153,9 @@
     </Component>
     <Component class="javax.swing.JCheckBox" name="rememberLoginCheckbox">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Remember login details"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="com/nosoop/ministeam2/UIStrings.properties" key="LoginDialog.Labels.RememberLogin" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="loginStatusLabel">

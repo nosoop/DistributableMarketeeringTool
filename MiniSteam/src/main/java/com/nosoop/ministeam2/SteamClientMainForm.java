@@ -1141,6 +1141,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 // If we have the token stored, we can just use that.
                 if (clientInfo.token != null) {
                     if (tokenValid(clientInfo.token)) {
+                        logger.info("Using stored login token.");
                         token = clientInfo.token;
                         return;
                     }
@@ -1148,6 +1149,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 }
                 
                 // Attempt to authenticate by API.
+                logger.info("Attempting API authentication.");
                 SteamLoginAuth apiAuth = authenticate(callback);
                 if (apiAuth.success) {
                     token = apiAuth.token;
@@ -1155,7 +1157,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 }
                 
                 // Failing the API sign-in, we sign in through the web form.
-                logger.info("API sign-in failed. Using SteamWeb.");
+                logger.info("API auth failed. Using SteamWeb.");
 
                 // Put the sessionid as a cookie for the request.
                 Map<String, String> cookies = new HashMap<>();
@@ -1163,6 +1165,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
                 // Provide machine auth cookie if available to skip SteamGuard.
                 if (!clientInfo.machineauthcookie.equals("")) {
+                    logger.info("Machine auth cookie provided.");
                     cookies.put("steamMachineAuth"
                             + steamUser.getSteamId().convertToLong(),
                             clientInfo.machineauthcookie);
