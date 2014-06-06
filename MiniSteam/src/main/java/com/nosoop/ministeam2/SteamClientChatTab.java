@@ -361,6 +361,10 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         /**
          * Notify the other user of our typing activity.
          */
+        if (evt.isActionKey()) {
+            return;
+        }
+        
         if (System.currentTimeMillis() - lastTimeKeyPressed
                 > MILLISEC_INTERVAL_TYPING) {
             frame.sendMessage(chatter, EChatEntryType.Typing, "");

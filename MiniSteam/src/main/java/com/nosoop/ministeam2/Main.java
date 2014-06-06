@@ -1,6 +1,17 @@
 package com.nosoop.ministeam2;
 
+import bundled.steamtrade.org.json.JSONException;
+import bundled.steamtrade.org.json.JSONObject;
+import bundled.steamtrade.org.json.JSONTokener;
+import com.nosoop.json.VDF;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.security.NoSuchAlgorithmException;
+import java.util.Set;
 import javax.crypto.Cipher;
 import javax.swing.JOptionPane;
 import org.slf4j.Logger;
@@ -31,6 +42,17 @@ public class Main {
         }
         //</editor-fold>
 
+        verifyJCEUSPFInstall();
+
+        // Create and display the form
+        new SteamClientMainForm();
+    }
+
+    /**
+     * Verifies that the JCE Unlimited Strength Policy files are installed by
+     * checking the allowed key length for AES.
+     */
+    private static void verifyJCEUSPFInstall() {
         try {
             int keyLength = Cipher.getMaxAllowedKeyLength("AES");
 
@@ -47,10 +69,46 @@ public class Main {
             JOptionPane.showMessageDialog(null, "For some reason, this system "
                     + "refuses to acknowledge the existence of the AES "
                     + "algorithm.");
-            return;
+            System.exit(2);
         }
+    }
 
-        // Create and display the form
-        new SteamClientMainForm();
+    /**
+     * Helper method that parses a given Steam config file, copying the stored
+     * sentry file to multiple DMT users.
+     */
+    private static void copySentryFiles(File configFile) throws JSONException,
+            FileNotFoundException, IOException {
+        JSONObject cfg = VDF.toJSONObject(new JSONTokener(
+                new FileInputStream(configFile)), false);
+
+        JSONObject steam = cfg.getJSONObject("InstallConfigStore").
+                getJSONObject("Software").getJSONObject("Valve").
+                getJSONObject("Steam");
+
+        // List of available accounts.
+        Set<String> accounts = steam.getJSONObject("Accounts").keySet();
+
+        // Grabs the path for the installed sentry file.
+        File sentryFile = new File(steam.getString("SentryFile"));
+
+        // Assumes that all the accounts in the config use the same sentry file.
+        for (String s : accounts) {
+            File fs = new File(".\\SentryFile_" + s);
+
+            /**
+             * We can't use Files.copy(...) because it copies the hidden
+             * attribute of the sentry file.
+             */
+            if (!fs.exists()) {
+                fs.createNewFile();
+                try (FileChannel in = new FileInputStream(sentryFile).getChannel();
+                        FileChannel out = new FileOutputStream(fs).getChannel()) {
+                    long bytesCopied = out.transferFrom(in, 0, in.size());
+
+                    assert (bytesCopied == in.size());
+                }
+            }
+        }
     }
 }
