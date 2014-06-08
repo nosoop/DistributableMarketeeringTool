@@ -22,6 +22,7 @@ import java.security.*;
 import java.security.spec.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import javax.crypto.*;
 import javax.swing.JOptionPane;
@@ -266,6 +267,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         clientMenu.add(addFriendOption);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Distributable Markteering Tool");
 
         labelPlayerName.setText(bundle.getString("Steam.UndefinedName")); // NOI18N
         labelPlayerName.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -580,7 +582,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             clientExec = Executors.newSingleThreadScheduledExecutor();
         }
 
-        void init(SteamClientInfo loginInfo) {
+        void init(final SteamClientInfo loginInfo) {
             steamClient = new SteamClient();
             steamTrade = steamClient.getHandler(SteamTrading.class);
             steamUser = steamClient.getHandler(SteamUser.class);
@@ -590,18 +592,25 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             callbackManager = new CallbackMgr();
 
             logger.info("Connecting to the Steam network...");
-            steamClient.connect();
+            clientExec.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    // Provide sign-in information.
+                    clientInfo = loginInfo;
+                    loginOnConnectedCallback = true;
+                    
+                    // Connect to Steam.
+                    steamClient.connect();
+
+                    // Schedule callback fetching to occur every 100 ms.
+                    clientExec.scheduleWithFixedDelay(new CallbackGetter(),
+                            100, 100, TimeUnit.MILLISECONDS);
+                }
+            }, 0, TimeUnit.MILLISECONDS);
 
             // Schedule trade poller to poll every second when in a trade.
             tradePoller = new TradePoller();
             tradeExec.scheduleAtFixedRate(tradePoller, 0, 1, TimeUnit.SECONDS);
-
-            // Schedule callback fetching to occur every 100 ms.
-            clientExec.scheduleWithFixedDelay(
-                    new CallbackGetter(), 0, 100, TimeUnit.MILLISECONDS);
-
-            clientInfo = loginInfo;
-            loginOnConnectedCallback = true;
         }
 
         /**
@@ -1124,9 +1133,15 @@ public class SteamClientMainForm extends javax.swing.JFrame {
          */
         private class LoginHelper implements Runnable {
             LoginKeyCallback callback;
+            private final String TOKEN_FMT = "%d\\|\\|[\\d|A-F]{40}";
+            private final Pattern TOKEN_PATTERN;
 
             LoginHelper(LoginKeyCallback callback) {
                 this.callback = callback;
+                
+                long ownSID = steamUser.getSteamId().convertToLong();
+                TOKEN_PATTERN = Pattern.compile(String.format(TOKEN_FMT, 
+                        ownSID));
             }
 
             @Override
@@ -1144,10 +1159,12 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                         logger.info("Using stored login token.");
                         token = clientInfo.token;
                         return;
+                    } else {
+                        // TODO remove token and save if necessary?
+                        logger.info("Stored login token is invalid.");
                     }
-                    // else remove token
                 }
-                
+
                 // Attempt to authenticate by API.
                 logger.info("Attempting API authentication.");
                 SteamLoginAuth apiAuth = authenticate(callback);
@@ -1155,7 +1172,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     token = apiAuth.token;
                     return;
                 }
-                
+
                 // Failing the API sign-in, we sign in through the web form.
                 logger.info("API auth failed. Using SteamWeb.");
 
@@ -1188,14 +1205,18 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     logger.error("SteamWeb Login Failre", e);
                 }
             }
-            
+
             /**
-             * Verifies that a given token is of the expected format.
-             * Format is URLEncoded ${longSteamID}||...
+             * Verifies that a given token is of the expected format. Format is
+             * URLEncoded ${longSteamID}||...
              */
             private boolean tokenValid(String token) {
-                // TODO Write a token validation method to verify proper format.
-                return true;
+                // TODO Write a cleaner token validation method to verify format
+                logger.trace("Checking login token {} against pattern {}.",
+                            clientInfo.token, TOKEN_PATTERN.pattern());
+                
+                return TOKEN_PATTERN.matcher(token.replace("%7C", "|")).matches();
+                //return true;
             }
         }
 
@@ -1645,7 +1666,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         /**
          * Returns the status to be displayed in the friend table, among other
          * places.
-         * 
+         *
          * Includes the game that they are currently playing, if any.
          */
         String renderUserStatus() {
@@ -1653,7 +1674,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 case Friend:
                     // Get localized status.
                     String fs = renderFriendStatus();
-                    
+
                     // Append game if available.
                     if (game != null && game.length() > 0) {
                         fs = String.format("%s (in %s)", fs, game);
