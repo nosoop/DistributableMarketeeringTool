@@ -124,6 +124,13 @@ public class SteamClientChatTab extends javax.swing.JPanel {
 
         receiveUserStatus(userinfo);
     }
+    
+    /**
+     * Called when this tab receives focus.
+     */
+    void receiveFocus() {
+        messageEntryField.requestFocusInWindow();
+    }
 
     /**
      * Receives a chat message event from the parent SteamClientChatFrame

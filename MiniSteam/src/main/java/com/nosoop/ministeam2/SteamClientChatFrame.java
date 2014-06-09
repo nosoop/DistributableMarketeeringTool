@@ -121,6 +121,9 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
         client.steamFriends.sendChatMessage(target, entryType, message);
     }
 
+    /**
+     * Receives an updated friend status, passing it to a tab if needed.
+     */
     void onUpdatedFriendStatus(SteamFriendEntry friendStatus) {
         if (currentUsers.containsKey(friendStatus.steamid)) {
             currentUsers.get(friendStatus.steamid)
@@ -245,7 +248,12 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
         // TODO Custom formatting for title
         int tabIndex = chatTabbedPane.getSelectedIndex();
         if (tabIndex != -1) {
+            // Set title by tab title.
             setTitle(chatTabbedPane.getTitleAt(tabIndex));
+
+            // Pass the focus event to the tab so it puts the text box in focus.
+            ((SteamClientChatTab) chatTabbedPane.getSelectedComponent())
+                    .receiveFocus();
         }
     }//GEN-LAST:event_chatTabbedPaneStateChanged
 
