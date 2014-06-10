@@ -168,7 +168,7 @@
             <Component class="javax.swing.JLabel" name="messageFmtPreviewLabel">
               <Properties>
                 <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-                  <Connection code="SteamClientChatTab.ChatlogFormatter.mockFormatEvent(com.nosoop.ministeam2.prefs.ClientSettings.getInstance().chatLogEntryFormat)" type="code"/>
+                  <Connection code="SteamClientChatTab.mockFormatEvent(com.nosoop.ministeam2.prefs.ClientSettings.getInstance().chatLogEntryFormat)" type="code"/>
                 </Property>
               </Properties>
             </Component>

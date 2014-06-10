@@ -86,7 +86,7 @@ public class SettingsDialog extends javax.swing.JDialog {
             }
         });
 
-        messageFmtPreviewLabel.setText(SteamClientChatTab.ChatlogFormatter.mockFormatEvent(com.nosoop.ministeam2.prefs.ClientSettings.getInstance().chatLogEntryFormat));
+        messageFmtPreviewLabel.setText(SteamClientChatTab.mockFormatEvent(com.nosoop.ministeam2.prefs.ClientSettings.getInstance().chatLogEntryFormat));
 
         dateFormatLabel.setLabelFor(dateFormatField);
         dateFormatLabel.setText("Date format:");
@@ -169,7 +169,7 @@ public class SettingsDialog extends javax.swing.JDialog {
 
     private void messageFmtFieldUpdated(javax.swing.event.DocumentEvent evt) {
         try {
-            messageFmtPreviewLabel.setText(SteamClientChatTab.ChatlogFormatter
+            messageFmtPreviewLabel.setText(SteamClientChatTab
                     .mockFormatEvent(messageFmtField.getText()));
         } catch (IllegalFormatException e) {
             // Drop.
@@ -186,15 +186,15 @@ public class SettingsDialog extends javax.swing.JDialog {
         } catch (IllegalFormatException e) {
             // Do not save.
         }
-        
+
         try {
             String.format(dateFormatField.getText());
             ClientSettings.getInstance().dateTimeFormat =
-                dateFormatField.getText();
+                    dateFormatField.getText();
         } catch (IllegalFormatException e) {
             // Do not save.
         }
-        
+
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {

@@ -47,9 +47,14 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     private static final String CHATLOG_FILENAME =
             "%1$tY-%1$tm-%1$td-%1$tH%1$tM%1$tS %2$s";
     /**
+     * Formatting String for new chat messages in log files.
+     */
+    private static final String CHAT_LOG_ENTRY_FMT =
+            ClientSettings.getInstance().getChatLogEntryFormat();
+    /**
      * Formatting string for date / time.
      */
-    private static final String DATE_TIME_FMT = 
+    private static final String DATE_TIME_FMT =
             ClientSettings.getInstance().getDateTimeFormat();
     /**
      * Number of milliseconds that must pass before we fire off another message
@@ -128,7 +133,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
 
         receiveUserStatus(userinfo);
     }
-    
+
     /**
      * Called when this tab receives focus.
      */
@@ -174,9 +179,9 @@ public class SteamClientChatTab extends javax.swing.JPanel {
                     .getString("ChatEvent.Fmt.StatusChange"),
                     status.getUsername(), status.renderFriendStatus())));
         }
-        
+
         // TODO add event for in-game-ness.
-        
+
         // Their screen name has changed.
         if (!userinfo.getUsername().equals(status.getUsername())) {
             addChatEvent(new ChatEvent(
@@ -191,7 +196,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         // If status is changed while typing, reflect the change.
         updateStatusLabel(userIsTypingTimer.isRunning());
     }
-    
+
     void closeTrade() {
         addChatEvent(new ChatEvent("The trade has been closed."));
     }
@@ -263,6 +268,41 @@ public class SteamClientChatTab extends javax.swing.JPanel {
             chatlogger.pw.close();
         }
         frame.sendMessage(chatter, EChatEntryType.LeftConversation, "");
+    }
+
+    /**
+     * Renders a custom formatted event String.
+     */
+    private static String formatEvent(String chatFormat, ChatEvent event) {
+        String dateTime = String.format(ClientSettings.getInstance().
+                getDateTimeFormat(), new Date(event.timestamp));
+
+        // TODO Custom formatting of file-written events.
+        chatFormat = String.format(chatFormat);
+
+        Map<String, String> replacementMap = new HashMap<>();
+        replacementMap.put("DATE", dateTime);
+        replacementMap.put("EVTMSG", event.toString());
+
+        return StringSubstitution.substituteVariables(
+                chatFormat, replacementMap);
+    }
+
+    /**
+     * Returns a rendered chat event String, formatted by the initial
+     * ClientSettings.  Requires a restart to change.
+     */
+    private static String formatEvent(ChatEvent event) {
+        return formatEvent(CHAT_LOG_ENTRY_FMT, event);
+    }
+
+    /**
+     * Returns a formatted chat event String, provided an input format string.
+     * Used to test custom formatting.
+     */
+    public static String mockFormatEvent(String formatString) {
+        ChatEvent event = new ChatEvent("This guy did a thing.");
+        return formatEvent(formatString, event);
     }
 
     /**
@@ -375,7 +415,7 @@ public class SteamClientChatTab extends javax.swing.JPanel {
         if (evt.isActionKey()) {
             return;
         }
-        
+
         if (System.currentTimeMillis() - lastTimeKeyPressed
                 > MILLISEC_INTERVAL_TYPING) {
             frame.sendMessage(chatter, EChatEntryType.Typing, "");
@@ -470,42 +510,9 @@ public class SteamClientChatTab extends javax.swing.JPanel {
          */
         void writeEvent(ChatEvent event) {
             createLogFile();
-            
-            pw.print(ChatlogFormatter.formatEvent(event));
+
+            pw.print(formatEvent(event));
             pw.flush();
-            
-            //pw.printf("%s %s%n", dateTime, event.toString());
-        }
-    }
-    
-    public static class ChatlogFormatter {
-        
-        private static String formatEvent(String chatFormat, ChatEvent event) {
-            String dateTime = String.format(
-                    ClientSettings.getInstance().getDateTimeFormat(),
-                    new Date(event.timestamp));
-
-            // TODO Custom formatting of file-written events.
-            chatFormat = String.format(chatFormat);
-
-            Map<String,String> replacementMap = new HashMap<>();
-            replacementMap.put("DATE", dateTime);
-            replacementMap.put("EVTMSG", event.toString());
-            
-            return StringSubstitution.substituteVariables(
-                    chatFormat, replacementMap);
-        }
-        
-        static String formatEvent(ChatEvent event) {
-            String chatFormat = ClientSettings.getInstance().
-                    getChatLogEntryFormat();
-
-            return formatEvent(chatFormat, event);
-        }
-        
-        public static String mockFormatEvent(String formatString) {
-            ChatEvent event = new ChatEvent("This guy did a thing.");
-            return formatEvent(formatString, event);
         }
     }
 
