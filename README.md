@@ -40,7 +40,7 @@ Account information can be saved into a `users` subfolder by ticking the "Rememb
 
 Slow Starts
 -----------
-Requires the support of Java Cryptography Extension Unlimited Strength policy files, assuming you're on the standard JRE.  
+Requires the support of Java Cryptography Extension Unlimited Strength policy files, assuming you're on the standard JRE.  The application will prompt you to install them if you do require them.  
 The direct download page for them is available [here](http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html), and full instructions on how to install them can be viewed [here](http://suhothayan.blogspot.com/2012/05/how-to-install-java-cryptography.html).
 
 In the future, an "easy install" method may be added to mostly? automate the installation of the policy files.
