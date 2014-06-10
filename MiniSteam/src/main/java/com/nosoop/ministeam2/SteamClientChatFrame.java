@@ -147,6 +147,8 @@ public class SteamClientChatFrame extends javax.swing.JFrame {
                     SteamClientChatTab.TradeButtonState.RECEIVED_REQUEST,
                     callback.getTradeID());
 
+            // TODO Use TradeResultCallback to notify of cancels.
+            
             this.setVisible(true);
         }
     }

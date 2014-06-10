@@ -4,6 +4,7 @@ import com.nosoop.ministeam2.util.LocalizationResources;
 import bundled.steamtrade.org.json.JSONException;
 import bundled.steamtrade.org.json.JSONObject;
 import com.nosoop.inputdialog.CallbackInputFrame.DialogCallback;
+import com.nosoop.ministeam2.prefs.SettingsDialog;
 import com.nosoop.ministeam2.util.SteamCommunityProfileData;
 import com.nosoop.ministeam2.util.SteamIDUtil;
 import com.nosoop.steamtrade.*;
@@ -210,6 +211,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         changeNameOption = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         addFriendOption = new javax.swing.JMenuItem();
+        jSeparator3 = new javax.swing.JPopupMenu.Separator();
+        settingsOption = new javax.swing.JMenuItem();
         labelPlayerName = new javax.swing.JLabel();
         comboboxUserStatus = new javax.swing.JComboBox();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -265,6 +268,15 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             }
         });
         clientMenu.add(addFriendOption);
+        clientMenu.add(jSeparator3);
+
+        settingsOption.setText(bundle.getString("ClientMenu.Settings")); // NOI18N
+        settingsOption.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                settingsOptionActionPerformed(evt);
+            }
+        });
+        clientMenu.add(settingsOption);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Distributable Markteering Tool");
@@ -541,6 +553,14 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             backend.steamFriends.addFriend(user.steamid);
         }
     }//GEN-LAST:event_acceptFriendRequestOptionActionPerformed
+
+    private void settingsOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_settingsOptionActionPerformed
+        SettingsDialog preferencesDialog = 
+                new SettingsDialog(this);
+        
+        preferencesDialog.setVisible(true);
+    }//GEN-LAST:event_settingsOptionActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem acceptFriendRequestOption;
     private javax.swing.JMenuItem addFriendOption;
@@ -555,7 +575,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
+    private javax.swing.JPopupMenu.Separator jSeparator3;
     private javax.swing.JLabel labelPlayerName;
+    private javax.swing.JMenuItem settingsOption;
     private javax.swing.JTable tableUsers;
     // End of variables declaration//GEN-END:variables
 

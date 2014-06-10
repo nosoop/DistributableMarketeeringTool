@@ -1,7 +1,9 @@
 package com.nosoop.ministeam2;
 
+import com.nosoop.ministeam2.prefs.ClientSettings;
 import com.nosoop.ministeam2.util.LocalizationResources;
 import com.nosoop.ministeam2.util.SteamIDUtil;
+import com.nosoop.ministeam2.util.StringSubstitution;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -10,7 +12,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import javax.swing.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +49,8 @@ public class SteamClientChatTab extends javax.swing.JPanel {
     /**
      * Formatting string for date / time.
      */
-    private static final String DATE_TIME_FMT =
-            "[%1$tm/%1$td/%1$tY %1$tI:%1$tM:%1$tS %1$Tp]";
+    private static final String DATE_TIME_FMT = 
+            ClientSettings.getInstance().getDateTimeFormat();
     /**
      * Number of milliseconds that must pass before we fire off another message
      * notifying the other user that we are typing.
@@ -466,13 +470,42 @@ public class SteamClientChatTab extends javax.swing.JPanel {
          */
         void writeEvent(ChatEvent event) {
             createLogFile();
-
-            String dateTime = String.format(DATE_TIME_FMT,
+            
+            pw.print(ChatlogFormatter.formatEvent(event));
+            pw.flush();
+            
+            //pw.printf("%s %s%n", dateTime, event.toString());
+        }
+    }
+    
+    public static class ChatlogFormatter {
+        
+        private static String formatEvent(String chatFormat, ChatEvent event) {
+            String dateTime = String.format(
+                    ClientSettings.getInstance().getDateTimeFormat(),
                     new Date(event.timestamp));
 
             // TODO Custom formatting of file-written events.
+            chatFormat = String.format(chatFormat);
 
-            pw.printf("%s %s%n", dateTime, event.toString());
+            Map<String,String> replacementMap = new HashMap<>();
+            replacementMap.put("DATE", dateTime);
+            replacementMap.put("EVTMSG", event.toString());
+            
+            return StringSubstitution.substituteVariables(
+                    chatFormat, replacementMap);
+        }
+        
+        static String formatEvent(ChatEvent event) {
+            String chatFormat = ClientSettings.getInstance().
+                    getChatLogEntryFormat();
+
+            return formatEvent(chatFormat, event);
+        }
+        
+        public static String mockFormatEvent(String formatString) {
+            ChatEvent event = new ChatEvent("This guy did a thing.");
+            return formatEvent(formatString, event);
         }
     }
 
