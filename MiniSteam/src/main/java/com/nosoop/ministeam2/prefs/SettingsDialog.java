@@ -32,9 +32,11 @@ public class SettingsDialog extends javax.swing.JDialog {
         chatLogTab = new javax.swing.JPanel();
         messageFmtLabel = new javax.swing.JLabel();
         messageFmtField = new javax.swing.JTextField();
-        messageFmtPreviewLabel = new javax.swing.JLabel();
         dateFormatLabel = new javax.swing.JLabel();
         dateFormatField = new javax.swing.JTextField();
+        previewLabel = new javax.swing.JLabel();
+        previewField = new javax.swing.JTextField();
+        jSeparator1 = new javax.swing.JSeparator();
         cancelButton = new javax.swing.JButton();
         saveButton = new javax.swing.JButton();
 
@@ -42,6 +44,7 @@ public class SettingsDialog extends javax.swing.JDialog {
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("com/nosoop/ministeam2/UIStrings"); // NOI18N
         setTitle(bundle.getString("ClientMenu.Settings")); // NOI18N
 
+        jTabbedPane1.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
         jTabbedPane1.setTabPlacement(javax.swing.JTabbedPane.LEFT);
 
         jLabel1.setText("This space accidentally left blank.");
@@ -53,14 +56,14 @@ public class SettingsDialog extends javax.swing.JDialog {
             .addGroup(activityTabLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel1)
-                .addContainerGap(146, Short.MAX_VALUE))
+                .addContainerGap(142, Short.MAX_VALUE))
         );
         activityTabLayout.setVerticalGroup(
             activityTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(activityTabLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel1)
-                .addContainerGap(231, Short.MAX_VALUE))
+                .addContainerGap(240, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("User Status", activityTab);
@@ -86,12 +89,15 @@ public class SettingsDialog extends javax.swing.JDialog {
             }
         });
 
-        messageFmtPreviewLabel.setText(SteamClientChatTab.mockFormatEvent(com.nosoop.ministeam2.prefs.ClientSettings.getInstance().chatLogEntryFormat));
-
         dateFormatLabel.setLabelFor(dateFormatField);
         dateFormatLabel.setText("Date format:");
 
         dateFormatField.setText(com.nosoop.ministeam2.prefs.ClientSettings.getInstance().dateTimeFormat);
+
+        previewLabel.setText("Preview:");
+
+        previewField.setEditable(false);
+        previewField.setText(SteamClientChatTab.mockFormatEvent(messageFmtField.getText()));
 
         javax.swing.GroupLayout chatLogTabLayout = new javax.swing.GroupLayout(chatLogTab);
         chatLogTab.setLayout(chatLogTabLayout);
@@ -99,30 +105,34 @@ public class SettingsDialog extends javax.swing.JDialog {
             chatLogTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(chatLogTabLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(chatLogTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                .addGroup(chatLogTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(messageFmtField)
+                    .addComponent(dateFormatField, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(dateFormatLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(messageFmtLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(chatLogTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(messageFmtPreviewLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(messageFmtField, javax.swing.GroupLayout.DEFAULT_SIZE, 205, Short.MAX_VALUE)
-                    .addComponent(dateFormatField))
+                    .addComponent(messageFmtLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 292, Short.MAX_VALUE)
+                    .addComponent(previewField)
+                    .addComponent(previewLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jSeparator1))
                 .addContainerGap())
         );
         chatLogTabLayout.setVerticalGroup(
             chatLogTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(chatLogTabLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(chatLogTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(messageFmtLabel)
-                    .addComponent(messageFmtField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(previewLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(messageFmtPreviewLabel)
+                .addComponent(previewField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(dateFormatLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(dateFormatField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(chatLogTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(dateFormatLabel)
-                    .addComponent(dateFormatField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(182, Short.MAX_VALUE))
+                .addComponent(messageFmtLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(messageFmtField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(121, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Chat Logging", chatLogTab);
@@ -145,23 +155,23 @@ public class SettingsDialog extends javax.swing.JDialog {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1)
+            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 396, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(saveButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(15, 15, 15)
                 .addComponent(cancelButton)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 261, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jTabbedPane1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cancelButton)
-                    .addComponent(saveButton))
-                .addGap(0, 11, Short.MAX_VALUE))
+                    .addComponent(saveButton)
+                    .addComponent(cancelButton))
+                .addContainerGap())
         );
 
         pack();
@@ -169,7 +179,7 @@ public class SettingsDialog extends javax.swing.JDialog {
 
     private void messageFmtFieldUpdated(javax.swing.event.DocumentEvent evt) {
         try {
-            messageFmtPreviewLabel.setText(SteamClientChatTab
+            previewField.setText(SteamClientChatTab
                     .mockFormatEvent(messageFmtField.getText()));
         } catch (IllegalFormatException e) {
             // Drop.
@@ -222,10 +232,12 @@ public class SettingsDialog extends javax.swing.JDialog {
     private javax.swing.JTextField dateFormatField;
     private javax.swing.JLabel dateFormatLabel;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JSeparator jSeparator1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTextField messageFmtField;
     private javax.swing.JLabel messageFmtLabel;
-    private javax.swing.JLabel messageFmtPreviewLabel;
+    private javax.swing.JTextField previewField;
+    private javax.swing.JLabel previewLabel;
     private javax.swing.JButton saveButton;
     // End of variables declaration//GEN-END:variables
 }
