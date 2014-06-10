@@ -44,7 +44,7 @@ public class SteamClientLoginDialog extends CallbackInputFrame<SteamClientInfo> 
     enum ClientConnectivityState {
         CONNECTING(DialogActivityMode.LOGIN_BUTTON_BLOCK),
         SIGN_IN_WAITING(DialogActivityMode.ALL_FIELDS_ACTIVE),
-        DISCONNECTED(DialogActivityMode.LOGIN_BUTTON_BLOCK),
+        DISCONNECTED(DialogActivityMode.ALL_FIELDS_DISABLED),
         SIGNING_IN(DialogActivityMode.ALL_FIELDS_DISABLED),
         INCORRECT_LOGIN(DialogActivityMode.ALL_FIELDS_ACTIVE),
         SIGNED_IN(DialogActivityMode.CLOSED);

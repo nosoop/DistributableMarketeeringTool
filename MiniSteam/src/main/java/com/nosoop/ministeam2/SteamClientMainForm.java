@@ -210,6 +210,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         clientMenu = new javax.swing.JPopupMenu();
         changeNameOption = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
+        friendMenu = new javax.swing.JMenu();
         addFriendOption = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
         settingsOption = new javax.swing.JMenuItem();
@@ -261,13 +262,17 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         clientMenu.add(changeNameOption);
         clientMenu.add(jSeparator2);
 
+        friendMenu.setText("jMenu1");
+
         addFriendOption.setText(bundle.getString("ClientMenu.AddFriend")); // NOI18N
         addFriendOption.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 addFriendOptionActionPerformed(evt);
             }
         });
-        clientMenu.add(addFriendOption);
+        friendMenu.add(addFriendOption);
+
+        clientMenu.add(friendMenu);
         clientMenu.add(jSeparator3);
 
         settingsOption.setText(bundle.getString("ClientMenu.Settings")); // NOI18N
@@ -469,6 +474,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
     private void labelPlayerNameMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_labelPlayerNameMouseReleased
         if (evt.getButton() == MouseEvent.BUTTON3) {
+            friendMenu.setText(String.format("(%d friends)",
+                    backend.steamFriends.getFriendCount()));
             clientMenu.show(labelPlayerName, evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_labelPlayerNameMouseReleased
@@ -555,9 +562,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     }//GEN-LAST:event_acceptFriendRequestOptionActionPerformed
 
     private void settingsOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_settingsOptionActionPerformed
-        SettingsDialog preferencesDialog = 
+        SettingsDialog preferencesDialog =
                 new SettingsDialog(this);
-        
+
         preferencesDialog.setVisible(true);
     }//GEN-LAST:event_settingsOptionActionPerformed
 
@@ -568,6 +575,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     private javax.swing.JPopupMenu clientMenu;
     private javax.swing.JComboBox comboboxUserStatus;
     private javax.swing.JMenuItem friendChatOption;
+    private javax.swing.JMenu friendMenu;
     private javax.swing.JPopupMenu friendPopupMenu;
     private javax.swing.JMenuItem friendRemoveOption;
     private javax.swing.JPopupMenu friendRequestedPopupMenu;
@@ -620,7 +628,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                     // Provide sign-in information.
                     clientInfo = loginInfo;
                     loginOnConnectedCallback = true;
-                    
+
                     // Connect to Steam.
                     steamClient.connect();
 
@@ -702,6 +710,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                             @Override
                             public void run() {
                                 logger.info("Retrying connection.");
+
+                                loginDialog.setSteamConnectionState(
+                                        SteamClientLoginDialog.ClientConnectivityState.DISCONNECTED);
                                 steamClient.connect();
                             }
                         }, 1, TimeUnit.SECONDS);
@@ -1160,9 +1171,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
             LoginHelper(LoginKeyCallback callback) {
                 this.callback = callback;
-                
+
                 long ownSID = steamUser.getSteamId().convertToLong();
-                TOKEN_PATTERN = Pattern.compile(String.format(TOKEN_FMT, 
+                TOKEN_PATTERN = Pattern.compile(String.format(TOKEN_FMT,
                         ownSID));
             }
 
@@ -1235,8 +1246,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
             private boolean tokenValid(String token) {
                 // TODO Write a cleaner token validation method to verify format
                 logger.trace("Checking login token {} against pattern {}.",
-                            clientInfo.token, TOKEN_PATTERN.pattern());
-                
+                        clientInfo.token, TOKEN_PATTERN.pattern());
+
                 return TOKEN_PATTERN.matcher(token.replace("%7C", "|")).matches();
                 //return true;
             }
