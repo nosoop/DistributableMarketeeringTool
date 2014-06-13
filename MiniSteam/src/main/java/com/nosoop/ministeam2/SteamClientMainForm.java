@@ -77,6 +77,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
      */
     Map<SteamID, SteamFriendEntry> friendList;
     Object[][] dataTable;
+    EnumSet<EPersonaState> visibleStates;
 
     /**
      * Creates new form SteamClientMainForm
@@ -98,6 +99,8 @@ public class SteamClientMainForm extends javax.swing.JFrame {
                 SteamClientLoginDialog.ClientConnectivityState.SIGN_IN_WAITING);
 
         backend = new SteamKitClient();
+
+        visibleStates = EnumSet.allOf(EPersonaState.class);
 
         /**
          * Show components.
@@ -157,9 +160,19 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         for (Map.Entry<SteamID, SteamFriendEntry> keyValues : friendList.entrySet()) {
             SteamFriendEntry entry = keyValues.getValue();
 
-            // Display username in first cell, status in second.
-            friendTable.addRow(new Object[]{entry, entry.renderUserStatus()});
+            // Ignore any users that should be invisible.
+            if (visibleStates.contains(entry.state)) {
+                // Display username in first cell, status in second.
+                friendTable.addRow(
+                        new Object[]{entry, entry.renderUserStatus()});
+            }
         }
+
+        /**
+         * Handle case where you might have the nth row selected and rows are
+         * removed from the table such that there are fewer than N rows.
+         */
+        storedPosition = Math.min(storedPosition, tableUsers.getRowCount() - 1);
 
         // Restore row if there is a selection (row != -1)
         if (storedPosition > 0) {
@@ -211,6 +224,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         changeNameOption = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         friendMenu = new javax.swing.JMenu();
+        offlineStatusVisibilityOption = new javax.swing.JCheckBoxMenuItem();
+        awayStatusVisibilityOption = new javax.swing.JCheckBoxMenuItem();
+        jSeparator4 = new javax.swing.JPopupMenu.Separator();
         addFriendOption = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
         settingsOption = new javax.swing.JMenuItem();
@@ -263,6 +279,25 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         clientMenu.add(jSeparator2);
 
         friendMenu.setText("jMenu1");
+
+        offlineStatusVisibilityOption.setSelected(true);
+        offlineStatusVisibilityOption.setText(bundle.getString("EPersonaState.Offline")); // NOI18N
+        offlineStatusVisibilityOption.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                offlineStatusVisibilityOptionActionPerformed(evt);
+            }
+        });
+        friendMenu.add(offlineStatusVisibilityOption);
+
+        awayStatusVisibilityOption.setSelected(true);
+        awayStatusVisibilityOption.setText(bundle.getString("EPersonaState.Away")); // NOI18N
+        awayStatusVisibilityOption.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                awayStatusVisibilityOptionActionPerformed(evt);
+            }
+        });
+        friendMenu.add(awayStatusVisibilityOption);
+        friendMenu.add(jSeparator4);
 
         addFriendOption.setText(bundle.getString("ClientMenu.AddFriend")); // NOI18N
         addFriendOption.addActionListener(new java.awt.event.ActionListener() {
@@ -568,9 +603,29 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         preferencesDialog.setVisible(true);
     }//GEN-LAST:event_settingsOptionActionPerformed
 
+    private void awayStatusVisibilityOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_awayStatusVisibilityOptionActionPerformed
+        if (awayStatusVisibilityOption.isSelected()) {
+            visibleStates.add(EPersonaState.Away);
+        } else {
+            visibleStates.remove(EPersonaState.Away);
+        }
+
+        updateFriendTable();
+    }//GEN-LAST:event_awayStatusVisibilityOptionActionPerformed
+
+    private void offlineStatusVisibilityOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_offlineStatusVisibilityOptionActionPerformed
+        if (offlineStatusVisibilityOption.isSelected()) {
+            visibleStates.add(EPersonaState.Offline);
+        } else {
+            visibleStates.remove(EPersonaState.Offline);
+        }
+
+        updateFriendTable();
+    }//GEN-LAST:event_offlineStatusVisibilityOptionActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem acceptFriendRequestOption;
     private javax.swing.JMenuItem addFriendOption;
+    private javax.swing.JCheckBoxMenuItem awayStatusVisibilityOption;
     private javax.swing.JMenuItem changeNameOption;
     private javax.swing.JPopupMenu clientMenu;
     private javax.swing.JComboBox comboboxUserStatus;
@@ -584,7 +639,9 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JPopupMenu.Separator jSeparator3;
+    private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JLabel labelPlayerName;
+    private javax.swing.JCheckBoxMenuItem offlineStatusVisibilityOption;
     private javax.swing.JMenuItem settingsOption;
     private javax.swing.JTable tableUsers;
     // End of variables declaration//GEN-END:variables
@@ -1739,7 +1796,7 @@ public class SteamClientMainForm extends javax.swing.JFrame {
     /**
      * Container class holding the result of sign-in.
      */
-    public static class SteamLoginAuth {
+    private static class SteamLoginAuth {
         boolean success;
         String token;
     }
