@@ -77,6 +77,10 @@ public class SteamClientMainForm extends javax.swing.JFrame {
      */
     Map<SteamID, SteamFriendEntry> friendList;
     Object[][] dataTable;
+    /**
+     * A set of all visible persona states. If an EPersonaState is not in this
+     * set, all users with that state are hidden.
+     */
     EnumSet<EPersonaState> visibleStates;
 
     /**
@@ -269,6 +273,16 @@ public class SteamClientMainForm extends javax.swing.JFrame {
         });
         friendRequestedPopupMenu.add(acceptFriendRequestOption);
 
+        clientMenu.addPopupMenuListener(new javax.swing.event.PopupMenuListener() {
+            public void popupMenuCanceled(javax.swing.event.PopupMenuEvent evt) {
+            }
+            public void popupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent evt) {
+            }
+            public void popupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent evt) {
+                clientMenuPopupMenuWillBecomeVisible(evt);
+            }
+        });
+
         changeNameOption.setText(bundle.getString("ClientMenu.ChangeName")); // NOI18N
         changeNameOption.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -433,19 +447,26 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
         selectedRow = tableUsers.getSelectedRow();
 
-        if (evt.getButton() == MouseEvent.BUTTON3 && selectedRow >= 0) {
-            SteamFriendEntry user = getFriendFromTable(selectedRow);
+        if (evt.getButton() == MouseEvent.BUTTON3) {
+            if (selectedRow >= 0) {
+                SteamFriendEntry user = getFriendFromTable(selectedRow);
 
-            // Show menu depending on friend relationship
-            switch (user.relationship) {
-                case Friend:
-                    friendPopupMenu.show(tableUsers, evt.getX(), evt.getY());
-                    break;
-                case RequestRecipient:
-                    friendRequestedPopupMenu.show(tableUsers, evt.getX(),
-                            evt.getY());
-                    break;
+                // Show menu depending on friend relationship
+                switch (user.relationship) {
+                    case Friend:
+                        friendPopupMenu.show(tableUsers, evt.getX(),
+                                evt.getY());
+                        break;
+                    case RequestRecipient:
+                        friendRequestedPopupMenu.show(tableUsers, evt.getX(),
+                                evt.getY());
+                        break;
+                }
+            } else {
+                // Show client menu if not selecting a user.
+                clientMenu.show(tableUsers, evt.getX(), evt.getY());
             }
+
         }
     }//GEN-LAST:event_tableUsersMouseReleased
 
@@ -509,8 +530,6 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
     private void labelPlayerNameMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_labelPlayerNameMouseReleased
         if (evt.getButton() == MouseEvent.BUTTON3) {
-            friendMenu.setText(String.format("(%d friends)",
-                    backend.steamFriends.getFriendCount()));
             clientMenu.show(labelPlayerName, evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_labelPlayerNameMouseReleased
@@ -622,6 +641,18 @@ public class SteamClientMainForm extends javax.swing.JFrame {
 
         updateFriendTable();
     }//GEN-LAST:event_offlineStatusVisibilityOptionActionPerformed
+
+    private void clientMenuPopupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent evt) {//GEN-FIRST:event_clientMenuPopupMenuWillBecomeVisible
+        // Update friend count.
+        friendMenu.setText(String.format("(%d friends)",
+                backend.steamFriends.getFriendCount()));
+
+        // Re-check visibility menu options.
+        awayStatusVisibilityOption.setSelected(
+                visibleStates.contains(EPersonaState.Away));
+        offlineStatusVisibilityOption.setSelected(
+                visibleStates.contains(EPersonaState.Offline));
+    }//GEN-LAST:event_clientMenuPopupMenuWillBecomeVisible
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem acceptFriendRequestOption;
     private javax.swing.JMenuItem addFriendOption;
